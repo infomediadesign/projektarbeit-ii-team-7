@@ -34,7 +34,7 @@ typedef pthread_mutex_t mutex_t;
  * @param data Pointer to the data that needs to be passed to the function.
  * @return thread_t Thread ID.
  */
-thread_t platform_spawn(void (*func)(void *), void *data);
+thread_t platform_spawn(int (*func)(void *), void *data);
 
 /**
  * @brief Joins a thread into the main thread.

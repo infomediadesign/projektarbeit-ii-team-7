@@ -29,11 +29,11 @@ enum GameFlag { GS_PAUSED = 1, GS_DEBUG = 2, GS_EXIT = 4 };
 
 /**
  * @brief Creates a new game state.
- * 
+ *
  * ```
  * GameState *state = game_new_state();
  * ```
- * 
+ *
  * @return GameState* Newly created game state.
  */
 GameState *game_new_state();
