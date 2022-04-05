@@ -2,6 +2,8 @@ project(miniflow_bin C)
 
 set(CMAKE_C_STANDARD 11)
 
+include(../../cmake/raylib.cmake)
+
 find_package(raylib 4.0 REQUIRED)
 find_package(Threads REQUIRED)
 
