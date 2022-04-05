@@ -8,6 +8,9 @@ configure:
 build:
 	cmake --build build
 
+release:
+	cmake --build build --config Release
+
 lint:
 	find ./src -type f -name '*.c' -exec clang-format -i {} \;
 	find ./src -type f -name '*.h' -exec clang-format -i {} \;
