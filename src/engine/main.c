@@ -1,8 +1,6 @@
 #include "platform.h"
 #include "state/state.h"
 
-void dummy(void *args) {}
-
 /**
  * @brief Data to be sent to logic threads.
  *
@@ -15,6 +13,18 @@ typedef struct ThreadData {
   mutex_t *lock;
 } ThreadData;
 
+int dummy(void *args) {
+  ThreadData *td = (ThreadData *)args;
+  GameState *state = (GameState *)td->state;
+
+  while (1) {
+    state->tick++;
+    platform_sleep(100);
+  }
+
+  return 0;
+}
+
 /**
  * @brief The main entry point of the engine executable
  *
@@ -24,8 +34,10 @@ typedef struct ThreadData {
  * @return int Exit status code
  */
 int main(int argc, char *argv[]) {
+  printf("Starting...\n");
+
   /* Initialize game state and a mutex lock */
-  GameState *const state = (GameState *)malloc(sizeof(GameState));
+  GameState *const state = game_new_state();
   mutex_t state_lock;
 
   /* Spawn threads */
@@ -37,8 +49,11 @@ int main(int argc, char *argv[]) {
 
   /* Wait until game state tells us we should exit */
   while (!game_should_exit(state)) {
+    printf("\r  In main loop, tick %i", state->tick);
     platform_sleep(100);
   }
+
+  printf("Exiting...\n");
 
   /* Join all threads into the main thread */
   platform_join(input_thread);

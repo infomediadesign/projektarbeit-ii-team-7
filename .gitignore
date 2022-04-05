@@ -1,0 +1,5 @@
+.vscode
+CMakeFiles
+build
+CMakeCache.txt
+CMakeOutput.log

@@ -25,7 +25,18 @@ typedef struct GameState {
  * behavior of the engine.
  *
  */
-enum GameFlag { PAUSED = 1, DEBUG = 2, EXIT = 4 };
+enum GameFlag { GS_PAUSED = 1, GS_DEBUG = 2, GS_EXIT = 4 };
+
+/**
+ * @brief Creates a new game state.
+ * 
+ * ```
+ * GameState *state = game_new_state();
+ * ```
+ * 
+ * @return GameState* Newly created game state.
+ */
+GameState *game_new_state();
 
 /**
  * @brief Adds a boolean flag to the game flags.
@@ -61,6 +72,7 @@ uint8_t game_is_paused(GameState *state);
  * if (game_is_debug(state)) {
  *   draw_debug_gui();
  * }
+ * ```
  *
  * @param state Current game state
  * @return uint8_t Whether or not the game is in debug mode

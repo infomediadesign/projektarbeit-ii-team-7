@@ -9,7 +9,7 @@
 
 #include <Windows.h>
 
-typedef pthread_t thread_t;
+typedef HANDLE thread_t;
 typedef HANDLE mutex_t;
 
 #else

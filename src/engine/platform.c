@@ -1,8 +1,8 @@
 #include "platform.h"
 
-thread_t platform_spawn(void (*func)(void *), void *data) {
+thread_t platform_spawn(int (*func)(void *), void *data) {
 #ifdef _WIN32
-  return CreateThread(NULL, 0, func, data, 0, NULL);
+  return CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)func, data, 0, NULL);
 #else
   pthread_t handle;
 
@@ -23,7 +23,7 @@ void platform_join(thread_t thread) {
 
 void platform_sleep(uint64_t milliseconds) {
 #ifdef _WIN32
-  Sleep(milliseconds);
+  Sleep((DWORD)milliseconds);
 #else
   usleep(milliseconds * 1000);
 #endif
