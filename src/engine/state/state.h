@@ -15,7 +15,8 @@
 typedef struct GameState {
   uint32_t flags;
   uint64_t tick;
-  int tickrate;
+  uint32_t tickrate;
+  uint32_t fps_max;
 } GameState;
 
 /**

@@ -1,3 +1,4 @@
+#include "input/argparse.h"
 #include "logic/logic.h"
 #include "platform.h"
 #include "state/state.h"
@@ -22,12 +23,18 @@ int dummy(void *args) {
  * itself
  * @return int Exit status code
  */
-int main(int argc, char *argv[]) {
+int main(const int argc, const char *argv[]) {
   printf("Starting...\n");
 
   /* Initialize game state and a mutex lock */
   GameState *const state = game_new_state();
   mutex_t state_lock;
+
+  input_parse_args(state, argc, argv);
+
+  if (game_is_debug(state)) {
+    printf("Debug mode is enabled.\n");
+  }
 
   /* Spawn threads */
   ThreadData thread_data = {.state = state, .lock = &state_lock};
@@ -38,8 +45,8 @@ int main(int argc, char *argv[]) {
 
   /* Wait until game state tells us we should exit */
   while (!game_should_exit(state)) {
-    printf("  in main loop, tick %i\n", state->tick);
-    platform_sleep(100);
+    printf("  in main loop, tick %lu\n", state->tick);
+    platform_sleep(1000);
   }
 
   printf("Exiting...\n");

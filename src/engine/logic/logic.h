@@ -5,13 +5,15 @@
 #include "../state/state.h"
 #include "../util.h"
 
+#include <sys/time.h>
+
 /**
  * @brief Main function for game logic.
- * 
+ *
  * This function runs in its own thread `tickrate` times
  * every second. It handles things like logic, position adjustments,
  * and manages entities.
- * 
+ *
  * @param args Pointer to ThreadData structure passed to the thread
  * @return int Always returns 0
  */
