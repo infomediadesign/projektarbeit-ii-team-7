@@ -33,7 +33,7 @@ long int platform_time_sec() {
 
   gettimeofday(&tv, NULL);
 
-  return tv->tv_sec;
+  return tv.tv_sec;
 #endif
 }
 
@@ -50,7 +50,7 @@ long int platform_time_usec() {
 
   gettimeofday(&tv, NULL);
 
-  return tv->tv_usec;
+  return tv.tv_usec;
 #endif
 }
 
