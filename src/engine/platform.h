@@ -194,6 +194,6 @@ void platform_join(thread_t thread);
  *
  * @param milliseconds The amount of milliseconds to wait.
  */
-void platform_sleep(uint64_t milliseconds);
+void platform_sleep(const uint64_t milliseconds);
 
 #endif

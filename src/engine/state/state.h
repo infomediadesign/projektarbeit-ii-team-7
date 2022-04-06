@@ -84,7 +84,7 @@ void game_add_flag(GameState *state, const uint32_t flag);
  * @param state Current game state
  * @return uint8_t Whether or not the game is paused
  */
-uint8_t game_is_paused(GameState *state);
+uint8_t game_is_paused(const GameState *state);
 
 /**
  * @brief Checks whether the game is in debug mode.
@@ -98,7 +98,7 @@ uint8_t game_is_paused(GameState *state);
  * @param state Current game state
  * @return uint8_t Whether or not the game is in debug mode
  */
-uint8_t game_is_debug(GameState *state);
+uint8_t game_is_debug(const GameState *state);
 
 /**
  * @brief Checks whether or not the game should exit.
@@ -120,7 +120,7 @@ uint8_t game_is_debug(GameState *state);
  * @param state Current game state
  * @return uint8_t Whether or not the game should exit.
  */
-uint8_t game_should_exit(GameState *state);
+uint8_t game_should_exit(const GameState *state);
 
 /**
  * @brief Whether or not is the game fullscreen.
@@ -134,6 +134,6 @@ uint8_t game_should_exit(GameState *state);
  * @param state Current game state
  * @return uint8_t Whether or not the game is fullscreen.
  */
-uint8_t game_is_fullscreen(GameState *state);
+uint8_t game_is_fullscreen(const GameState *state);
 
 #endif

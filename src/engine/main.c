@@ -5,7 +5,7 @@
 #include "state/state.h"
 #include "util.h"
 
-int dummy(void *args) {
+int dummy(const void *args) {
   ThreadData *td = (ThreadData *)args;
   GameState *state = (GameState *)td->state;
 
