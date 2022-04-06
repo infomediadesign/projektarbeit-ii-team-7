@@ -11,6 +11,15 @@ build:
 release:
 	cmake --build build --config Release
 
+dist:
+	configure
+	release
+	rm -rf dist
+	mkdir dist
+	cp build/engine/miniflow dist/miniflow
+	cp -r assets/ dist/assets
+	cp -r levels/ dist/levels
+
 lint:
 	find ./src -type f -name '*.c' -exec clang-format -i {} \;
 	find ./src -type f -name '*.h' -exec clang-format -i {} \;

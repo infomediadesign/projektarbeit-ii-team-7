@@ -17,10 +17,11 @@ set(engine_source_files
 add_subdirectory(state ../../build/state)
 add_subdirectory(input ../../build/input)
 add_subdirectory(logic ../../build/logic)
+add_subdirectory(render ../../build/render)
 
 add_executable(miniflow ${engine_source_files})
 
-target_link_libraries(miniflow PRIVATE logic input state raylib Threads::Threads)
+target_link_libraries(miniflow PRIVATE logic input state render raylib Threads::Threads)
 
 if (APPLE)
   target_link_libraries(${PROJECT_NAME} "-framework IOKit")

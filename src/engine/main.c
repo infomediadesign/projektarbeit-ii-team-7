@@ -1,5 +1,6 @@
 #include "input/argparse.h"
 #include "logic/logic.h"
+#include "render/render.h"
 #include "platform.h"
 #include "state/state.h"
 #include "util.h"
@@ -27,7 +28,7 @@ int main(const int argc, const char *argv[]) {
   printf("Starting...\n");
 
   /* Initialize game state and a mutex lock */
-  GameState *const state = game_new_state();
+  GameState *const state = game_default_state();
   mutex_t state_lock;
 
   input_parse_args(state, argc, argv);
@@ -39,13 +40,14 @@ int main(const int argc, const char *argv[]) {
   /* Spawn threads */
   ThreadData thread_data = {.state = state, .lock = &state_lock};
 
-  const thread_t render_thread = platform_spawn(dummy, &thread_data);
+  const thread_t render_thread = platform_spawn(render_perform, &thread_data);
   const thread_t logic_thread = platform_spawn(logic_perform, &thread_data);
   const thread_t input_thread = platform_spawn(dummy, &thread_data);
 
+  printf("Entering main loop...\n");
+
   /* Wait until game state tells us we should exit */
   while (!game_should_exit(state)) {
-    printf("  in main loop, tick %lu\n", state->tick);
     platform_sleep(1000);
   }
 

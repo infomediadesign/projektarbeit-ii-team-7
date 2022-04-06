@@ -4,11 +4,11 @@ int logic_perform(void *args) {
   ThreadData *const td = (ThreadData *)args;
   GameState *const state = (GameState *)td->state;
 
-  const uint32_t delay = 1000 / state->tickrate;
-  struct timeval start_time, end_time;
+  const int delay = 1000 / state->tickrate;
+  long int start_time, end_time;
 
   while (!game_should_exit(state)) {
-    gettimeofday(&start_time, NULL);
+    start_time = platform_time_usec();
 
     if (game_is_paused(state)) {
       platform_sleep(50);
@@ -18,10 +18,10 @@ int logic_perform(void *args) {
 
     state->tick++;
 
-    gettimeofday(&end_time, NULL);
+    end_time = platform_time_usec();
 
-    if ((end_time.tv_usec - start_time.tv_usec) < delay * 1000) {
-      platform_sleep(delay - (end_time.tv_usec - start_time.tv_usec) / 1000);
+    if ((end_time - start_time) < delay * 1000) {
+      platform_sleep(delay - (end_time - start_time) / 1000);
     }
   }
 

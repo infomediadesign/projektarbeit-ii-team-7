@@ -9,4 +9,4 @@ set(engine_render_header_files
 )
 
 add_library(render ${engine_render_source_files} ${engine_render_header_files})
-target_link_libraries(render state)
+target_link_libraries(render state raylib)

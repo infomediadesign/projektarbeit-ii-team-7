@@ -5,8 +5,6 @@
 #include "../state/state.h"
 #include "../util.h"
 
-#include <sys/time.h>
-
 /**
  * @brief Main function for game logic.
  *
