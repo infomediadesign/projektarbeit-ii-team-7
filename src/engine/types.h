@@ -1,6 +1,7 @@
 #ifndef __ENGINE_TYPES_H
 #define __ENGINE_TYPES_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 /* 
