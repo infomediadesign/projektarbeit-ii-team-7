@@ -2,6 +2,7 @@
 #define __ENGINE_INPUT_ARGPARSE_H
 
 #include "../state/state.h"
+#include "../types.h"
 #include <string.h>
 
 void input_parse_args(GameState *const state, const int argc,

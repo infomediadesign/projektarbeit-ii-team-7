@@ -1,8 +1,8 @@
 #ifndef __ENGINE_STATE_STATE_H
 #define __ENGINE_STATE_STATE_H
 
-#include "../types.h"
 #include "../platform.h"
+#include "../types.h"
 
 /**
  * @brief Current state of the game.
@@ -33,7 +33,7 @@ enum GameFlag { GS_PAUSED = 1, GS_DEBUG = 2, GS_EXIT = 4, GS_FULLSCREEN = 8 };
 
 /**
  * @brief Creates a new game state.
- * 
+ *
  * **Don't forget to free after allocating.**
  *
  * ```
@@ -46,16 +46,16 @@ GameState *game_new_state();
 
 /**
  * @brief Creates a new game state with default values.
- * 
+ *
  * Basically the same as `game_new_state` but also populates the
  * struct fields with default values.
- * 
+ *
  * **Don't forget to free after allocating.**
- * 
+ *
  * ```
  * GameState *state = game_default_state();
  * ```
- * 
+ *
  * @return GameState* Newly created game state
  */
 GameState *game_default_state();
@@ -70,7 +70,7 @@ GameState *game_default_state();
  * @param state Current game state
  * @param flag The flag to add
  */
-void game_add_flag(GameState *state, const u32 flag);
+void game_add_flag(GameState *restrict state, const u32 flag);
 
 /**
  * @brief Checks whether game state is paused or not.
@@ -83,9 +83,9 @@ void game_add_flag(GameState *state, const u32 flag);
  * ```
  *
  * @param state Current game state
- * @return uint8_t Whether or not the game is paused
+ * @return u8 Whether or not the game is paused
  */
-uint8_t game_is_paused(const GameState *state);
+u8 game_is_paused(const GameState *restrict state);
 
 /**
  * @brief Checks whether the game is in debug mode.
@@ -97,9 +97,9 @@ uint8_t game_is_paused(const GameState *state);
  * ```
  *
  * @param state Current game state
- * @return uint8_t Whether or not the game is in debug mode
+ * @return u8 Whether or not the game is in debug mode
  */
-uint8_t game_is_debug(const GameState *state);
+u8 game_is_debug(const GameState *restrict state);
 
 /**
  * @brief Checks whether or not the game should exit.
@@ -119,22 +119,22 @@ uint8_t game_is_debug(const GameState *state);
  * ```
  *
  * @param state Current game state
- * @return uint8_t Whether or not the game should exit.
+ * @return u8 Whether or not the game should exit.
  */
-uint8_t game_should_exit(const GameState *state);
+u8 game_should_exit(const GameState *restrict state);
 
 /**
  * @brief Whether or not is the game fullscreen.
- * 
+ *
  * ```
  * if (game_is_fullscreen(state) && !IsWindowFullscreen()) {
  *   ToggleFullscreen();
  * }
  * ```
- * 
+ *
  * @param state Current game state
- * @return uint8_t Whether or not the game is fullscreen.
+ * @return u8 Whether or not the game is fullscreen.
  */
-uint8_t game_is_fullscreen(const GameState *state);
+u8 game_is_fullscreen(const GameState *restrict state);
 
 #endif

@@ -4,8 +4,8 @@ int logic_perform(void *args) {
   ThreadData *const td = (ThreadData *)args;
   GameState *const state = (GameState *)td->state;
 
-  const int delay = 1000 / state->tickrate;
-  long int start_time, end_time;
+  const i64 delay = 1000 / state->tickrate;
+  i64 start_time, end_time;
 
   while (!game_should_exit(state)) {
     start_time = platform_time_usec();

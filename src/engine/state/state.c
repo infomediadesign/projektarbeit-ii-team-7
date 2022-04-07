@@ -1,8 +1,6 @@
 #include "state.h"
 
-GameState *game_new_state() {
-  return (GameState *)malloc(sizeof(GameState));
-}
+GameState *game_new_state() { return (GameState *)malloc(sizeof(GameState)); }
 
 GameState *game_default_state() {
   GameState *state = game_new_state();
@@ -16,13 +14,19 @@ GameState *game_default_state() {
   return state;
 }
 
-void game_add_flag(GameState *state, const u32 flag) {
+void game_add_flag(GameState *restrict state, const u32 flag) {
   state->flags = state->flags | flag;
 }
 
-uint8_t game_is_paused(const GameState *state) { return state->flags & GS_PAUSED; }
-uint8_t game_is_debug(const GameState *state) { return state->flags & GS_DEBUG; }
-uint8_t game_should_exit(const GameState *state) { return state->flags & GS_EXIT; }
-uint8_t game_is_fullscreen(const GameState *state) {
+u8 game_is_paused(const GameState *restrict state) {
+  return state->flags & GS_PAUSED;
+}
+u8 game_is_debug(const GameState *restrict state) {
+  return state->flags & GS_DEBUG;
+}
+u8 game_should_exit(const GameState *restrict state) {
+  return state->flags & GS_EXIT;
+}
+u8 game_is_fullscreen(const GameState *restrict state) {
   return state->flags & GS_FULLSCREEN;
 }

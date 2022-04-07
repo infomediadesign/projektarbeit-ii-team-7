@@ -3,6 +3,6 @@
 
 #include "types.h"
 
-u64 crc64(const void *p, size_t len);
+u64 crc64(const void *restrict p, size_t len);
 
 #endif

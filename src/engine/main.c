@@ -1,14 +1,11 @@
 #include "input/argparse.h"
 #include "logic/logic.h"
-#include "render/render.h"
 #include "platform.h"
+#include "render/render.h"
 #include "state/state.h"
 #include "util.h"
 
-int dummy(const void *args) {
-  ThreadData *td = (ThreadData *)args;
-  GameState *state = (GameState *)td->state;
-
+int dummy(void *_args) {
   while (1) {
     platform_sleep(100);
   }

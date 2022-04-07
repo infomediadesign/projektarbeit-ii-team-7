@@ -3,26 +3,29 @@
 all: configure build
 
 configure:
-  cmake -B build -S src
+	cmake -B build -S src
 
 build:
-  cmake --build build
+	cmake --build build
 
 release:
-  cmake --build build --config Release
+	cmake --build build --config Release
 
 dist:
-  configure
-  release
-  rm -rf dist
-  mkdir dist
-  cp build/engine/miniflow dist/miniflow
-  cp -r assets/ dist/assets
-  cp -r levels/ dist/levels
+	cmake -B build -S src
+	cmake --build build --config Release
+	rm -rf dist
+	mkdir dist
+	cp build/engine/miniflow dist/miniflow
+	cp -r assets/ dist/assets
+	cp -r levels/ dist/levels
 
 lint:
-  find ./src -type f -name '*.c' -exec clang-format -i {} \;
-  find ./src -type f -name '*.h' -exec clang-format -i {} \;
+	find ./src -type f -name '*.c' -exec clang-format -i {} \;
+	find ./src -type f -name '*.h' -exec clang-format -i {} \;
+
+analyze:
+	find ./src -type f -name '*.c' -exec clang -Wno-unused-command-line-argument --analyze -Xanalyzer -analyzer-output=text {} \;
 
 clean:
-  rm -rf build/
+	rm -rf build/
