@@ -7,7 +7,7 @@ Time platform_time() {
   QueryPerformanceFrequency(&freq); 
   QueryPerformanceCounter(&curtime);
 
-  const long int usec = (long int)(curtime.QuadPart * 1000000 / freq.QuadPart);
+  const i32 usec = (i32)(curtime.QuadPart * 1000000 / freq.QuadPart);
   Time t = {.sec = usec / 1000000, .usec = usec};
 #else
   struct timeval tv;
@@ -20,14 +20,14 @@ Time platform_time() {
   return t;
 }
 
-long int platform_time_sec() {
+i32 platform_time_sec() {
 #ifdef _WIN32
   LARGE_INTEGER freq, curtime;
 
   QueryPerformanceFrequency(&freq); 
   QueryPerformanceCounter(&curtime);
 
-  return (long int)(curtime.QuadPart / freq.QuadPart);
+  return (i32)(curtime.QuadPart / freq.QuadPart);
 #else
   struct timeval tv;
 
@@ -37,14 +37,14 @@ long int platform_time_sec() {
 #endif
 }
 
-long int platform_time_usec() {
+i32 platform_time_usec() {
 #ifdef _WIN32
   LARGE_INTEGER freq, curtime;
 
   QueryPerformanceFrequency(&freq); 
   QueryPerformanceCounter(&curtime);
 
-  return (long int)(curtime.QuadPart * 1000000 / freq.QuadPart);
+  return (i32)(curtime.QuadPart * 1000000 / freq.QuadPart);
 #else
   struct timeval tv;
 
@@ -75,7 +75,7 @@ void platform_join(thread_t thread) {
 #endif
 }
 
-void platform_sleep(const uint64_t milliseconds) {
+void platform_sleep(const u64 milliseconds) {
 #ifdef _WIN32
   Sleep((DWORD)milliseconds);
 #else

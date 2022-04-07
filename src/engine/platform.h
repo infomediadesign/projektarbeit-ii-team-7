@@ -1,9 +1,9 @@
 #ifndef __ENGINE_PLATFORM_H
 #define __ENGINE_PLATFORM_H
 
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "types.h"
 
 #ifdef _WIN32
 
@@ -97,8 +97,8 @@ typedef pthread_mutex_t mutex_t;
  * 
  */
 typedef struct Time {
-  long int sec;
-  long int usec;
+  i32 sec;
+  i32 usec;
 } Time;
 
 /**
@@ -130,7 +130,7 @@ Time platform_time();
  * 
  * @return long int Current time in seconds.
  */
-long int platform_time_sec();
+i32 platform_time_sec();
 
 /**
  * @brief Current time in microseconds.
@@ -150,7 +150,7 @@ long int platform_time_sec();
  * 
  * @return long int Time in microseconds.
  */
-long int platform_time_usec();
+i32 platform_time_usec();
 
 /**
  * @brief Spawns a thread.
@@ -194,6 +194,6 @@ void platform_join(thread_t thread);
  *
  * @param milliseconds The amount of milliseconds to wait.
  */
-void platform_sleep(const uint64_t milliseconds);
+void platform_sleep(const u64 milliseconds);
 
 #endif

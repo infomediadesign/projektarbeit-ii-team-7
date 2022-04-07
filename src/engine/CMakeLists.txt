@@ -11,6 +11,8 @@ set(engine_source_files
   platform.h
   util.c
   util.h
+  crc64.c
+  crc64.h
   main.c
 )
 

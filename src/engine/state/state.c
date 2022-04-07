@@ -7,16 +7,16 @@ GameState *game_new_state() {
 GameState *game_default_state() {
   GameState *state = game_new_state();
 
-  state->flags = 0;
-  state->tick = 0;
-  state->tickrate = 64;
-  state->width = 800;
-  state->height = 600;
+  state->flags = 0U;
+  state->tick = 0U;
+  state->tickrate = 64U;
+  state->width = 800U;
+  state->height = 600U;
 
   return state;
 }
 
-void game_add_flag(GameState *state, const uint32_t flag) {
+void game_add_flag(GameState *state, const u32 flag) {
   state->flags = state->flags | flag;
 }
 

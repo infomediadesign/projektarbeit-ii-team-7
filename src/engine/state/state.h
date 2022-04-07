@@ -1,6 +1,7 @@
 #ifndef __ENGINE_STATE_STATE_H
 #define __ENGINE_STATE_STATE_H
 
+#include "../types.h"
 #include "../platform.h"
 
 /**
@@ -13,12 +14,12 @@
  *
  */
 typedef struct GameState {
-  uint32_t flags;
-  uint64_t tick;
-  uint32_t tickrate;
-  uint32_t fps_max;
-  uint32_t width;
-  uint32_t height;
+  u32 flags;
+  u64 tick;
+  u32 tickrate;
+  u32 fps_max;
+  u32 width;
+  u32 height;
 } GameState;
 
 /**
@@ -69,7 +70,7 @@ GameState *game_default_state();
  * @param state Current game state
  * @param flag The flag to add
  */
-void game_add_flag(GameState *state, const uint32_t flag);
+void game_add_flag(GameState *state, const u32 flag);
 
 /**
  * @brief Checks whether game state is paused or not.
