@@ -1,8 +1,7 @@
-# RPG Game
+# Dungeon Crawler: Limb-Tearer 3000®
 
-(title pending)
-
-(also everything else pending)
+Dungeon-Crawler where replace your limbs with guns that you tear off of your enemies. 
+Battle System like Dragon Quest where you can target different weapons, limbs and body parts of enemies and shoot them off.
 
 ## Why no license
 
