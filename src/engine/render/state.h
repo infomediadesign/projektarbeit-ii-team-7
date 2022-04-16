@@ -12,18 +12,18 @@
 typedef struct RenderState {
   GLFWwindow *window;
 
-  VkInstance *instance;
-  VkPhysicalDevice *physical_device;
-  VkPhysicalDeviceFeatures *physical_device_features;
-  VkDevice *device;
-  VkQueue *queue;
-  VkSurfaceKHR *surface;
-  VkSwapchainKHR *swapchain;
-  VkImageView *image_view;
-  VkFramebuffer *framebuffer;
-  VkPipeline *pipeline;
-  VkCommandBuffer *command_buffer;
-  VkCommandPool *command_pool;
+  VkInstance instance;
+  VkPhysicalDevice physical_device;
+  VkPhysicalDeviceFeatures physical_device_features;
+  VkDevice device;
+  VkQueue queue;
+  VkSurfaceKHR surface;
+  VkSwapchainKHR swapchain;
+  VkImageView image_view;
+  VkFramebuffer framebuffer;
+  VkPipeline pipeline;
+  VkCommandBuffer command_buffer;
+  VkCommandPool command_pool;
 } RenderState;
 
 RenderState *render_state_init();
