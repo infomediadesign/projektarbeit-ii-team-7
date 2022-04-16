@@ -4,6 +4,8 @@
 #include "../platform.h"
 #include "../state/state.h"
 #include "../util.h"
+#include "geyser.h"
+#include "state.h"
 
 /**
  * @brief Manages the game window and performs rendering.

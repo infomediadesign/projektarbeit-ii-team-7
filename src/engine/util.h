@@ -15,4 +15,5 @@ typedef struct ThreadData {
   mutex_t *lock;
 } ThreadData;
 
+#define DEBUG_MESSAGE(args...) if (game_is_debug(state)) { printf("[Debug] "); printf(args); }
 #endif

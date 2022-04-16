@@ -28,7 +28,7 @@ lint:
 
 analyze:
 	find ./src -type f -name '*.c' -exec clang -Wno-unused-command-line-argument --analyze -Xanalyzer -analyzer-output=text {} \;
-  find ./src -type f -name '*.cpp' -exec clang -Wno-unused-command-line-argument --analyze -Xanalyzer -analyzer-output=text {} \;
+	find ./src -type f -name '*.cpp' -exec clang -Wno-unused-command-line-argument --analyze -Xanalyzer -analyzer-output=text {} \;
 
 clean:
 	rm -rf build/
