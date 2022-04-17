@@ -20,17 +20,17 @@ const char *get_window_surface_extension() {
 #endif
 }
 
-VkBool32 debug_callback(VkDebugReportFlagsEXT flags,
-                        VkDebugReportObjectTypeEXT objectType, uint64_t object,
-                        size_t location, int32_t messageCode,
-                        const char *pLayerPrefix, const char *pMessage,
-                        void *pUserData) {
-  printf("[Vulkan Debug] %s\n", pMessage);
+VkBool32 debug_callback(VkDebugReportFlagsEXT _flags,
+                        VkDebugReportObjectTypeEXT _object_type, u64 _object,
+                        size_t _location, i32 _message_code,
+                        const char *_layer_prefix, const char *message,
+                        void *_userdata) {
+  printf("[Vulkan Debug] %s\n", message);
   return VK_FALSE;
 }
 
-void geyser_init_vk(RenderState *state) {
-  u8 gs_debug = 1;
+void geyser_init_vk(RenderState *restrict state) {
+  const u8 gs_debug = 1;
   u32 ext_count = 2;
   u32 validation_layer_count = 0;
 
@@ -65,7 +65,7 @@ void geyser_init_vk(RenderState *state) {
     ext_count = 3;
   }
 
-  VkApplicationInfo app_info = {
+  const VkApplicationInfo app_info = {
       .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
       .pNext = NULL,
       .pApplicationName = "Geyser",
@@ -75,14 +75,15 @@ void geyser_init_vk(RenderState *state) {
       .apiVersion = VK_API_VERSION_1_1 /* 1.1.0 */
   };
 
-  VkInstanceCreateInfo instance_info = {VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-                                        NULL,
-                                        0,
-                                        &app_info,
-                                        validation_layer_count,
-                                        validation_layer_names,
-                                        ext_count,
-                                        ext_names};
+  const VkInstanceCreateInfo instance_info = {
+      .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+      .pNext = NULL,
+      .flags = 0,
+      .pApplicationInfo = &app_info,
+      .enabledLayerCount = validation_layer_count,
+      .ppEnabledLayerNames = validation_layer_names,
+      .enabledExtensionCount = ext_count,
+      .ppEnabledExtensionNames = ext_names};
 
   VkResult res = vkCreateInstance(&instance_info, NULL, &state->instance);
 
@@ -119,17 +120,18 @@ void geyser_init_vk(RenderState *state) {
   gladLoadVulkanUserPtr(NULL, glad_vulkan_load_func_vk, state->instance);
 
   if (gs_debug == 1) {
-    VkDebugReportCallbackCreateInfoEXT debug_callback_info = {
+    const VkDebugReportCallbackCreateInfoEXT debug_callback_info = {
         .sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT,
         .pNext = NULL,
         .flags = 0xf,
         .pfnCallback = debug_callback,
         .pUserData = NULL};
 
-    VkDebugReportCallbackEXT debug_callback;
+    VkDebugReportCallbackEXT debug_report_callback;
 
     if (vkCreateDebugReportCallbackEXT(state->instance, &debug_callback_info,
-                                      NULL, &debug_callback) != VK_SUCCESS) {
+                                       NULL,
+                                       &debug_report_callback) != VK_SUCCESS) {
       printf("[Geyser Error] Failed to create a debug callback!\n");
       abort();
     }
@@ -153,18 +155,17 @@ void geyser_init_vk(RenderState *state) {
 
     state->physical_device = physical_devices[i];
 
-    if (device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-      if (gs_debug == 1) {
-        printf("[Geyser] Using a discrete GPU\n");
-        printf("API Version: %u\nDriver Version: %u\nVendor ID: %u\nDevice: %s "
-              "(ID: %u)\n",
-              device_properties.apiVersion, device_properties.driverVersion,
-              device_properties.vendorID, device_properties.deviceName,
-              device_properties.deviceID);
-      }
-  
-      break;
+    if (device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
+        gs_debug == 1) {
+      printf("[Geyser] Using a discrete GPU\n");
+      printf("API Version: %u\nDriver Version: %u\nVendor ID: %u\nDevice: %s "
+             "(ID: %u)\n",
+             device_properties.apiVersion, device_properties.driverVersion,
+             device_properties.vendorID, device_properties.deviceName,
+             device_properties.deviceID);
     }
+
+    break;
   }
 
   gladLoadVulkanUserPtr(state->physical_device, glad_vulkan_load_func_vk,
@@ -190,9 +191,9 @@ void geyser_init_vk(RenderState *state) {
       break;
   }
 
-  float queue_prios[] = {1.0f, 1.0f};
+  const float queue_prios[] = {1.0f, 1.0f};
 
-  VkDeviceQueueCreateInfo queue_create_info = {
+  const VkDeviceQueueCreateInfo queue_create_info = {
       .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
       .pNext = NULL,
       .flags = 0,
@@ -202,16 +203,17 @@ void geyser_init_vk(RenderState *state) {
 
   const char *device_ext_names[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
-  VkDeviceCreateInfo device_create_info = {VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-                                           NULL,
-                                           0,
-                                           1,
-                                           &queue_create_info,
-                                           0,
-                                           NULL,
-                                           1,
-                                           device_ext_names,
-                                           NULL};
+  const VkDeviceCreateInfo device_create_info = {
+      .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+      .pNext = NULL,
+      .flags = 0,
+      .queueCreateInfoCount = 1,
+      .pQueueCreateInfos = &queue_create_info,
+      .enabledLayerCount = 0,
+      .ppEnabledLayerNames = NULL,
+      .enabledExtensionCount = 1,
+      .ppEnabledExtensionNames = device_ext_names,
+      .pEnabledFeatures = NULL};
 
   res = vkCreateDevice(state->physical_device, &device_create_info, NULL,
                        &state->device);
@@ -255,39 +257,41 @@ void geyser_init_vk(RenderState *state) {
   }
 
   VkSurfaceCapabilitiesKHR surface_capabilities;
-  res = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-      state->physical_device, state->surface, &surface_capabilities);
 
-  if (res != VK_SUCCESS) {
+  if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+          state->physical_device, state->surface, &surface_capabilities) !=
+      VK_SUCCESS) {
     printf("[Geyser] Failed to get physical device surface capabilities!\n");
     abort();
-  } else {
-    if (gs_debug == 1) {
-      printf("[Geyser] min %ux%u, max %ux%u, min image count is %u, max image "
-            "count is %u\n",
-            surface_capabilities.minImageExtent.width,
-            surface_capabilities.minImageExtent.height,
-            surface_capabilities.maxImageExtent.width,
-            surface_capabilities.maxImageExtent.height,
-            surface_capabilities.minImageCount,
-            surface_capabilities.maxImageCount);
-    }
+  } else if (gs_debug == 1) {
+    printf("[Geyser] min %ux%u, max %ux%u, min image count is %u, max image "
+           "count is %u\n",
+           surface_capabilities.minImageExtent.width,
+           surface_capabilities.minImageExtent.height,
+           surface_capabilities.maxImageExtent.width,
+           surface_capabilities.maxImageExtent.height,
+           surface_capabilities.minImageCount,
+           surface_capabilities.maxImageCount);
   }
 
   VkBool32 device_surface_supported = VK_FALSE;
 
-  if (vkGetPhysicalDeviceSurfaceSupportKHR(state->physical_device, family_index, state->surface, &device_surface_supported) != VK_SUCCESS) {
+  if (vkGetPhysicalDeviceSurfaceSupportKHR(
+          state->physical_device, family_index, state->surface,
+          &device_surface_supported) != VK_SUCCESS) {
     printf("[Geyser Error] Unable to determine device surface support!\n");
     abort();
   }
 
   if (device_surface_supported != VK_TRUE) {
-    printf("[Geyser Error] Device does not support the required surface type!\n");
+    printf(
+        "[Geyser Error] Device does not support the required surface type!\n");
     abort();
   }
 
   u32 device_present_mode_count = 0;
-  vkGetPhysicalDeviceSurfacePresentModesKHR(state->physical_device, state->surface, &device_present_mode_count, NULL);
+  vkGetPhysicalDeviceSurfacePresentModesKHR(
+      state->physical_device, state->surface, &device_present_mode_count, NULL);
 
   if (device_present_mode_count < 1) {
     printf("[Geyser Error] Device does not have any present modes!\n");
@@ -296,7 +300,9 @@ void geyser_init_vk(RenderState *state) {
 
   VkPresentModeKHR preferred_present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR;
   VkPresentModeKHR device_present_modes[device_present_mode_count];
-  vkGetPhysicalDeviceSurfacePresentModesKHR(state->physical_device, state->surface, &device_present_mode_count, device_present_modes);
+  vkGetPhysicalDeviceSurfacePresentModesKHR(
+      state->physical_device, state->surface, &device_present_mode_count,
+      device_present_modes);
 
   for (int i = 0; i < device_present_mode_count; i++) {
     if (device_present_modes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) {
@@ -341,7 +347,7 @@ void geyser_init_vk(RenderState *state) {
     preferred_color_space = surface_formats[0].colorSpace;
   }
 
-  VkExtent2D ext = {.width = 640, .height = 480};
+  const VkExtent2D ext = {.width = 640, .height = 480};
   const u32 family_indices[] = {family_index};
 
   VkSwapchainCreateInfoKHR swapchain_create_info = {
@@ -377,9 +383,8 @@ void geyser_init_vk(RenderState *state) {
   if (vkCreateSwapchainKHR(state->device, &swapchain_create_info, NULL,
                            &state->swapchain) != VK_SUCCESS) {
     printf("[Geyser Error] Failed to create swapchain!\n");
+    abort();
   }
-
-  printf("Created swapchain\n");
 }
 
 void geyser_destroy_vk(RenderState *state) {

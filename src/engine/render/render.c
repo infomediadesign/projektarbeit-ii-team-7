@@ -39,7 +39,7 @@ int render_perform(void *args) {
   }
 
   geyser_destroy_vk(render_state);
-  render_state_free(render_state);
+  render_state_destroy(render_state);
   glfwTerminate();
 
   return 0;

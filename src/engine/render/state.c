@@ -6,7 +6,7 @@ RenderState *render_state_init() {
   return state;
 }
 
-void render_state_free(RenderState *state) {
+void render_state_destroy(RenderState *state) {
   glfwDestroyWindow(state->window);
   free(state->instance);
   free(state);

@@ -10,6 +10,13 @@
 #include <glad/vulkan.h>
 #include <GLFW/glfw3.h>
 
+/**
+ * @brief Stores all the information necessary for rendering.
+ * 
+ * This includes all vulkan structures, the GLFW window, as well
+ * as other misc. variables.
+ * 
+ */
 typedef struct RenderState {
   GLFWwindow *window;
 
@@ -27,9 +34,42 @@ typedef struct RenderState {
   VkCommandPool command_pool;
 } RenderState;
 
+/**
+ * @brief Initializes a new render state.
+ * 
+ * @return RenderState* Pointer to a newly allocated RenderState.
+ */
 RenderState *render_state_init();
-void render_state_free(RenderState *state);
+
+/**
+ * @brief Frees up render state resources.
+ * 
+ * @param state State to be destroyed.
+ */
+void render_state_destroy(RenderState *state);
+
+/**
+ * @brief Spawns a new GLFW window.
+ * 
+ * ```
+ * render_state_create_window(render_state);
+ * do_something_with_window(render_state->window);
+ * ```
+ * 
+ * @param state Render state to spawn the window in.
+ */
 void render_state_create_window(RenderState *state);
+
+/**
+ * @brief Determines if the window should close or not.
+ * 
+ * Please note that this only accounts for user clicking the
+ * close button in the corner of the window and doesn't actually
+ * have any idea about the state of the rest of things.
+ * 
+ * @param state Render state to check.
+ * @return u8 Whether or not the window should close.
+ */
 u8 render_state_should_close(RenderState *state);
 
 #endif
