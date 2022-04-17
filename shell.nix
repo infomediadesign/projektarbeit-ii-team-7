@@ -9,7 +9,7 @@ in pkgs.mkShell {
     pkgs.gdb
     pkgs.clang
     pkgs.cmake
-    pkgs.gcc
+    pkgs.gcc11
     pkgs.vulkan-loader
     pkgs.vulkan-tools
     pkgs.vulkan-validation-layers

@@ -7,6 +7,7 @@
 #include "../platform.h"
 #include "../state/state.h"
 #include "../util.h"
+#include <glad/vulkan.h>
 #include <GLFW/glfw3.h>
 
 typedef struct RenderState {
