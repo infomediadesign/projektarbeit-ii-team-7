@@ -3,6 +3,9 @@
 RenderState *render_state_init() {
   RenderState *state = (RenderState *)malloc(sizeof(RenderState));
 
+  state->current_frame = 0;
+  state->current_swapchain_image = 0;
+
   return state;
 }
 

@@ -10,6 +10,7 @@ GameState *game_default_state() {
   state->tickrate = 64U;
   state->width = 800U;
   state->height = 600U;
+  state->fps_max = 300U;
 
   return state;
 }

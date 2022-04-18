@@ -29,6 +29,13 @@ VkBool32 debug_callback(VkDebugReportFlagsEXT _flags,
   return VK_FALSE;
 }
 
+void geyser_success_or_message(const VkResult res, const char *message) {
+  if (res != VK_SUCCESS) {
+    printf("[Geyser Error] %s\n", message);
+    abort();
+  }
+}
+
 void geyser_init_vk(RenderState *restrict state) {
   const u8 gs_debug = 1;
   u32 ext_count = 2;
@@ -129,12 +136,10 @@ void geyser_init_vk(RenderState *restrict state) {
 
     VkDebugReportCallbackEXT debug_report_callback;
 
-    if (vkCreateDebugReportCallbackEXT(state->instance, &debug_callback_info,
-                                       NULL,
-                                       &debug_report_callback) != VK_SUCCESS) {
-      printf("[Geyser Error] Failed to create a debug callback!\n");
-      abort();
-    }
+    geyser_success_or_message(
+        vkCreateDebugReportCallbackEXT(state->instance, &debug_callback_info,
+                                       NULL, &debug_report_callback),
+        "Failed to create a debug callback!");
   }
 
   u32 device_count = 0;
@@ -163,9 +168,8 @@ void geyser_init_vk(RenderState *restrict state) {
              device_properties.apiVersion, device_properties.driverVersion,
              device_properties.vendorID, device_properties.deviceName,
              device_properties.deviceID);
+      break;
     }
-
-    break;
   }
 
   gladLoadVulkanUserPtr(state->physical_device, glad_vulkan_load_func_vk,
@@ -250,18 +254,21 @@ void geyser_init_vk(RenderState *restrict state) {
     abort();
   }
 
-  if (glfwCreateWindowSurface(state->instance, state->window, NULL,
-                              &state->surface) != VK_SUCCESS) {
-    printf("[Geyser Error] Window surface initialization failed!\n");
-    abort();
-  }
+  vkGetPhysicalDeviceMemoryProperties(state->physical_device,
+                                      &state->memory_properties);
+
+  geyser_success_or_message(glfwCreateWindowSurface(state->instance,
+                                                    state->window, NULL,
+                                                    &state->surface),
+                            "Window surface initialization failed!");
 
   VkSurfaceCapabilitiesKHR surface_capabilities;
 
   if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
           state->physical_device, state->surface, &surface_capabilities) !=
       VK_SUCCESS) {
-    printf("[Geyser] Failed to get physical device surface capabilities!\n");
+    printf(
+        "[Geyser Error] Failed to get physical device surface capabilities!\n");
     abort();
   } else if (gs_debug == 1) {
     printf("[Geyser] min %ux%u, max %ux%u, min image count is %u, max image "
@@ -276,12 +283,10 @@ void geyser_init_vk(RenderState *restrict state) {
 
   VkBool32 device_surface_supported = VK_FALSE;
 
-  if (vkGetPhysicalDeviceSurfaceSupportKHR(
-          state->physical_device, family_index, state->surface,
-          &device_surface_supported) != VK_SUCCESS) {
-    printf("[Geyser Error] Unable to determine device surface support!\n");
-    abort();
-  }
+  geyser_success_or_message(vkGetPhysicalDeviceSurfaceSupportKHR(
+                                state->physical_device, family_index,
+                                state->surface, &device_surface_supported),
+                            "Unable to determine device surface support!");
 
   if (device_surface_supported != VK_TRUE) {
     printf(
@@ -310,7 +315,7 @@ void geyser_init_vk(RenderState *restrict state) {
       break;
     }
 
-    if (preferred_present_mode != VK_PRESENT_MODE_FIFO_KHR) {
+    if (preferred_present_mode != VK_PRESENT_MODE_MAILBOX_KHR) {
       preferred_present_mode = device_present_modes[i];
     }
   }
@@ -319,7 +324,7 @@ void geyser_init_vk(RenderState *restrict state) {
   vkGetPhysicalDeviceSurfaceFormatsKHR(state->physical_device, state->surface,
                                        &format_count, NULL);
 
-  if (format_count <= 0) {
+  if (format_count < 1) {
     printf(
         "[Geyser Error] Physical device surface does not have any formats!\n");
     abort();
@@ -329,22 +334,27 @@ void geyser_init_vk(RenderState *restrict state) {
   vkGetPhysicalDeviceSurfaceFormatsKHR(state->physical_device, state->surface,
                                        &format_count, surface_formats);
 
-  VkFormat preferred_format = VK_FORMAT_UNDEFINED;
-  VkColorSpaceKHR preferred_color_space = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+  state->preferred_color_format = surface_formats[0].format;
+  VkColorSpaceKHR preferred_color_space = surface_formats[0].colorSpace;
 
-  if (format_count > 1 || surface_formats[0].format != VK_FORMAT_UNDEFINED) {
+  if (surface_formats[0].format != VK_FORMAT_UNDEFINED) {
     for (u32 i = 0; i < format_count; i++) {
-      if (surface_formats[0].format == VK_FORMAT_B8G8R8A8_UNORM) {
-        preferred_format = surface_formats[0].format;
-        preferred_color_space = surface_formats[0].colorSpace;
+      if (surface_formats[i].format == VK_FORMAT_B8G8R8A8_UNORM) {
+        state->preferred_color_format = surface_formats[i].format;
+        preferred_color_space = surface_formats[i].colorSpace;
         break;
       }
     }
   }
 
-  if (preferred_format == VK_FORMAT_UNDEFINED) {
-    preferred_format = surface_formats[0].format;
-    preferred_color_space = surface_formats[0].colorSpace;
+  switch (state->preferred_color_format) {
+  case VK_FORMAT_B8G8R8A8_UNORM:
+  case VK_FORMAT_B8G8R8A8_SRGB:
+    break;
+  default:
+    printf("[Geyser Error] Surface color format doesn't appear to be 8-bit "
+           "BGRA!\n");
+    abort();
   }
 
   const VkExtent2D ext = {.width = 640, .height = 480};
@@ -356,7 +366,7 @@ void geyser_init_vk(RenderState *restrict state) {
       .flags = 0,
       .surface = state->surface,
       .minImageCount = surface_capabilities.minImageCount + 1,
-      .imageFormat = preferred_format,
+      .imageFormat = state->preferred_color_format,
       .imageColorSpace = preferred_color_space,
       .imageExtent = ext,
       .imageArrayLayers = 1,
@@ -380,13 +390,210 @@ void geyser_init_vk(RenderState *restrict state) {
     swapchain_create_info.imageUsage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
   }
 
-  if (vkCreateSwapchainKHR(state->device, &swapchain_create_info, NULL,
-                           &state->swapchain) != VK_SUCCESS) {
-    printf("[Geyser Error] Failed to create swapchain!\n");
+  geyser_success_or_message(vkCreateSwapchainKHR(state->device,
+                                                 &swapchain_create_info, NULL,
+                                                 &state->swapchain),
+                            "Failed to create swapchain!");
+
+  u32 swapchain_image_count = 0;
+  vkGetSwapchainImagesKHR(state->device, state->swapchain,
+                          &swapchain_image_count, NULL);
+
+  if (swapchain_image_count < 1) {
+    printf("[Geyser Error] Swapchain has no images!\n");
+    abort();
+  }
+
+  VkImage swapchain_images[swapchain_image_count];
+  vkGetSwapchainImagesKHR(state->device, state->swapchain,
+                          &swapchain_image_count, swapchain_images);
+  state->swapchain_images = swapchain_images;
+
+  const VkSemaphoreCreateInfo semaphore_create_info = {
+      .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+      .pNext = NULL,
+      .flags = 0};
+
+  geyser_success_or_message(vkCreateSemaphore(state->device,
+                                              &semaphore_create_info, NULL,
+                                              &state->semaphore),
+                            "Failed to create a semaphore!");
+
+  vkAcquireNextImageKHR(state->device, state->swapchain, UINT64_MAX,
+                        state->semaphore, NULL,
+                        &state->current_swapchain_image);
+
+  const VkImageCreateInfo backbuffer_image_info = {
+      .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+      .pNext = NULL,
+      .flags = 0,
+      .imageType = VK_IMAGE_TYPE_2D,
+      .format = state->preferred_color_format,
+      .extent = {640, 480, 1},
+      .mipLevels = 1,
+      .arrayLayers = 1,
+      .samples = VK_SAMPLE_COUNT_1_BIT,
+      .tiling = VK_IMAGE_TILING_OPTIMAL,
+      .usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
+               VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
+      .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+      .queueFamilyIndexCount = 1,
+      .pQueueFamilyIndices = family_indices,
+      .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED};
+
+  geyser_success_or_message(vkCreateImage(state->device, &backbuffer_image_info,
+                                          NULL, &state->backbuffer_image),
+                            "Failed to create backbuffer image!");
+
+  VkMemoryRequirements memory_requirements;
+  vkGetImageMemoryRequirements(state->device, state->backbuffer_image,
+                               &memory_requirements);
+
+  const VkMemoryAllocateInfo backbuffer_allocation_info = {
+      .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+      .pNext = NULL,
+      .allocationSize = memory_requirements.size,
+      .memoryTypeIndex = geyser_get_memory_type_index(
+          state, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)};
+
+  VkDeviceMemory backbuffer_memory;
+
+  geyser_success_or_message(vkAllocateMemory(state->device,
+                                             &backbuffer_allocation_info, NULL,
+                                             &backbuffer_memory),
+                            "Failed to allocate backbuffer image memory!");
+
+  geyser_success_or_message(vkBindImageMemory(state->device,
+                                              state->backbuffer_image,
+                                              backbuffer_memory, 0),
+                            "Failed to bind backbuffer image memory!");
+
+  state->backbuffer = geyser_create_image_view(state, &state->backbuffer_image,
+                                               VK_IMAGE_VIEW_TYPE_2D_ARRAY);
+
+  vkGetDeviceQueue(state->device, family_index, 0, &state->queue);
+
+  const VkAttachmentDescription attachment_description[1] = {
+      {.flags = 0,
+       .format = state->preferred_color_format,
+       .samples =
+           VK_SAMPLE_COUNT_1_BIT, /* todo: query VkPhysicalDeviceLimits */
+       .loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
+       .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+       .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
+       .stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE,
+       .initialLayout = VK_IMAGE_LAYOUT_GENERAL,
+       .finalLayout = VK_IMAGE_LAYOUT_GENERAL}};
+
+  const VkAttachmentReference attachment_ref[1] = {
+      {.attachment = 0, .layout = VK_IMAGE_LAYOUT_GENERAL}};
+
+  const VkSubpassDescription subpass_description[1] = {
+      {.flags = 0,
+       .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
+       .inputAttachmentCount = 1,
+       .pInputAttachments = attachment_ref,
+       .colorAttachmentCount = 1,
+       .pColorAttachments = attachment_ref,
+       .pResolveAttachments = NULL,
+       .pDepthStencilAttachment = NULL,
+       .preserveAttachmentCount = 0,
+       .pPreserveAttachments = NULL}};
+
+  const VkRenderPassCreateInfo renderpass_info = {
+      .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+      .pNext = NULL,
+      .flags = 0,
+      .attachmentCount = 1,
+      .pAttachments = attachment_description,
+      .subpassCount = 1,
+      .pSubpasses = subpass_description};
+
+  if (vkCreateRenderPass(state->device, &renderpass_info, NULL,
+                         &state->renderpass) != VK_SUCCESS) {
+    printf("[Geyser Error] Failed to create a render pass!\n");
+    abort();
+  }
+
+  const VkImageView fb_attachments[] = {state->backbuffer};
+
+  VkFramebufferCreateInfo framebuffer_info = {
+      .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+      .pNext = NULL,
+      .flags = 0,
+      .renderPass = state->renderpass,
+      .attachmentCount = 1,
+      .pAttachments = fb_attachments,
+      .width = 640,
+      .height = 480,
+      .layers = 1};
+
+  if (vkCreateFramebuffer(state->device, &framebuffer_info, NULL,
+                          &state->framebuffer) != VK_SUCCESS) {
+    printf("[Geyser Error] Failed to create a frame buffer!\n");
     abort();
   }
 }
 
 void geyser_destroy_vk(RenderState *state) {
+  vkDestroySwapchainKHR(state->device, state->swapchain, NULL);
   vkDestroySurfaceKHR(state->instance, state->surface, NULL);
+}
+
+void geyser_fill_image_view_creation_structs(
+    RenderState *state, VkImageSubresourceRange *resource_range,
+    VkComponentMapping *mapping, VkImageViewCreateInfo *creation_info) {
+  resource_range->aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  resource_range->baseMipLevel = 0;
+  resource_range->levelCount = 1;
+  resource_range->baseArrayLayer = 0;
+  resource_range->layerCount = 1;
+
+  mapping->r = VK_COMPONENT_SWIZZLE_R;
+  mapping->g = VK_COMPONENT_SWIZZLE_G;
+  mapping->b = VK_COMPONENT_SWIZZLE_B;
+  mapping->a = VK_COMPONENT_SWIZZLE_A;
+
+  creation_info->sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+  creation_info->pNext = NULL;
+  creation_info->flags = 0;
+  creation_info->viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+  creation_info->format = state->preferred_color_format;
+  creation_info->components = *mapping;
+  creation_info->subresourceRange = *resource_range;
+}
+
+VkImageView geyser_create_image_view(RenderState *state, VkImage *image,
+                                     VkImageViewType type) {
+  VkImageView image_view;
+  VkImageSubresourceRange resource_range;
+  VkComponentMapping mapping;
+  VkImageViewCreateInfo image_view_creation_info;
+
+  geyser_fill_image_view_creation_structs(state, &resource_range, &mapping,
+                                          &image_view_creation_info);
+
+  image_view_creation_info.image = *image;
+  image_view_creation_info.viewType = type;
+
+  if (vkCreateImageView(state->device, &image_view_creation_info, NULL,
+                        &image_view) != VK_SUCCESS) {
+    printf("[Geyser Error] Unable to create image view!\n");
+    abort();
+  }
+
+  return image_view;
+}
+
+u32 geyser_get_memory_type_index(const RenderState *restrict state,
+                                 const VkMemoryPropertyFlagBits flag) {
+  for (u32 i = 0; i < state->memory_properties.memoryTypeCount; i++) {
+    if (state->memory_properties.memoryTypes[i].propertyFlags & flag) {
+      return i;
+    }
+  }
+
+  printf("[Geyser Warning] Memory type index %i does not exist!\n", flag);
+
+  return 0;
 }

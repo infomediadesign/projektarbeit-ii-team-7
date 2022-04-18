@@ -88,3 +88,50 @@ void platform_sleep(const u64 milliseconds) {
   usleep(milliseconds * 1000);
 #endif
 }
+
+void platform_usleep(const u64 microseconds) {
+#ifdef _WIN32
+  const u64 milliseconds = microseconds / 1000;
+  const u64 remainder = microseconds % 1000;
+  LARGE_INTEGER freq, curtime;
+
+  if (milliseconds > 0)
+    Sleep((DWORD)milliseconds);
+
+  QueryPerformanceFrequency(&freq);
+  QueryPerformanceCounter(&curtime);
+
+  const LARGE_INTEGER targettime =
+      curtime.QuadPart * 1000000 / freq.QuadPart + remainder;
+
+  while (curtime.QuadPart * 1000000 / freq.QuadPart < targettime)
+    QueryPerformanceCounter(&curtime);
+#else
+  usleep(microseconds);
+#endif
+}
+
+void platform_nsleep(const u64 nanoseconds) {
+#ifdef _WIN32
+  const u64 milliseconds = nanoseconds / 1000000;
+  const u64 remainder = nanoseconds % 1000000;
+  LARGE_INTEGER freq, curtime;
+
+  if (milliseconds > 0)
+    Sleep((DWORD)milliseconds);
+
+  QueryPerformanceFrequency(&freq);
+  QueryPerformanceCounter(&curtime);
+
+  const LARGE_INTEGER targettime =
+      curtime.QuadPart * 1000000000 / freq.QuadPart + remainder;
+
+  while (curtime.QuadPart * 1000000000 / freq.QuadPart < targettime)
+    QueryPerformanceCounter(&curtime);
+#else
+  const struct timespec tv = {.tv_sec = nanoseconds / 1000000000,
+                              .tv_nsec = nanoseconds % 1000000000};
+
+  nanosleep(&tv, NULL);
+#endif
+}
