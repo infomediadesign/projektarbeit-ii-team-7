@@ -1,7 +1,8 @@
 #include "render.h"
+#include "shaders/shaders.h"
 
 void glfw_error_fun(int error_code, const char *error_message) {
-  printf("[GLFW Error] %s\n", error_message);
+  printf("\033[1;31m[GLFW Error]\033[0m %s\n", error_message);
 }
 
 int render_perform(void *args) {
@@ -31,6 +32,26 @@ int render_perform(void *args) {
   render_state_create_window(render_state);
   geyser_init_vk(render_state);
 
+  const VkDescriptorSetLayoutBinding descriptor_bindings[] = {
+    {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_ALL_GRAPHICS, NULL}
+  };
+
+  const VkPushConstantRange push_constant_range[] = {
+    {VK_SHADER_STAGE_ALL_GRAPHICS, 0, 4}
+  };
+
+  GeyserPipeline *pipeline = geyser_create_pipeline(
+    render_state,
+    descriptor_bindings,
+    1,
+    push_constant_range,
+    1,
+    unlit_generic_vertex_data,
+    unlit_generic_vertex_data_size,
+    unlit_generic_frag_data,
+    unlit_generic_frag_data_size
+  );
+
   u64 delay = 1000000 / state->fps_max;
   i64 start_time, end_time;
 
@@ -53,6 +74,7 @@ int render_perform(void *args) {
       platform_usleep(delay - (end_time - start_time));
   }
 
+  free(pipeline);
   geyser_destroy_vk(render_state);
   render_state_destroy(render_state);
   glfwTerminate();

@@ -30,5 +30,11 @@ analyze:
 	find ./src -type f -name '*.c' -exec clang -Wno-unused-command-line-argument --analyze -Xanalyzer -analyzer-output=text {} \;
 	find ./src -type f -name '*.cpp' -exec clang -Wno-unused-command-line-argument --analyze -Xanalyzer -analyzer-output=text {} \;
 
+shaders:
+	find ./src/engine/render/shaders -type f -name '*.frag' -exec glslc -fshader-stage=fragment -o {}.spv {} \;
+	find ./src/engine/render/shaders -type f -name '*.vertex' -exec glslc -fshader-stage=vertex -o {}.spv {} \;
+	find ./src/engine/render/shaders -type f -name '*.spv' -exec spirv-val {} \;
+	ruby ./src/engine/render/shaders/gen_baked_shaders.rb ./src/engine/render/shaders/
+
 clean:
 	rm -rf build/

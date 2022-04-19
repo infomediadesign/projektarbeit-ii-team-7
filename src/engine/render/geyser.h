@@ -10,6 +10,20 @@
  *
  */
 #include "state.h"
+#include "../types/vector.h"
+
+typedef struct GeyserImage {
+  VkImage image;
+  VkDeviceMemory memory;
+} GeyserImage;
+
+typedef struct GeyserPipeline {
+  VkDescriptorSetLayout descriptor_set_layout;
+  VkPipelineLayout pipeline_layout;
+  VkShaderModule vertex_shader;
+  VkShaderModule fragment_shader;
+  VkPipeline pipeline;
+} GeyserPipeline;
 
 /**
  * @brief Initializes Vulkan resources.
@@ -42,7 +56,7 @@ void geyser_init_vk(RenderState *state);
  *
  * @param state Rendering state
  */
-void geyser_destroy_vk(RenderState *state);
+void geyser_destroy_vk(RenderState *restrict state);
 
 void geyser_fill_image_view_creation_structs(
     RenderState *state, VkImageSubresourceRange *resource_range,
@@ -51,5 +65,19 @@ VkImageView geyser_create_image_view(RenderState *state, VkImage *image,
                                      VkImageViewType type);
 u32 geyser_get_memory_type_index(const RenderState *restrict state,
                                  const VkMemoryPropertyFlagBits flag);
+GeyserImage *geyser_create_image(const RenderState *restrict state, const Vector2 size);
+void geyser_allocate_image_memory(const RenderState *restrict state, GeyserImage *image);
+GeyserImage *geyser_create_and_allocate_image(const RenderState *restrict state, const Vector2 size);
+GeyserPipeline *geyser_create_pipeline(
+  const RenderState *restrict state,
+  const VkDescriptorSetLayoutBinding descriptor_bindings[],
+  const u32 descriptor_bindings_size,
+  const VkPushConstantRange push_constant_ranges[],
+  const u32 push_constant_ranges_size,
+  const u8 vertex_shader_data[],
+  const u32 vertex_shader_data_size,
+  const u8 fragment_shader_data[],
+  const u32 fragment_shader_data_size
+);
 
 #endif

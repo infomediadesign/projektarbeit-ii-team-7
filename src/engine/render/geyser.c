@@ -1,6 +1,13 @@
 #include "geyser.h"
 #include <string.h>
 
+#define GEYSER_MINIMAL_VK_STRUCT_INFO(t) .sType = t,\
+.pNext = NULL
+
+#define GEYSER_BASIC_VK_STRUCT_INFO(t) .sType = t,\
+.pNext = NULL,\
+.flags = 0
+
 static GLADapiproc glad_vulkan_load_func(void *user, const char *name) {
   return glfwGetInstanceProcAddress((VkInstance)user, name);
 }
@@ -25,19 +32,18 @@ VkBool32 debug_callback(VkDebugReportFlagsEXT _flags,
                         size_t _location, i32 _message_code,
                         const char *_layer_prefix, const char *message,
                         void *_userdata) {
-  printf("[Vulkan Debug] %s\n", message);
+  printf("\033[1;32m[Vulkan Debug]\033[0m %s\n", message);
   return VK_FALSE;
 }
 
 void geyser_success_or_message(const VkResult res, const char *message) {
   if (res != VK_SUCCESS) {
-    printf("[Geyser Error] %s\n", message);
+    printf("\033[1;31m[Geyser Error]\033[0m %s\n", message);
     abort();
   }
 }
 
 void geyser_init_vk(RenderState *restrict state) {
-  const u8 gs_debug = 1;
   u32 ext_count = 2;
   u32 validation_layer_count = 0;
 
@@ -47,7 +53,7 @@ void geyser_init_vk(RenderState *restrict state) {
   const char *ext_names[3] = {"VK_KHR_surface", get_window_surface_extension()};
   const char *validation_layer_names[1] = {};
 
-  if (gs_debug == 1) {
+  if (state->debug == 1) {
     u32 layer_count = 0;
     vkEnumerateInstanceLayerProperties(&layer_count, NULL);
 
@@ -73,8 +79,7 @@ void geyser_init_vk(RenderState *restrict state) {
   }
 
   const VkApplicationInfo app_info = {
-      .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
-      .pNext = NULL,
+      GEYSER_MINIMAL_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_APPLICATION_INFO),
       .pApplicationName = "Geyser",
       .applicationVersion = 1,
       .pEngineName = "Miniflow",
@@ -83,9 +88,7 @@ void geyser_init_vk(RenderState *restrict state) {
   };
 
   const VkInstanceCreateInfo instance_info = {
-      .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-      .pNext = NULL,
-      .flags = 0,
+      GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO),
       .pApplicationInfo = &app_info,
       .enabledLayerCount = validation_layer_count,
       .ppEnabledLayerNames = validation_layer_names,
@@ -126,10 +129,9 @@ void geyser_init_vk(RenderState *restrict state) {
   /* Now that we have an instance, load all other functions */
   gladLoadVulkanUserPtr(NULL, glad_vulkan_load_func_vk, state->instance);
 
-  if (gs_debug == 1) {
+  if (state->debug == 1) {
     const VkDebugReportCallbackCreateInfoEXT debug_callback_info = {
-        .sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT,
-        .pNext = NULL,
+        GEYSER_MINIMAL_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT),
         .flags = 0xf,
         .pfnCallback = debug_callback,
         .pUserData = NULL};
@@ -155,22 +157,25 @@ void geyser_init_vk(RenderState *restrict state) {
 
   /* Simply pick the first discrete GPU as our "ideal" GPU. */
   for (u32 i = 0; i < device_count; i++) {
-    VkPhysicalDeviceProperties device_properties;
-    vkGetPhysicalDeviceProperties(physical_devices[i], &device_properties);
+    vkGetPhysicalDeviceProperties(physical_devices[i], &state->physical_device_properties);
 
     state->physical_device = physical_devices[i];
 
-    if (device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
-        gs_debug == 1) {
-      printf("[Geyser] Using a discrete GPU\n");
-      printf("API Version: %u\nDriver Version: %u\nVendor ID: %u\nDevice: %s "
-             "(ID: %u)\n",
-             device_properties.apiVersion, device_properties.driverVersion,
-             device_properties.vendorID, device_properties.deviceName,
-             device_properties.deviceID);
+    if (state->physical_device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+      if (state->debug == 1) {
+        printf("[Geyser] Using a discrete GPU\n");
+        printf("API Version: %u\nDriver Version: %u\nVendor ID: %u\nDevice: %s "
+              "(ID: %u)\n",
+              state->physical_device_properties.apiVersion, state->physical_device_properties.driverVersion,
+              state->physical_device_properties.vendorID, state->physical_device_properties.deviceName,
+              state->physical_device_properties.deviceID);
+      }
+
       break;
     }
   }
+
+  vkGetPhysicalDeviceFeatures(state->physical_device, &state->physical_device_features);
 
   gladLoadVulkanUserPtr(state->physical_device, glad_vulkan_load_func_vk,
                         state->instance);
@@ -188,29 +193,27 @@ void geyser_init_vk(RenderState *restrict state) {
   vkGetPhysicalDeviceQueueFamilyProperties(
       state->physical_device, &queue_properties_count, queue_properties);
 
-  u32 family_index = 0;
-
-  for (family_index; family_index < queue_properties_count; family_index++) {
-    if (queue_properties[family_index].queueFlags & VK_QUEUE_GRAPHICS_BIT)
+  for (state->queue_family_index = 0; state->queue_family_index < queue_properties_count; state->queue_family_index++) {
+    if (queue_properties[state->queue_family_index].queueFlags & VK_QUEUE_GRAPHICS_BIT)
       break;
   }
+
+  u32 family_indices[] = {state->queue_family_index};
+  state->queue_family_indices = family_indices;
+  state->queue_family_indices_count = 1;
 
   const float queue_prios[] = {1.0f, 1.0f};
 
   const VkDeviceQueueCreateInfo queue_create_info = {
-      .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-      .pNext = NULL,
-      .flags = 0,
-      .queueFamilyIndex = family_index,
+      GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO),
+      .queueFamilyIndex = state->queue_family_index,
       .queueCount = 1,
       .pQueuePriorities = queue_prios};
 
   const char *device_ext_names[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
   const VkDeviceCreateInfo device_create_info = {
-      .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-      .pNext = NULL,
-      .flags = 0,
+      GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO),
       .queueCreateInfoCount = 1,
       .pQueueCreateInfos = &queue_create_info,
       .enabledLayerCount = 0,
@@ -255,7 +258,7 @@ void geyser_init_vk(RenderState *restrict state) {
   }
 
   vkGetPhysicalDeviceMemoryProperties(state->physical_device,
-                                      &state->memory_properties);
+                                      &state->physical_device_memory_properties);
 
   geyser_success_or_message(glfwCreateWindowSurface(state->instance,
                                                     state->window, NULL,
@@ -270,7 +273,7 @@ void geyser_init_vk(RenderState *restrict state) {
     printf(
         "[Geyser Error] Failed to get physical device surface capabilities!\n");
     abort();
-  } else if (gs_debug == 1) {
+  } else if (state->debug == 1) {
     printf("[Geyser] min %ux%u, max %ux%u, min image count is %u, max image "
            "count is %u\n",
            surface_capabilities.minImageExtent.width,
@@ -284,7 +287,7 @@ void geyser_init_vk(RenderState *restrict state) {
   VkBool32 device_surface_supported = VK_FALSE;
 
   geyser_success_or_message(vkGetPhysicalDeviceSurfaceSupportKHR(
-                                state->physical_device, family_index,
+                                state->physical_device, state->queue_family_index,
                                 state->surface, &device_surface_supported),
                             "Unable to determine device surface support!");
 
@@ -357,13 +360,10 @@ void geyser_init_vk(RenderState *restrict state) {
     abort();
   }
 
-  const VkExtent2D ext = {.width = 640, .height = 480};
-  const u32 family_indices[] = {family_index};
+  const VkExtent2D ext = {.width = state->window_width, .height = state->window_height};
 
   VkSwapchainCreateInfoKHR swapchain_create_info = {
-      .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
-      .pNext = NULL,
-      .flags = 0,
+      GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR),
       .surface = state->surface,
       .minImageCount = surface_capabilities.minImageCount + 1,
       .imageFormat = state->preferred_color_format,
@@ -372,8 +372,8 @@ void geyser_init_vk(RenderState *restrict state) {
       .imageArrayLayers = 1,
       .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
       .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
-      .queueFamilyIndexCount = 1,
-      .pQueueFamilyIndices = family_indices,
+      .queueFamilyIndexCount = state->queue_family_indices_count,
+      .pQueueFamilyIndices = state->queue_family_indices,
       .preTransform = surface_capabilities.currentTransform,
       .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
       .presentMode = preferred_present_mode,
@@ -410,9 +410,8 @@ void geyser_init_vk(RenderState *restrict state) {
   state->swapchain_images = swapchain_images;
 
   const VkSemaphoreCreateInfo semaphore_create_info = {
-      .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
-      .pNext = NULL,
-      .flags = 0};
+    GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO)
+  };
 
   geyser_success_or_message(vkCreateSemaphore(state->device,
                                               &semaphore_create_info, NULL,
@@ -424,12 +423,10 @@ void geyser_init_vk(RenderState *restrict state) {
                         &state->current_swapchain_image);
 
   const VkImageCreateInfo backbuffer_image_info = {
-      .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
-      .pNext = NULL,
-      .flags = 0,
+      GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO),
       .imageType = VK_IMAGE_TYPE_2D,
       .format = state->preferred_color_format,
-      .extent = {640, 480, 1},
+      .extent = {state->window_width, state->window_height, 1},
       .mipLevels = 1,
       .arrayLayers = 1,
       .samples = VK_SAMPLE_COUNT_1_BIT,
@@ -437,8 +434,8 @@ void geyser_init_vk(RenderState *restrict state) {
       .usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
                VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
       .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-      .queueFamilyIndexCount = 1,
-      .pQueueFamilyIndices = family_indices,
+      .queueFamilyIndexCount = state->queue_family_indices_count,
+      .pQueueFamilyIndices = state->queue_family_indices,
       .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED};
 
   geyser_success_or_message(vkCreateImage(state->device, &backbuffer_image_info,
@@ -450,8 +447,7 @@ void geyser_init_vk(RenderState *restrict state) {
                                &memory_requirements);
 
   const VkMemoryAllocateInfo backbuffer_allocation_info = {
-      .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-      .pNext = NULL,
+      GEYSER_MINIMAL_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO),
       .allocationSize = memory_requirements.size,
       .memoryTypeIndex = geyser_get_memory_type_index(
           state, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)};
@@ -471,7 +467,7 @@ void geyser_init_vk(RenderState *restrict state) {
   state->backbuffer = geyser_create_image_view(state, &state->backbuffer_image,
                                                VK_IMAGE_VIEW_TYPE_2D_ARRAY);
 
-  vkGetDeviceQueue(state->device, family_index, 0, &state->queue);
+  vkGetDeviceQueue(state->device, state->queue_family_index, 0, &state->queue);
 
   const VkAttachmentDescription attachment_description[1] = {
       {.flags = 0,
@@ -501,9 +497,7 @@ void geyser_init_vk(RenderState *restrict state) {
        .pPreserveAttachments = NULL}};
 
   const VkRenderPassCreateInfo renderpass_info = {
-      .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
-      .pNext = NULL,
-      .flags = 0,
+      GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO),
       .attachmentCount = 1,
       .pAttachments = attachment_description,
       .subpassCount = 1,
@@ -518,14 +512,12 @@ void geyser_init_vk(RenderState *restrict state) {
   const VkImageView fb_attachments[] = {state->backbuffer};
 
   VkFramebufferCreateInfo framebuffer_info = {
-      .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-      .pNext = NULL,
-      .flags = 0,
+      GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO),
       .renderPass = state->renderpass,
       .attachmentCount = 1,
       .pAttachments = fb_attachments,
-      .width = 640,
-      .height = 480,
+      .width = state->window_width,
+      .height = state->window_height,
       .layers = 1};
 
   if (vkCreateFramebuffer(state->device, &framebuffer_info, NULL,
@@ -533,6 +525,44 @@ void geyser_init_vk(RenderState *restrict state) {
     printf("[Geyser Error] Failed to create a frame buffer!\n");
     abort();
   }
+
+  const VkBufferCreateInfo general_buffer_info = {
+    GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO),
+    .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+    .size = util_mebibytes(256),
+    .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+    .queueFamilyIndexCount = state->queue_family_indices_count,
+    .pQueueFamilyIndices = state->queue_family_indices
+  };
+
+  vkCreateBuffer(state->device, &general_buffer_info, NULL, &state->buffer);
+
+  const VkMemoryAllocateInfo general_memory_allocation_info = {
+    GEYSER_MINIMAL_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO),
+    .allocationSize = util_mebibytes(256),
+    .memoryTypeIndex = geyser_get_memory_type_index(state, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
+  };
+
+  vkAllocateMemory(state->device, &general_memory_allocation_info, NULL, &state->memory);
+  vkBindBufferMemory(state->device, state->buffer, state->memory, 0);
+
+  VkCommandPoolCreateInfo command_pool_info = {
+    GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO),
+    .queueFamilyIndex = state->queue_family_index
+  };
+
+  vkCreateCommandPool(state->device, &command_pool_info, NULL, &state->command_pool);
+
+  VkCommandBufferAllocateInfo command_buffer_info = {
+    GEYSER_MINIMAL_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO),
+    .commandPool = state->command_pool,
+    .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+    .commandBufferCount = 1
+  };
+
+  VkCommandBuffer command_buffers[] = {state->command_buffer};
+
+  vkAllocateCommandBuffers(state->device, &command_buffer_info, command_buffers);
 }
 
 void geyser_destroy_vk(RenderState *state) {
@@ -587,8 +617,8 @@ VkImageView geyser_create_image_view(RenderState *state, VkImage *image,
 
 u32 geyser_get_memory_type_index(const RenderState *restrict state,
                                  const VkMemoryPropertyFlagBits flag) {
-  for (u32 i = 0; i < state->memory_properties.memoryTypeCount; i++) {
-    if (state->memory_properties.memoryTypes[i].propertyFlags & flag) {
+  for (u32 i = 0; i < state->physical_device_memory_properties.memoryTypeCount; i++) {
+    if (state->physical_device_memory_properties.memoryTypes[i].propertyFlags & flag) {
       return i;
     }
   }
@@ -596,4 +626,220 @@ u32 geyser_get_memory_type_index(const RenderState *restrict state,
   printf("[Geyser Warning] Memory type index %i does not exist!\n", flag);
 
   return 0;
+}
+
+GeyserImage *geyser_create_image(const RenderState *restrict state, const Vector2 size) {
+  GeyserImage *gi = (GeyserImage *)malloc(sizeof(GeyserImage));
+
+  const VkImageCreateInfo image_creation_info = {
+      GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO),
+      .imageType = VK_IMAGE_TYPE_2D,
+      .format = state->preferred_color_format,
+      .extent = {.width = size.x, .height = size.y, .depth = 1},
+      .mipLevels = 1,
+      .arrayLayers = 1,
+      .samples = VK_SAMPLE_COUNT_1_BIT,
+      .tiling = VK_IMAGE_TILING_OPTIMAL,
+      .usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
+               VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
+      .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+      .queueFamilyIndexCount = state->queue_family_indices_count,
+      .pQueueFamilyIndices = state->queue_family_indices,
+      .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED};
+
+  geyser_success_or_message(vkCreateImage(state->device, &image_creation_info,
+                                          NULL, &gi->image),
+                            "Failed to create image!");
+
+  return gi;
+}
+
+void geyser_allocate_image_memory(const RenderState *restrict state, GeyserImage *image) {
+  VkMemoryRequirements memory_requirements;
+  vkGetImageMemoryRequirements(state->device, image->image,
+                               &memory_requirements);
+
+  const VkMemoryAllocateInfo image_allocation_info = {
+      GEYSER_MINIMAL_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO),
+      .allocationSize = memory_requirements.size,
+      .memoryTypeIndex = geyser_get_memory_type_index(
+          state, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)};
+
+  geyser_success_or_message(vkAllocateMemory(state->device,
+                                             &image_allocation_info, NULL,
+                                             &image->memory),
+                            "Failed to allocate image memory!");
+
+  geyser_success_or_message(vkBindImageMemory(state->device,
+                                              image->image,
+                                              image->memory, 0),
+                            "Failed to bind image memory!");
+}
+
+GeyserImage *geyser_create_and_allocate_image(const RenderState *restrict state, const Vector2 size) {
+  GeyserImage *image = geyser_create_image(state, size);
+
+  geyser_allocate_image_memory(state, image);
+
+  return image;
+}
+
+GeyserPipeline *geyser_create_pipeline(
+  const RenderState *restrict state,
+  const VkDescriptorSetLayoutBinding descriptor_bindings[],
+  const u32 descriptor_bindings_size,
+  const VkPushConstantRange push_constant_ranges[],
+  const u32 push_constant_ranges_size,
+  const u8 vertex_shader_data[],
+  const u32 vertex_shader_data_size,
+  const u8 fragment_shader_data[],
+  const u32 fragment_shader_data_size
+) {
+  GeyserPipeline *pipe = (GeyserPipeline *)malloc(sizeof(GeyserPipeline));
+
+  const VkDescriptorSetLayoutCreateInfo descriptor_layout_create_info = {
+    GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO),
+    .bindingCount = descriptor_bindings_size,
+    .pBindings = descriptor_bindings
+  };
+
+  vkCreateDescriptorSetLayout(state->device, &descriptor_layout_create_info, NULL, &pipe->descriptor_set_layout);
+
+  const VkDescriptorSetLayout layouts[] = {pipe->descriptor_set_layout};
+
+  const VkPipelineLayoutCreateInfo pipeline_layout_info = {
+    GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO),
+    .setLayoutCount = 1,
+    .pSetLayouts = layouts,
+    .pushConstantRangeCount = push_constant_ranges_size,
+    .pPushConstantRanges = push_constant_ranges
+  };
+
+  vkCreatePipelineLayout(state->device, &pipeline_layout_info, NULL, &pipe->pipeline_layout);
+
+  const VkShaderModuleCreateInfo vertex_shader_info = {
+    GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO),
+    .codeSize = vertex_shader_data_size,
+    .pCode = (u32 *)vertex_shader_data
+  };
+
+  const VkShaderModuleCreateInfo fragment_shader_info = {
+    GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO),
+    .codeSize = fragment_shader_data_size,
+    .pCode = (u32 *)fragment_shader_data
+  };
+
+  vkCreateShaderModule(state->device, &vertex_shader_info, NULL, &pipe->vertex_shader);
+  vkCreateShaderModule(state->device, &fragment_shader_info, NULL, &pipe->fragment_shader);
+
+  const VkPipelineShaderStageCreateInfo pipeline_shader_stages[] = {
+    {
+      GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO),
+      .stage = VK_SHADER_STAGE_VERTEX_BIT,
+      .module = pipe->vertex_shader,
+      .pName = "main",
+      .pSpecializationInfo = NULL
+    },
+    {
+      GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO),
+      .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+      .module = pipe->fragment_shader,
+      .pName = "main",
+      .pSpecializationInfo = NULL
+    },
+  };
+
+  const VkPipelineVertexInputStateCreateInfo vertex_input_info = {
+    GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO),
+    .vertexBindingDescriptionCount = 0,
+    .pVertexBindingDescriptions = NULL,
+    .vertexAttributeDescriptionCount = 0,
+    .pVertexAttributeDescriptions = NULL
+  };
+
+  const VkPipelineInputAssemblyStateCreateInfo input_assembly_info = {
+    GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO),
+    .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+    .primitiveRestartEnable = VK_FALSE
+  };
+
+  const VkPipelineRasterizationStateCreateInfo raster_state_info = {
+    GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO),
+    .depthClampEnable = VK_FALSE,
+    .rasterizerDiscardEnable = VK_FALSE,
+    .polygonMode = VK_POLYGON_MODE_FILL,
+    .cullMode = VK_CULL_MODE_BACK_BIT,
+    .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+    .depthBiasEnable = VK_FALSE,
+    .depthBiasConstantFactor = 1.0f,
+    .depthBiasClamp = 1.0f,
+    .depthBiasSlopeFactor = 1.0f,
+    .lineWidth = 1.0f
+  };
+
+  const VkPipelineMultisampleStateCreateInfo multisample_state_info = {
+    GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO),
+    .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
+    .sampleShadingEnable = VK_FALSE,
+    .minSampleShading = 0.0f,
+    .pSampleMask = NULL,
+    .alphaToCoverageEnable = VK_TRUE,
+    .alphaToOneEnable = VK_FALSE
+  };
+
+  const VkPipelineDepthStencilStateCreateInfo stencil_state_info = {
+    GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO),
+    .depthTestEnable = VK_TRUE,
+    .depthWriteEnable = VK_TRUE,
+    .depthCompareOp = VK_COMPARE_OP_LESS,
+    .depthBoundsTestEnable = VK_FALSE,
+    .stencilTestEnable = VK_FALSE
+  };
+
+  const VkPipelineColorBlendStateCreateInfo color_blend_state_info = {
+    GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO),
+    .logicOpEnable = VK_TRUE,
+    .logicOp = VK_LOGIC_OP_AND,
+    .attachmentCount = 0,
+    .pAttachments = NULL,
+    .blendConstants = {1.0f, 1.0f, 1.0f, 1.0f}
+  };
+
+  const VkDynamicState dynamic_states[] = {
+    VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR
+  };
+
+  const VkPipelineDynamicStateCreateInfo dynamic_states_info = {
+    GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO),
+    .dynamicStateCount = 2,
+    .pDynamicStates = dynamic_states
+  };
+
+  const VkGraphicsPipelineCreateInfo pipeline_info[] = {
+    {
+      GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO),
+      .layout = pipe->pipeline_layout,
+      .renderPass = state->renderpass,
+      .stageCount = 2,
+      .pStages = pipeline_shader_stages,
+      .pVertexInputState = &vertex_input_info,
+      .pInputAssemblyState = &input_assembly_info,
+      .pTessellationState = NULL,
+      .pViewportState = NULL,
+      .pRasterizationState = &raster_state_info,
+      .pMultisampleState = &multisample_state_info,
+      .pDepthStencilState = &stencil_state_info,
+      .pColorBlendState = &color_blend_state_info,
+      .pDynamicState = &dynamic_states_info,
+      .subpass = 0,
+      .basePipelineHandle = NULL,
+      .basePipelineIndex = 0
+    }
+  };
+
+  VkPipeline pipelines[] = {pipe->pipeline};
+
+  vkCreateGraphicsPipelines(state->device, NULL, 1, pipeline_info, NULL, pipelines);
+
+  return pipe;
 }

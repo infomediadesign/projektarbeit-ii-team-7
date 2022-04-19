@@ -20,29 +20,42 @@
 typedef struct RenderState {
   GLFWwindow *window;
 
-  /* Persistent stuff */
+  u8 debug;
+  u32 window_width;
+  u32 window_height;
+
+  /* Persistent Vulkan-related stuff */
   VkInstance instance;
   VkPhysicalDevice physical_device;
   VkPhysicalDeviceFeatures physical_device_features;
+  VkPhysicalDeviceProperties physical_device_properties;
+  VkPhysicalDeviceMemoryProperties physical_device_memory_properties;
   VkDevice device;
   VkQueue queue;
   VkSurfaceKHR surface;
   VkSwapchainKHR swapchain;
+  VkImage *swapchain_images;
   VkImage backbuffer_image;
   VkImageView backbuffer;
   VkRenderPass renderpass;
   VkFramebuffer framebuffer;
-  VkPipeline pipeline;
-  VkCommandBuffer command_buffer;
+  VkPipeline pipeline2d;
+  VkPipeline pipeline3d;
+  VkDescriptorPool descriptor_pool;
+  VkDescriptorSet descriptor_set;
   VkCommandPool command_pool;
-  VkPhysicalDeviceMemoryProperties memory_properties;
+  VkCommandBuffer command_buffer;
+  VkBuffer buffer;
+  VkDeviceMemory memory;
 
-  /* Variable stuff */
-  VkImage *swapchain_images;
+  /* Variable Vulkan-related stuff */
   VkSemaphore semaphore;
   u32 current_swapchain_image;
   u64 current_frame;
   VkFormat preferred_color_format;
+  u32 queue_family_index;
+  u32 *queue_family_indices;
+  u32 queue_family_indices_count;
 } RenderState;
 
 /**

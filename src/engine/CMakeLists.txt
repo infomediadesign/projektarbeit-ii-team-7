@@ -15,7 +15,6 @@ find_package(Threads REQUIRED)
 set(engine_source_files
   platform.c
   platform.h
-  util.c
   util.h
   crc64.c
   crc64.h

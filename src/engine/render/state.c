@@ -5,6 +5,9 @@ RenderState *render_state_init() {
 
   state->current_frame = 0;
   state->current_swapchain_image = 0;
+  state->window_width = 640;
+  state->window_height = 480;
+  state->debug = 1;
 
   return state;
 }

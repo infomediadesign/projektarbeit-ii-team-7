@@ -13,6 +13,8 @@ in pkgs.mkShell {
     pkgs.vulkan-loader
     pkgs.vulkan-tools
     pkgs.vulkan-validation-layers
+    pkgs.spirv-tools
+    pkgs.shaderc
     pkgs.wayland
     pkgs.wayland-protocols
     pkgs.libxkbcommon

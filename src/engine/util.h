@@ -2,6 +2,7 @@
 #define __ENGINE_UTIL_H
 
 #include "state/state.h"
+#include "types.h"
 
 /**
  * @brief Data to be sent to logic threads.
@@ -20,4 +21,29 @@ typedef struct ThreadData {
     printf("[Debug] ");                                                        \
     printf(args);                                                              \
   }
+
+inline u64 util_kibibytes(const u64 kb) {
+  return kb * 1024;
+}
+
+inline u64 util_mebibytes(const u64 mb) {
+  return mb * 1024 * 1024;
+}
+
+inline u64 util_gibibytes(const u64 gb) {
+  return gb * 1024 * 1024 * 1024;
+}
+
+inline u64 util_kbytes(const u64 kb) {
+  return kb * 1000;
+}
+
+inline u64 util_mbytes(const u64 mb) {
+  return mb * 1000000;
+}
+
+inline u64 util_gbytes(const u64 gb) {
+  return gb * 1000000000;
+}
+
 #endif
