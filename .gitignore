@@ -1,4 +1,5 @@
 .vscode
+.vs
 CMakeFiles
 build
 CMakeCache.txt

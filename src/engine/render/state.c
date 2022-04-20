@@ -14,6 +14,7 @@ RenderState *render_state_init() {
 
 void render_state_destroy(RenderState *state) {
   glfwDestroyWindow(state->window);
+  free(state->swapchain_images);
   free(state->instance);
   free(state);
 }

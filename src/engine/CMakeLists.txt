@@ -22,8 +22,10 @@ set(engine_source_files
 )
 
 set(GLAD_DIR ../../vendor/glad)
+set(VULKAN_HEADERS_DIR ../../vendor/vulkan-headers)
 
 include_directories("${GLAD_DIR}/include")
+include_directories("${VULKAN_HEADERS_DIR}/include")
 
 add_subdirectory(../../vendor/glfw ../../build/glfw)
 add_subdirectory(state ../../build/state)
