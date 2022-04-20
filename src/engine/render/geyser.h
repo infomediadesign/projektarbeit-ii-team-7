@@ -25,6 +25,13 @@ typedef struct GeyserPipeline {
   VkPipeline pipeline;
 } GeyserPipeline;
 
+typedef struct GeyserVertexInputDescription {
+  u32 input_binding_description_size;
+  u32 input_attribute_description_size;
+  VkVertexInputBindingDescription input_binding_descriptions[16];
+  VkVertexInputAttributeDescription input_attribute_descriptions[16];
+} GeyserVertexInputDescription;
+
 /**
  * @brief Initializes Vulkan resources.
  *
@@ -77,7 +84,14 @@ GeyserPipeline *geyser_create_pipeline(
   const u8 vertex_shader_data[],
   const u32 vertex_shader_data_size,
   const u8 fragment_shader_data[],
-  const u32 fragment_shader_data_size
+  const u32 fragment_shader_data_size,
+  GeyserVertexInputDescription *vertex_input_description
 );
+GeyserVertexInputDescription geyser_create_vertex_input_description();
+void geyser_add_vertex_input_binding(GeyserVertexInputDescription *description, const u32 binding, const u32 stride, const VkVertexInputRate input_rate);
+void geyser_add_vertex_input_attribute(GeyserVertexInputDescription *description, const u32 location, const u32 binding, VkFormat format, const u32 offset);
+
+void geyser_cmd_begin_command_buffer(RenderState *restrict state);
+void geyser_cmd_end_command_buffer(RenderState *restrict state);
 
 #endif

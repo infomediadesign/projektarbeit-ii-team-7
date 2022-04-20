@@ -2,7 +2,7 @@
 #ifndef __ENGINE_RENDER_SHADERS_H
 #define __ENGINE_RENDER_SHADERS_H
 
-/* Generated from unlit_generic_frag.spv */
+/* Generated from ./src/engine/render/shaders/unlit_generic.frag.spv */
 const u8 unlit_generic_frag_data[420] = {
     3,   2,  35,   7,   0,   0,   1,   0,  10,   0,
    13,   0,  13,   0,   0,   0,   0,   0,   0,   0,
@@ -49,8 +49,8 @@ const u8 unlit_generic_frag_data[420] = {
 };
 const u32 unlit_generic_frag_data_size = 420U;
 
-/* Generated from unlit_generic_vertex.spv */
-const u8 unlit_generic_vertex_data[780] = {
+/* Generated from ./src/engine/render/shaders/unlit_generic.vert.spv */
+const u8 unlit_generic_vert_data[780] = {
     3,   2,  35,   7,   0,   0,   1,   0,  10,   0,
    13,   0,  21,   0,   0,   0,   0,   0,   0,   0,
    17,   0,   2,   0,   1,   0,   0,   0,  11,   0,
@@ -130,6 +130,6 @@ const u8 unlit_generic_vertex_data[780] = {
    62,   0,   3,   0,  20,   0,   0,   0,  18,   0,
     0,   0, 253,   0,   1,   0,  56,   0,   1,   0,
 };
-const u32 unlit_generic_vertex_data_size = 780U;
+const u32 unlit_generic_vert_data_size = 780U;
 
 #endif

@@ -547,7 +547,8 @@ void geyser_init_vk(RenderState *restrict state) {
   vkBindBufferMemory(state->device, state->buffer, state->memory, 0);
 
   VkCommandPoolCreateInfo command_pool_info = {
-    GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO),
+    GEYSER_MINIMAL_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO),
+    .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
     .queueFamilyIndex = state->queue_family_index
   };
 
@@ -693,7 +694,8 @@ GeyserPipeline *geyser_create_pipeline(
   const u8 vertex_shader_data[],
   const u32 vertex_shader_data_size,
   const u8 fragment_shader_data[],
-  const u32 fragment_shader_data_size
+  const u32 fragment_shader_data_size,
+  GeyserVertexInputDescription *vertex_input_description
 ) {
   GeyserPipeline *pipe = (GeyserPipeline *)malloc(sizeof(GeyserPipeline));
 
@@ -751,10 +753,10 @@ GeyserPipeline *geyser_create_pipeline(
 
   const VkPipelineVertexInputStateCreateInfo vertex_input_info = {
     GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO),
-    .vertexBindingDescriptionCount = 0,
-    .pVertexBindingDescriptions = NULL,
-    .vertexAttributeDescriptionCount = 0,
-    .pVertexAttributeDescriptions = NULL
+    .vertexBindingDescriptionCount = vertex_input_description->input_binding_description_size,
+    .pVertexBindingDescriptions = vertex_input_description->input_binding_descriptions,
+    .vertexAttributeDescriptionCount = vertex_input_description->input_attribute_description_size,
+    .pVertexAttributeDescriptions = vertex_input_description->input_attribute_descriptions
   };
 
   const VkPipelineInputAssemblyStateCreateInfo input_assembly_info = {
@@ -771,9 +773,9 @@ GeyserPipeline *geyser_create_pipeline(
     .cullMode = VK_CULL_MODE_BACK_BIT,
     .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
     .depthBiasEnable = VK_FALSE,
-    .depthBiasConstantFactor = 1.0f,
-    .depthBiasClamp = 1.0f,
-    .depthBiasSlopeFactor = 1.0f,
+    .depthBiasConstantFactor = 0.0f,
+    .depthBiasClamp = 0.0f,
+    .depthBiasSlopeFactor = 0.0f,
     .lineWidth = 1.0f
   };
 
@@ -796,12 +798,33 @@ GeyserPipeline *geyser_create_pipeline(
     .stencilTestEnable = VK_FALSE
   };
 
+  const VkPipelineViewportStateCreateInfo viewport_state_info = {
+    GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO),
+    .viewportCount = 1,
+    .pViewports = NULL,
+    .scissorCount = 1,
+    .pScissors = NULL
+  };
+
+  VkPipelineColorBlendAttachmentState color_attachment_states[] = {
+    {
+      .blendEnable = VK_TRUE,
+      .srcColorBlendFactor = VK_BLEND_FACTOR_SRC_COLOR,
+      .dstColorBlendFactor = VK_BLEND_FACTOR_DST_COLOR,
+      .colorBlendOp = VK_BLEND_OP_ADD,
+      .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR,
+      .dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR,
+      .alphaBlendOp = VK_BLEND_OP_ADD,
+      .colorWriteMask = 0xF
+    }
+  };
+
   const VkPipelineColorBlendStateCreateInfo color_blend_state_info = {
     GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO),
-    .logicOpEnable = VK_TRUE,
+    .logicOpEnable = VK_FALSE,
     .logicOp = VK_LOGIC_OP_AND,
-    .attachmentCount = 0,
-    .pAttachments = NULL,
+    .attachmentCount = 1,
+    .pAttachments = color_attachment_states,
     .blendConstants = {1.0f, 1.0f, 1.0f, 1.0f}
   };
 
@@ -825,7 +848,7 @@ GeyserPipeline *geyser_create_pipeline(
       .pVertexInputState = &vertex_input_info,
       .pInputAssemblyState = &input_assembly_info,
       .pTessellationState = NULL,
-      .pViewportState = NULL,
+      .pViewportState = &viewport_state_info,
       .pRasterizationState = &raster_state_info,
       .pMultisampleState = &multisample_state_info,
       .pDepthStencilState = &stencil_state_info,
@@ -842,4 +865,36 @@ GeyserPipeline *geyser_create_pipeline(
   vkCreateGraphicsPipelines(state->device, NULL, 1, pipeline_info, NULL, pipelines);
 
   return pipe;
+}
+
+GeyserVertexInputDescription geyser_create_vertex_input_description() {
+  GeyserVertexInputDescription description;
+
+  description.input_binding_description_size = 0U;
+  description.input_attribute_description_size = 0U;
+
+  return description;
+}
+
+void geyser_add_vertex_input_binding(GeyserVertexInputDescription *description, const u32 binding, const u32 stride, const VkVertexInputRate input_rate) {
+  const VkVertexInputBindingDescription binding_description = {binding, stride, input_rate};
+  description->input_binding_descriptions[description->input_binding_description_size++] = binding_description;
+};
+
+void geyser_add_vertex_input_attribute(GeyserVertexInputDescription *description, const u32 location, const u32 binding, VkFormat format, const u32 offset) {
+  const VkVertexInputAttributeDescription attribute_description = {location, binding, format, offset};
+  description->input_attribute_descriptions[description->input_attribute_description_size++] = attribute_description;
+}
+
+void geyser_cmd_begin_command_buffer(RenderState *restrict state) {
+  VkCommandBufferBeginInfo cmd_begin_info = {
+    GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO),
+    .pInheritanceInfo = NULL
+  };
+
+  vkBeginCommandBuffer(state->command_buffer, &cmd_begin_info);
+}
+
+void geyser_cmd_end_command_buffer(RenderState *restrict state) {
+  vkEndCommandBuffer(state->command_buffer);
 }

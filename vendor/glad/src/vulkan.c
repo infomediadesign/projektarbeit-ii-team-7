@@ -50,6 +50,8 @@ static void _pre_call_vulkan_callback_default(const char *name, GLADapiproc apip
     (void) name;
     (void) apiproc;
     (void) len_args;
+    if (strcmp(name, "vkGetInstanceProcAddr") != 0)
+        printf("\033[1;35m >\033[0m %s\n", name);
 }
 static void _post_call_vulkan_callback_default(void *ret, const char *name, GLADapiproc apiproc, int len_args, ...) {
     (void) ret;

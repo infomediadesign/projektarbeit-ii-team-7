@@ -40,17 +40,24 @@ int render_perform(void *args) {
     {VK_SHADER_STAGE_ALL_GRAPHICS, 0, 4}
   };
 
-  GeyserPipeline *pipeline = geyser_create_pipeline(
+  GeyserVertexInputDescription vertex_input_description = geyser_create_vertex_input_description(1U);
+  geyser_add_vertex_input_binding(&vertex_input_description, 0, 16, VK_VERTEX_INPUT_RATE_VERTEX);
+  geyser_add_vertex_input_attribute(&vertex_input_description, 0, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 0);
+
+  GeyserPipeline *pipeline3d = geyser_create_pipeline(
     render_state,
     descriptor_bindings,
     1,
     push_constant_range,
     1,
-    unlit_generic_vertex_data,
-    unlit_generic_vertex_data_size,
+    unlit_generic_vert_data,
+    unlit_generic_vert_data_size,
     unlit_generic_frag_data,
-    unlit_generic_frag_data_size
+    unlit_generic_frag_data_size,
+    &vertex_input_description
   );
+
+  render_state->pipeline3d = pipeline3d->pipeline;
 
   u64 delay = 1000000 / state->fps_max;
   i64 start_time, end_time;
@@ -64,7 +71,8 @@ int render_perform(void *args) {
 
     start_time = platform_time_usec();
 
-    /* render here */
+    geyser_cmd_begin_command_buffer(render_state);
+    geyser_cmd_end_command_buffer(render_state);
 
     render_state->current_frame++;
 
@@ -74,7 +82,7 @@ int render_perform(void *args) {
       platform_usleep(delay - (end_time - start_time));
   }
 
-  free(pipeline);
+  free(pipeline3d);
   geyser_destroy_vk(render_state);
   render_state_destroy(render_state);
   glfwTerminate();
