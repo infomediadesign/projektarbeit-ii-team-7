@@ -23,6 +23,7 @@ typedef struct RenderState {
   u8 debug;
   u32 window_width;
   u32 window_height;
+  Time init_time;
 
   /* Persistent Vulkan-related stuff */
   VkInstance instance;
@@ -44,18 +45,21 @@ typedef struct RenderState {
   VkDescriptorPool descriptor_pool;
   VkDescriptorSet descriptor_set;
   VkCommandPool command_pool;
-  VkCommandBuffer command_buffer;
   VkBuffer buffer;
   VkDeviceMemory memory;
 
   /* Variable Vulkan-related stuff */
-  VkSemaphore semaphore;
+  VkCommandBuffer command_buffer;
+  VkSemaphore image_semaphore;
+  VkSemaphore draw_semaphore;
   u32 current_swapchain_image;
   u64 current_frame;
   VkFormat preferred_color_format;
   u32 queue_family_index;
   u32 *queue_family_indices;
   u32 queue_family_indices_count;
+  VkImageMemoryBarrier pre_draw_barrier;
+  VkImageMemoryBarrier pre_present_barrier;
 } RenderState;
 
 /**

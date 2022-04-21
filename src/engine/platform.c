@@ -101,8 +101,7 @@ void platform_usleep(const u64 microseconds) {
   QueryPerformanceFrequency(&freq);
   QueryPerformanceCounter(&curtime);
 
-  const u64 targettime =
-      curtime.QuadPart * 1000000 / freq.QuadPart + remainder;
+  const u64 targettime = curtime.QuadPart * 1000000 / freq.QuadPart + remainder;
 
   while (curtime.QuadPart * 1000000 / freq.QuadPart < targettime)
     QueryPerformanceCounter(&curtime);
