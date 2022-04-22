@@ -1,6 +1,13 @@
 #ifndef __ENGINE_TYPES_H
 #define __ENGINE_TYPES_H
 
+#ifdef __cplusplus
+#define RESTRICTED_PTR *
+extern "C" {
+#else
+#define RESTRICTED_PTR *restrict
+#endif
+
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -20,5 +27,9 @@ typedef double f64;
 
 /* Callbacks */
 typedef int (*ThreadCallback)(void *);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

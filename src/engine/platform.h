@@ -1,6 +1,10 @@
 #ifndef __ENGINE_PLATFORM_H
 #define __ENGINE_PLATFORM_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "types.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -181,5 +185,9 @@ void platform_usleep(const u64 microseconds);
  * @param nanoseconds The amount of nanoseconds to wait.
  */
 void platform_nsleep(const u64 nanoseconds);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

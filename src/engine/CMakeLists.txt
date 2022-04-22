@@ -1,4 +1,6 @@
-project(miniflow_bin C)
+cmake_minimum_required(VERSION 3.16)
+
+project(miniflow_bin C CXX)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_BUILD_TYPE Debug)
@@ -24,6 +26,7 @@ set(engine_source_files
 set(GLAD_DIR ../../vendor/glad)
 set(VULKAN_HEADERS_DIR ../../vendor/vulkan-headers)
 
+include_directories("..")
 include_directories("${GLAD_DIR}/include")
 include_directories("${VULKAN_HEADERS_DIR}/include")
 
@@ -32,10 +35,16 @@ add_subdirectory(state ../../build/state)
 add_subdirectory(input ../../build/input)
 add_subdirectory(logic ../../build/logic)
 add_subdirectory(render ../../build/render)
+add_subdirectory(../game ../../build/game)
+
+set_target_properties(game PROPERTIES
+  IMPORTED_LOCATION ../../build/game/libgame.a
+  IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+)
 
 add_executable(miniflow ${engine_source_files})
 
-target_link_libraries(miniflow PRIVATE logic input state render glfw Threads::Threads)
+target_link_libraries(miniflow PRIVATE logic input state render glfw Threads::Threads game)
 
 if (APPLE)
   target_link_libraries(${PROJECT_NAME} "-framework IOKit")

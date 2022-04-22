@@ -5,6 +5,8 @@
 #include "state/state.h"
 #include "util.h"
 
+#include <game/game.h>
+
 int dummy(void *_args) {
   while (1) {
     platform_sleep(100);
@@ -33,6 +35,8 @@ int main(const int argc, const char *argv[]) {
   if (game_is_debug(state)) {
     DEBUG_MESSAGE("Debug mode is enabled.\n");
   }
+
+  game_initialize(state);
 
   /* Spawn threads */
   ThreadData thread_data = {.state = state, .lock = &state_lock};

@@ -1,25 +1,26 @@
-let
-  pkgs = import <nixos> {};
-in pkgs.mkShell {
+
+with import <nixpkgs> {};
+stdenv.mkDerivation {
+  name = "env";
   nativeBuildInputs = [
-    pkgs.vulkan-headers
+    (enableDebugging vulkan-headers)
+    cmake
   ];
 
   buildInputs = [
-    pkgs.gdb
-    pkgs.clang
-    pkgs.cmake
-    pkgs.gcc11
-    pkgs.vulkan-loader
-    pkgs.vulkan-tools
-    pkgs.vulkan-validation-layers
-    pkgs.spirv-tools
-    pkgs.shaderc
-    pkgs.wayland
-    pkgs.wayland-protocols
-    pkgs.libxkbcommon
-    pkgs.extra-cmake-modules
-    pkgs.libGL
+    gdb
+    clang
+    gcc11
+    (enableDebugging vulkan-loader)
+    vulkan-tools
+    (enableDebugging vulkan-validation-layers)
+    spirv-tools
+    shaderc
+    wayland
+    wayland-protocols
+    libxkbcommon
+    extra-cmake-modules
+    libGL
   ];
 
   shellHook = ''

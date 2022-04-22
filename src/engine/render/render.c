@@ -69,11 +69,15 @@ int render_perform(void *args) {
 
     start_time = platform_time_usec();
 
+    glfwPollEvents();
+
     geyser_cmd_begin_draw(render_state);
     geyser_cmd_begin_renderpass(render_state);
 
     geyser_cmd_end_renderpass(render_state);
     geyser_cmd_end_draw(render_state);
+
+    vkDeviceWaitIdle(render_state->device);
 
     render_state->current_frame++;
 

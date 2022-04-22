@@ -1,6 +1,10 @@
 #ifndef __ENGINE_UTIL_H
 #define __ENGINE_UTIL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "state/state.h"
 #include "types.h"
 
@@ -35,5 +39,9 @@ static inline u64 util_kbytes(const u64 kb) { return kb * 1000; }
 static inline u64 util_mbytes(const u64 mb) { return mb * 1000000; }
 
 static inline u64 util_gbytes(const u64 gb) { return gb * 1000000000; }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -1,6 +1,10 @@
 #ifndef __ENGINE_RENDER_GEYSER_H
 #define __ENGINE_RENDER_GEYSER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Geyser is a minimalistic Vulkan middleware library.
  *
@@ -10,7 +14,7 @@
  *
  */
 #include "../types/vector.h"
-#include "state.h"
+#include "render_state.h"
 
 typedef struct GeyserImage {
   VkImage image;
@@ -101,5 +105,9 @@ void geyser_create_semaphore(const RenderState *restrict state,
                              VkSemaphore *semaphore);
 void geyser_cmd_begin_renderpass(const RenderState *restrict state);
 void geyser_cmd_end_renderpass(const RenderState *restrict state);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

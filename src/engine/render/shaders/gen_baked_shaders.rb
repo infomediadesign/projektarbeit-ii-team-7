@@ -27,11 +27,22 @@ contents = <<-TEXT
 #ifndef __ENGINE_RENDER_SHADERS_H
 #define __ENGINE_RENDER_SHADERS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 TEXT
 
 contents += make_shader_fragment "#{path}unlit_generic.frag"
 contents += "\n\n"
 contents += make_shader_fragment "#{path}unlit_generic.vert"
-contents += "\n\n#endif\n"
+contents += "\n\n"
+contents += <<-TEXT
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+TEXT
 
 File.write("#{path}shaders.h", contents)

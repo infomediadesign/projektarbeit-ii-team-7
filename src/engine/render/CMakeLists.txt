@@ -1,11 +1,11 @@
 set(engine_render_source_files
-  state.c
+  render_state.c
   geyser.c
   render.c
 )
 
 set(engine_render_header_files
-  state.h
+  render_state.h
   geyser.h
   render.h
 )

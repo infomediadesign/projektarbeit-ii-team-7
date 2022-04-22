@@ -1,5 +1,9 @@
-#ifndef __ENGINE_RENDER_STATE_H
-#define __ENGINE_RENDER_STATE_H
+#ifndef __ENGINE_RENDER_RENDER_STATE_H
+#define __ENGINE_RENDER_RENDER_STATE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define GLFW_INCLUDE_NONE
 #define GLFW_INCLUDE_VULKAN
@@ -99,5 +103,9 @@ void render_state_create_window(RenderState *state);
  * @return u8 Whether or not the window should close.
  */
 u8 render_state_should_close(RenderState *state);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
