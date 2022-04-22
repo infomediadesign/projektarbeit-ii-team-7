@@ -5,6 +5,8 @@
 #include "state/state.h"
 #include "util.h"
 
+#include <game/game.h>
+
 int dummy(void *_args) {
   while (1) {
     platform_sleep(100);
@@ -22,7 +24,7 @@ int dummy(void *_args) {
  * @return int Exit status code
  */
 int main(const int argc, const char *argv[]) {
-  printf("Starting...\n");
+  printf("[Miniflow] Starting...\n");
 
   /* Initialize game state and a mutex lock */
   GameState *const state = game_default_state();
@@ -31,8 +33,10 @@ int main(const int argc, const char *argv[]) {
   input_parse_args(state, argc, argv);
 
   if (game_is_debug(state)) {
-    printf("Debug mode is enabled.\n");
+    DEBUG_MESSAGE("Debug mode is enabled.\n");
   }
+
+  game_initialize(state);
 
   /* Spawn threads */
   ThreadData thread_data = {.state = state, .lock = &state_lock};
@@ -41,7 +45,7 @@ int main(const int argc, const char *argv[]) {
   const thread_t logic_thread = platform_spawn(logic_perform, &thread_data);
   const thread_t input_thread = platform_spawn(dummy, &thread_data);
 
-  printf("Entering main loop...\n");
+  DEBUG_MESSAGE("Entering main loop...\n");
 
   /* Wait until game state tells us we should exit */
   while (!game_should_exit(state)) {

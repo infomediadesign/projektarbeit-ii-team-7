@@ -1,6 +1,10 @@
 #ifndef __ENGINE_PLATFORM_H
 #define __ENGINE_PLATFORM_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "types.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,64 +14,6 @@
 /* More like WIN32_JUST_EVIL_AND_MEAN */
 #define WIN32_LEAN_AND_MEAN
 
-/*
- * WINDOWS YOU PIECE OF SCRAP
- * REEEEEEEEEEEEEEEEEEEEEEEE
- *
- * Also THANK YOU RAYLIB FOR NOT NAMESPACING
- * I AM SO GLAD YOU DID THAT
- * YAY
- * WOW
- * 10/10 DESIGN CHOICE
- * I AM SO HAPPY I WET MY PANTS
- * ...
- * Why couldn't we just use Vulkan directly for this project?
- */
-#define NOGDICAPMASKS     /* CC_*, LC_*, PC_*, CP_*, TC_*, RC_ */
-#define NOVIRTUALKEYCODES /* VK_* */
-#define NOWINMESSAGES     /* WM_*, EM_*, LB_*, CB_* */
-#define NOWINSTYLES       /* WS_*, CS_*, ES_*, LBS_*, SBS_*, CBS_* */
-#define NOSYSMETRICS      /* SM_* */
-#define NOMENUS           /* MF_* */
-#define NOICONS           /* IDI_* */
-#define NOKEYSTATES       /* MK_* */
-#define NOSYSCOMMANDS     /* SC_* */
-#define NORASTEROPS       /* Binary and Tertiary raster ops */
-#define NOSHOWWINDOW      /* SW_* */
-#define OEMRESOURCE       /* OEM Resource values */
-#define NOATOM            /* Atom Manager routines */
-#define NOCLIPBOARD       /* Clipboard routines */
-#define NOCOLOR           /* Screen colors */
-#define NOCTLMGR          /* Control and Dialog routines */
-#define NODRAWTEXT        /* DrawText() and DT_* */
-#define NOGDI             /* All GDI defines and routines */
-#define NOKERNEL          /* All KERNEL defines and routines */
-#define NOUSER            /* All USER defines and routines */
-#define NONLS             /* All NLS defines and routines */
-#define NOMB              /* MB_* and MessageBox() */
-#define NOMEMMGR          /* GMEM_*, LMEM_*, GHND, LHND, associated routines */
-#define NOMETAFILE        /* typedef METAFILEPICT */
-#define NOMINMAX          /* Macros min(a,b) and max(a,b) */
-#define NOMSG             /* typedef MSG and associated routines */
-#define NOOPENFILE        /* OpenFile(), OemToAnsi, AnsiToOem, and OF_* */
-#define NOSCROLL          /* SB_* and scrolling routines */
-#define NOSERVICE /* All Service Controller routines, SERVICE_ equates, etc.   \
-                   */
-#define NOSOUND   /* Sound driver routines */
-#define NOTEXTMETRIC     /* typedef TEXTMETRIC and associated routines */
-#define NOWH             /* SetWindowsHook and WH_* */
-#define NOWINOFFSETS     /* GWL_*, GCL_*, associated routines */
-#define NOCOMM           /* COMM driver routines */
-#define NOKANJI          /* Kanji support stuff. */
-#define NOHELP           /* Help engine interface. */
-#define NOPROFILER       /* Profiler interface. */
-#define NODEFERWINDOWPOS /* DeferWindowPos routines */
-#define NOMCX            /* Modem Configuration Extensions */
-
-/* Type required before windows.h inclusion  */
-typedef struct tagMSG *LPMSG;
-
-/* WENDOVS DOT HAYCH */
 #include <Windows.h>
 #include <profileapi.h>
 
@@ -201,5 +147,47 @@ void platform_join(thread_t thread);
  * @param milliseconds The amount of milliseconds to wait.
  */
 void platform_sleep(const u64 milliseconds);
+
+/**
+ * @brief Does nothing for a specified amount of microseconds.
+ *
+ * On Windows, it would sleep for as many milliseconds as it can, and
+ * busy-wait the rest of the time, as WinAPI provides no way for
+ * sub-millisecond sleep.
+ *
+ * ```
+ * printf("Hi!");
+ *
+ * platform_usleep(1000000);
+ *
+ * printf("Hi one second later!");
+ * ```
+ *
+ * @param microseconds The amount of microseconds to wait.
+ */
+void platform_usleep(const u64 microseconds);
+
+/**
+ * @brief Does nothing for a specified amount of nanoseconds.
+ *
+ * On Windows, it would sleep for as many milliseconds as it can, and
+ * busy-wait the rest of the time, as WinAPI provides no way for
+ * sub-millisecond sleep.
+ *
+ * ```
+ * printf("Hi!");
+ *
+ * platform_nsleep(1000000000);
+ *
+ * printf("Hi one second later!");
+ * ```
+ *
+ * @param nanoseconds The amount of nanoseconds to wait.
+ */
+void platform_nsleep(const u64 nanoseconds);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

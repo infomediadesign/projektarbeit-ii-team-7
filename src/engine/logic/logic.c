@@ -1,10 +1,13 @@
 #include "logic.h"
 
+#include <game/game.h>
+
 int logic_perform(void *args) {
   ThreadData *const td = (ThreadData *)args;
   GameState *const state = (GameState *)td->state;
+  mutex_t *const lock = (mutex_t *)td->lock;
 
-  const i64 delay = 1000 / state->tickrate;
+  const i64 delay = 1000000 / state->tickrate;
   i64 start_time, end_time;
 
   while (!game_should_exit(state)) {
@@ -16,13 +19,17 @@ int logic_perform(void *args) {
       continue;
     }
 
+    game_tick(state, lock);
+
+    if (state->tick % 16 == 0)
+      game_lazy_tick(state, lock);
+
     state->tick++;
 
     end_time = platform_time_usec();
 
-    if ((end_time - start_time) < delay * 1000) {
-      platform_sleep(delay - (end_time - start_time) / 1000);
-    }
+    if ((end_time - start_time) < delay)
+      platform_usleep(delay - (end_time - start_time));
   }
 
   return 0;

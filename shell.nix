@@ -1,14 +1,29 @@
-let
-  pkgs = import <nixos> {};
-in pkgs.mkShell {
+
+with import <nixpkgs> {};
+stdenv.mkDerivation {
+  name = "env";
+  nativeBuildInputs = [
+    (enableDebugging vulkan-headers)
+    cmake
+  ];
+
   buildInputs = [
-    pkgs.clang
-    pkgs.cmake
-    pkgs.gcc
-    pkgs.raylib
+    gdb
+    clang
+    gcc11
+    (enableDebugging vulkan-loader)
+    vulkan-tools
+    (enableDebugging vulkan-validation-layers)
+    spirv-tools
+    shaderc
+    wayland
+    wayland-protocols
+    libxkbcommon
+    extra-cmake-modules
+    libGL
   ];
 
   shellHook = ''
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(nix eval --raw nixos.raylib)/lib
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(nix eval --raw nixos.libGL)/lib:$(nix eval --raw nixos.vulkan-loader)/lib:$(nix eval --raw nixos.libxkbcommon)/lib:$(nix eval --raw nixos.wayland)/lib
   '';
 }

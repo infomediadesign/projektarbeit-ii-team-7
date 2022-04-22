@@ -1,6 +1,10 @@
 #ifndef __ENGINE_STATE_STATE_H
 #define __ENGINE_STATE_STATE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "../platform.h"
 #include "../types.h"
 
@@ -70,7 +74,7 @@ GameState *game_default_state();
  * @param state Current game state
  * @param flag The flag to add
  */
-void game_add_flag(GameState *restrict state, const u32 flag);
+void game_add_flag(GameState RESTRICTED_PTR state, const u32 flag);
 
 /**
  * @brief Checks whether game state is paused or not.
@@ -85,7 +89,7 @@ void game_add_flag(GameState *restrict state, const u32 flag);
  * @param state Current game state
  * @return u8 Whether or not the game is paused
  */
-u8 game_is_paused(const GameState *restrict state);
+u8 game_is_paused(const GameState RESTRICTED_PTR state);
 
 /**
  * @brief Checks whether the game is in debug mode.
@@ -99,7 +103,7 @@ u8 game_is_paused(const GameState *restrict state);
  * @param state Current game state
  * @return u8 Whether or not the game is in debug mode
  */
-u8 game_is_debug(const GameState *restrict state);
+u8 game_is_debug(const GameState RESTRICTED_PTR state);
 
 /**
  * @brief Checks whether or not the game should exit.
@@ -121,7 +125,7 @@ u8 game_is_debug(const GameState *restrict state);
  * @param state Current game state
  * @return u8 Whether or not the game should exit.
  */
-u8 game_should_exit(const GameState *restrict state);
+u8 game_should_exit(const GameState RESTRICTED_PTR state);
 
 /**
  * @brief Whether or not is the game fullscreen.
@@ -135,6 +139,10 @@ u8 game_should_exit(const GameState *restrict state);
  * @param state Current game state
  * @return u8 Whether or not the game is fullscreen.
  */
-u8 game_is_fullscreen(const GameState *restrict state);
+u8 game_is_fullscreen(const GameState RESTRICTED_PTR state);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
