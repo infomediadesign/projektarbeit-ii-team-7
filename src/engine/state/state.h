@@ -24,6 +24,7 @@ typedef struct GameState {
   u32 fps_max;
   u32 width;
   u32 height;
+  char *preferred_platform;
 } GameState;
 
 /**

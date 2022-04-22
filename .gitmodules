@@ -1,7 +1,7 @@
 [submodule "vendor/glfw"]
 	path = vendor/glfw
 	url = https://github.com/glfw/glfw
-	branch = 3.3-stable
+	branch = master
 [submodule "vendor/vulkan-headers"]
 	path = vendor/vulkan-headers
 	url = https://github.com/KhronosGroup/Vulkan-Headers

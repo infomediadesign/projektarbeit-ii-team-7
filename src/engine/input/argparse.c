@@ -15,6 +15,10 @@ void input_parse_args(GameState *const state, const int argc,
       i++;
     } else if (strcmp(argv[i], "-debug") == 0) {
       game_add_flag(state, GS_DEBUG);
+    } else if (strcmp(argv[i], "-platform") == 0 && i + 1 < argc) {
+#ifndef _WIN32
+      state->preferred_platform = argv[i + 1];
+#endif
     }
   }
 }

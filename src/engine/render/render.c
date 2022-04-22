@@ -5,12 +5,38 @@ void glfw_error_fun(int error_code, const char *error_message) {
   printf("\033[1;31m[GLFW Error]\033[0m %s\n", error_message);
 }
 
+inline const char *platform_name(i32 platform) {
+  switch (platform) {
+  case GLFW_PLATFORM_WAYLAND:
+    return "Wayland";
+    break;
+  case GLFW_PLATFORM_X11:
+    return "X11";
+    break;
+  case GLFW_PLATFORM_COCOA:
+    return "Cocoa";
+    break;
+  case GLFW_PLATFORM_WIN32:
+    return "Win32";
+    break;
+  default:
+    return "Unknown";
+  }
+}
+
 int render_perform(void *args) {
   ThreadData *const td = (ThreadData *)args;
   GameState *const state = (GameState *)td->state;
   RenderState *const render_state = render_state_init();
 
   glfwSetErrorCallback(glfw_error_fun);
+
+#ifndef _WIN32
+  if (strcmp(state->preferred_platform, "x11") == 0)
+    glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+  else
+    glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
+#endif
 
   if (!glfwInit()) {
     game_add_flag(state, GS_EXIT);
@@ -28,6 +54,8 @@ int render_perform(void *args) {
 
     return 1;
   }
+
+  printf("[GLFW] Selected platform: %s\n", platform_name(glfwGetPlatform()));
 
   render_state_create_window(render_state);
   geyser_init_vk(render_state);

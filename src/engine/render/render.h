@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+#include <string.h>
 #include "../platform.h"
 #include "../state/state.h"
 #include "../util.h"
