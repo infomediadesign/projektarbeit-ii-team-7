@@ -1,9 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
 
-if (NOT WIN32)
-  set(CMAKE_C++_COMPILER /nix/store/8wk22c5p7igqr7s9nmlnfrraq2lj2313-gcc-wrapper-10.3.0/bin/g++)
-endif()
-
 enable_language(CXX)
 
 set(CMAKE_CXX_STANDARD 11)

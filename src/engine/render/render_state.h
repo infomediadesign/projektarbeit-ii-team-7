@@ -8,11 +8,13 @@ extern "C" {
 #define GLFW_INCLUDE_NONE
 #define GLFW_INCLUDE_VULKAN
 
+// clang-format off
 #include "../platform.h"
 #include "../state/state.h"
 #include "../util.h"
 #include <glad/vulkan.h>
 #include <GLFW/glfw3.h>
+// clang-format on
 
 /**
  * @brief Stores all the information necessary for rendering.
@@ -64,6 +66,7 @@ typedef struct RenderState {
   u32 queue_family_indices_count;
   VkImageMemoryBarrier pre_draw_barrier;
   VkImageMemoryBarrier pre_present_barrier;
+  VkImageMemoryBarrier clear_barrier;
 } RenderState;
 
 /**

@@ -1,15 +1,17 @@
 #include "geyser.h"
 #include <string.h>
 
-#define GEYSER_MINIMAL_VK_STRUCT_INFO(t) .sType = t, .pNext = NULL
-
-#define GEYSER_BASIC_VK_STRUCT_INFO(t) .sType = t, .pNext = NULL, .flags = 0
-
 /* This pretty much remains the same all the time */
-const VkSemaphoreCreateInfo semaphore_create_info = {
+static const VkSemaphoreCreateInfo semaphore_create_info = {
     .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
     .pNext = NULL,
     .flags = 0};
+
+static const VkClearColorValue clear_color_value = {
+    .float32 = {0.0f, 0.0f, 0.0f, 1.0f}};
+
+static const VkImageSubresourceRange image_subresource_clear_range = {
+    VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
 
 static GLADapiproc glad_vulkan_load_func(void *user, const char *name) {
   return glfwGetInstanceProcAddress((VkInstance)user, name);
@@ -24,7 +26,7 @@ VkBool32 debug_callback(VkDebugReportFlagsEXT _flags,
                         size_t _location, i32 _message_code,
                         const char *_layer_prefix, const char *message,
                         void *_userdata) {
-  // printf("\033[1;32m[Vulkan Debug]\033[0m %s\n", message);
+  printf("\033[1;32m[Vulkan Debug]\033[0m %s\n", message);
   return VK_FALSE;
 }
 
@@ -578,12 +580,23 @@ void geyser_init_vk(RenderState *restrict state) {
   vkAllocateCommandBuffers(state->device, &command_buffer_info,
                            &state->command_buffer);
 
-  VkImageMemoryBarrier pre_draw_barrier = {
+  VkImageMemoryBarrier clear_barrier = {
       .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
       .pNext = NULL,
       .srcAccessMask = 0,
       .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
       .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+      .newLayout = VK_IMAGE_LAYOUT_GENERAL,
+      .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+      .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+      .subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1}};
+
+  VkImageMemoryBarrier pre_draw_barrier = {
+      .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+      .pNext = NULL,
+      .srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+      .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+      .oldLayout = VK_IMAGE_LAYOUT_GENERAL,
       .newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
       .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
       .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
@@ -600,6 +613,7 @@ void geyser_init_vk(RenderState *restrict state) {
       .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
       .subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1}};
 
+  state->clear_barrier = clear_barrier;
   state->pre_draw_barrier = pre_draw_barrier;
   state->pre_present_barrier = pre_present_barrier;
 }
@@ -949,13 +963,28 @@ void geyser_cmd_begin_draw(RenderState *restrict state) {
 
   vkBeginCommandBuffer(state->command_buffer, &cmd_begin_info);
 
+  state->clear_barrier.image =
+      state->swapchain_images[state->current_swapchain_image];
+
+  vkCmdPipelineBarrier(state->command_buffer,
+                       VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                       VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT |
+                           VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                       0, 0, NULL, 0, NULL, 1, &state->clear_barrier);
+
+  vkCmdClearColorImage(state->command_buffer,
+                       state->swapchain_images[state->current_swapchain_image],
+                       VK_IMAGE_LAYOUT_GENERAL, &clear_color_value, 1,
+                       &image_subresource_clear_range);
+
   state->pre_draw_barrier.image =
       state->swapchain_images[state->current_swapchain_image];
 
   vkCmdPipelineBarrier(state->command_buffer,
                        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-                       VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, NULL, 0,
-                       NULL, 1, &state->pre_draw_barrier);
+                       VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT |
+                           VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                       0, 0, NULL, 0, NULL, 1, &state->pre_draw_barrier);
 }
 
 void geyser_cmd_end_draw(RenderState *restrict state) {
@@ -964,14 +993,16 @@ void geyser_cmd_end_draw(RenderState *restrict state) {
 
   vkCmdPipelineBarrier(state->command_buffer,
                        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-                       VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, NULL, 0,
-                       NULL, 1, &state->pre_present_barrier);
+                       VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT |
+                           VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                       0, 0, NULL, 0, NULL, 1, &state->pre_present_barrier);
 
   vkEndCommandBuffer(state->command_buffer);
 
   const VkFence no_fence = VK_NULL_HANDLE;
   const VkPipelineStageFlags pipe_stage_flags =
-      VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+      VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT |
+      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
   const VkSubmitInfo submit_info = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
                                     .pNext = NULL,
                                     .waitSemaphoreCount = 1,
@@ -1016,7 +1047,7 @@ void geyser_cmd_end_draw(RenderState *restrict state) {
 
 void geyser_cmd_begin_renderpass(const RenderState *restrict state) {
   const VkClearValue clear_values[2] = {
-      [0] = {.color.float32 = {0.0f, 0.0f, 0.0f, 1.0f}},
+      [0] = {.color = clear_color_value},
       [1] = {.depthStencil = {1.0f, 0}},
   };
 

@@ -5,7 +5,7 @@
 #include "../types.h"
 #include <string.h>
 
-void input_parse_args(GameState *const state, const int argc,
+void input_parse_args(GameState *const state, const i32 argc,
                       const char *argv[]);
 
 #endif

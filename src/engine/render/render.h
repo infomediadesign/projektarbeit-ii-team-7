@@ -5,12 +5,13 @@
 extern "C" {
 #endif
 
-#include <string.h>
 #include "../platform.h"
 #include "../state/state.h"
 #include "../util.h"
 #include "geyser.h"
 #include "render_state.h"
+#include "renderable.h"
+#include <string.h>
 
 /**
  * @brief Manages the game window and performs rendering.

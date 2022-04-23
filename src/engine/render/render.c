@@ -29,6 +29,9 @@ int render_perform(void *args) {
   GameState *const state = (GameState *)td->state;
   RenderState *const render_state = render_state_init();
 
+  if (game_is_debug(state))
+    render_state->debug = 1;
+
   glfwSetErrorCallback(glfw_error_fun);
 
 #ifndef _WIN32
@@ -69,10 +72,16 @@ int render_perform(void *args) {
 
   GeyserVertexInputDescription vertex_input_description =
       geyser_create_vertex_input_description(1U);
+
   geyser_add_vertex_input_binding(&vertex_input_description, 0, 16,
                                   VK_VERTEX_INPUT_RATE_VERTEX);
+  geyser_add_vertex_input_binding(&vertex_input_description, 1, 8,
+                                  VK_VERTEX_INPUT_RATE_VERTEX);
+
   geyser_add_vertex_input_attribute(&vertex_input_description, 0, 0,
                                     VK_FORMAT_R32G32B32A32_SFLOAT, 0);
+  geyser_add_vertex_input_attribute(&vertex_input_description, 1, 1,
+                                    VK_FORMAT_R32G32_SFLOAT, 0);
 
   GeyserPipeline *pipeline3d = geyser_create_pipeline(
       render_state, descriptor_bindings, 1, push_constant_range, 1,

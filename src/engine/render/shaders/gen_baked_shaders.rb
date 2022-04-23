@@ -27,6 +27,8 @@ contents = <<-TEXT
 #ifndef __ENGINE_RENDER_SHADERS_H
 #define __ENGINE_RENDER_SHADERS_H
 
+// clang-format off
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -41,6 +43,8 @@ contents += <<-TEXT
 #ifdef __cplusplus
 }
 #endif
+
+// clang-format on
 
 #endif
 TEXT

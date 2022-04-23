@@ -1,16 +1,16 @@
 
 with import <nixpkgs> {};
-stdenv.mkDerivation {
+gcc11Stdenv.mkDerivation {
   name = "env";
   nativeBuildInputs = [
     (enableDebugging vulkan-headers)
     cmake
+    gcc11
   ];
 
   buildInputs = [
     gdb
     clang
-    gcc11
     (enableDebugging vulkan-loader)
     vulkan-tools
     (enableDebugging vulkan-validation-layers)

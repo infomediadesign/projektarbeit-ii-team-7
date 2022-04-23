@@ -31,7 +31,7 @@ analyze:
 	find ./src -type f -name '*.cpp' -exec clang -Wno-unused-command-line-argument --analyze -Xanalyzer -analyzer-output=text {} \;
 
 shaders:
-	rm ./src/engine/render/shaders/*.spv
+	rm -f ./src/engine/render/shaders/*.spv
 	find ./src/engine/render/shaders -type f -name '*.frag' -exec glslc -fshader-stage=fragment -o {}.spv {} \;
 	find ./src/engine/render/shaders -type f -name '*.vert' -exec glslc -fshader-stage=vertex -o {}.spv {} \;
 	find ./src/engine/render/shaders -type f -name '*.spv' -exec spirv-val {} \;

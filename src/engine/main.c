@@ -7,8 +7,11 @@
 
 #include <game/game.h>
 
-int dummy(void *_args) {
-  while (1) {
+int dummy(void *args) {
+  ThreadData *const td = (ThreadData *)args;
+  GameState *const state = (GameState *)td->state;
+
+  while (!game_should_exit(state)) {
     platform_sleep(100);
   }
 

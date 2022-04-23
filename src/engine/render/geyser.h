@@ -5,6 +5,9 @@
 extern "C" {
 #endif
 
+#define GEYSER_MINIMAL_VK_STRUCT_INFO(t) .sType = t, .pNext = NULL
+#define GEYSER_BASIC_VK_STRUCT_INFO(t) .sType = t, .pNext = NULL, .flags = 0
+
 /**
  * Geyser is a minimalistic Vulkan middleware library.
  *
@@ -69,6 +72,7 @@ void geyser_init_vk(RenderState *state);
  */
 void geyser_destroy_vk(RenderState *restrict state);
 
+void geyser_success_or_message(const VkResult res, const char *message);
 void geyser_fill_image_view_creation_structs(
     RenderState *state, VkImageSubresourceRange *resource_range,
     VkComponentMapping *mapping, VkImageViewCreateInfo *creation_info);

@@ -5,3 +5,4 @@ build
 CMakeCache.txt
 CMakeOutput.log
 dist/
+**/*.spv
