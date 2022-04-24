@@ -65,6 +65,8 @@ int render_perform(void *args) {
 
   const VkDescriptorSetLayoutBinding descriptor_bindings[] = {
       {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_ALL_GRAPHICS,
+       NULL},
+      {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_ALL_GRAPHICS,
        NULL}};
 
   const VkPushConstantRange push_constant_range[] = {
@@ -84,12 +86,22 @@ int render_perform(void *args) {
                                     VK_FORMAT_R32G32_SFLOAT, 0);
 
   GeyserPipeline *pipeline3d = geyser_create_pipeline(
-      render_state, descriptor_bindings, 1, push_constant_range, 1,
+      render_state, descriptor_bindings, 2, push_constant_range, 1,
       unlit_generic_vert_data, unlit_generic_vert_data_size,
       unlit_generic_frag_data, unlit_generic_frag_data_size,
       &vertex_input_description);
 
   render_state->pipeline3d = pipeline3d->pipeline;
+
+  Renderable r = renderable_default();
+  renderable_make_rect(render_state, &r, -32, -32, 64, 64);
+  renderable_allocate_memory(render_state, &r);
+  renderable_send_memory(render_state, &r);
+
+  for (i32 i = 0; i < 6; i++) {
+    printf("[%i] = vec4(%f, %f, %f, %f)\n", i, r.vertices[i].x, r.vertices[i].y,
+           r.vertices[i].z, r.vertices[i].w);
+  }
 
   u64 delay = 1000000 / state->fps_max;
   i64 start_time, end_time;
@@ -110,6 +122,19 @@ int render_perform(void *args) {
 
     geyser_cmd_begin_draw(render_state);
     geyser_cmd_begin_renderpass(render_state);
+
+    vkCmdBindPipeline(render_state->command_buffer,
+                      VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline3d->pipeline);
+
+    geyser_cmd_set_viewport(render_state);
+
+    VkDeviceSize offsets[1] = {0};
+    vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1, &r.vertex_buffer,
+                           offsets);
+    vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1, &r.uv_buffer,
+                           offsets);
+
+    vkCmdDraw(render_state->command_buffer, 6, 1, 0, 0);
 
     geyser_cmd_end_renderpass(render_state);
     geyser_cmd_end_draw(render_state);

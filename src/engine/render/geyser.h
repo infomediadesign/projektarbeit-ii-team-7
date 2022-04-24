@@ -24,6 +24,12 @@ typedef struct GeyserImage {
   VkDeviceMemory memory;
 } GeyserImage;
 
+typedef struct GeyserImageView {
+  VkImageView view;
+  VkImage image;
+  VkDeviceMemory memory;
+} GeyserImageView;
+
 typedef struct GeyserPipeline {
   VkDescriptorSetLayout descriptor_set_layout;
   VkPipelineLayout pipeline_layout;
@@ -76,8 +82,12 @@ void geyser_success_or_message(const VkResult res, const char *message);
 void geyser_fill_image_view_creation_structs(
     RenderState *state, VkImageSubresourceRange *resource_range,
     VkComponentMapping *mapping, VkImageViewCreateInfo *creation_info);
-VkImageView geyser_create_image_view(RenderState *state, VkImage *image,
-                                     VkImageViewType type);
+GeyserImageView *geyser_create_image_view(RenderState *state,
+                                          const Vector2 size,
+                                          VkImageViewType type);
+GeyserImageView *geyser_create_image_view_from_image(RenderState *state,
+                                                     VkImage *img,
+                                                     VkImageViewType type);
 u32 geyser_get_memory_type_index(const RenderState *restrict state,
                                  const VkMemoryPropertyFlagBits flag);
 GeyserImage *geyser_create_image(const RenderState *restrict state,
@@ -109,6 +119,7 @@ void geyser_create_semaphore(const RenderState *restrict state,
                              VkSemaphore *semaphore);
 void geyser_cmd_begin_renderpass(const RenderState *restrict state);
 void geyser_cmd_end_renderpass(const RenderState *restrict state);
+void geyser_cmd_set_viewport(const RenderState *restrict state);
 
 #ifdef __cplusplus
 }

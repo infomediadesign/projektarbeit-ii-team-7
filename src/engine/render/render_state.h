@@ -16,6 +16,12 @@ extern "C" {
 #include <GLFW/glfw3.h>
 // clang-format on
 
+typedef struct BackbufferView {
+  VkImageView view;
+  VkImage image;
+  VkDeviceMemory memory;
+} BackbufferView;
+
 /**
  * @brief Stores all the information necessary for rendering.
  *
@@ -42,10 +48,10 @@ typedef struct RenderState {
   VkSurfaceKHR surface;
   VkSwapchainKHR swapchain;
   VkImage *swapchain_images;
-  VkImage backbuffer_image;
-  VkImageView backbuffer;
+  u32 swapchain_image_count;
   VkRenderPass renderpass;
-  VkFramebuffer framebuffer;
+  BackbufferView *backbuffers;
+  VkFramebuffer *framebuffers;
   VkPipeline pipeline2d;
   VkPipeline pipeline3d;
   VkDescriptorPool descriptor_pool;
@@ -66,7 +72,6 @@ typedef struct RenderState {
   u32 queue_family_indices_count;
   VkImageMemoryBarrier pre_draw_barrier;
   VkImageMemoryBarrier pre_present_barrier;
-  VkImageMemoryBarrier clear_barrier;
 } RenderState;
 
 /**

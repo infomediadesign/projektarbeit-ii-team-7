@@ -16,6 +16,10 @@ endif()
 find_package(Threads REQUIRED)
 
 set(engine_source_files
+  types/vector.c
+  types/vector.h
+  types/matrix.c
+  types/matrix.h
   platform.c
   platform.h
   util.h

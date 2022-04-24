@@ -1,3 +1,5 @@
+#include "vector.h"
+
 Vector2 vector_default2() {
   Vector2 vec = {.x = 0.0f, .y = 0.0f};
   return vec;

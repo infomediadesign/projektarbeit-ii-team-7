@@ -88,18 +88,21 @@ void renderable_send_memory(RenderState *state, Renderable *r) {
       "Failed to map UV memory!");
   memcpy(data, r->uv, sizeof(Vector2) * r->vertices_count);
   vkUnmapMemory(state->device, r->uv_memory);
+
+  vkBindBufferMemory(state->device, r->vertex_buffer, r->vertex_memory, 0);
+  vkBindBufferMemory(state->device, r->uv_buffer, r->uv_memory, 0);
 }
 
-void renderable_make_rect(Renderable *r, const f32 x, const f32 y,
-                          const f32 width, const f32 height) {
+void renderable_make_rect(const RenderState *state, Renderable *r, const f32 x,
+                          const f32 y, const f32 width, const f32 height) {
   // clang-format off
   Vector4 vertices[6] = {
-    {x, y, 0.0f, 1.0f},
-    {x, y + height, 0.0f, 1.0f},
-    {x + width, y, 0.0f, 1.0f},
-    {x + width, y, 0.0f, 1.0f},
-    {x, y + height, 0.0f, 1.0f},
-    {x + width, y + height, 0.0f, 1.0f}
+    {x / state->window_width,            y / state->window_height,           0.0f, 1.0f},
+    {x / state->window_width,           (y + height) / state->window_height, 0.0f, 1.0f},
+    {(x + width) / state->window_width,  y / state->window_height,           0.0f, 1.0f},
+    {(x + width) / state->window_width,  y / state->window_height,           0.0f, 1.0f},
+    {x / state->window_width,           (y + height) / state->window_height, 0.0f, 1.0f},
+    {(x + width) / state->window_width, (y + height) / state->window_height, 0.0f, 1.0f}
   };
 
   Vector2 uvmap[6] = {
@@ -112,7 +115,11 @@ void renderable_make_rect(Renderable *r, const f32 x, const f32 y,
   };
   // clang-format on
 
-  r->vertices = vertices;
-  r->uv = uvmap;
+  r->vertices = malloc(sizeof(Vector4) * 6);
+  r->uv = malloc(sizeof(Vector2) * 6);
+
+  memcpy(r->vertices, vertices, sizeof(Vector4) * 6);
+  memcpy(r->uv, uvmap, sizeof(Vector2) * 6);
+
   r->vertices_count = 6U;
 }
