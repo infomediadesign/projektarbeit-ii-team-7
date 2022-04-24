@@ -5,7 +5,7 @@ void glfw_error_fun(int error_code, const char *error_message) {
   printf("\033[1;31m[GLFW Error]\033[0m %s\n", error_message);
 }
 
-inline const char *platform_name(i32 platform) {
+static inline const char *platform_name(i32 platform) {
   switch (platform) {
   case GLFW_PLATFORM_WAYLAND:
     return "Wayland";

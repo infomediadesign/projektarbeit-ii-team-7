@@ -1,6 +1,6 @@
 #include "argparse.h"
 
-inline u8 arg_is_valid(const i32 i, const i32 argc, const char *argv[]) {
+static inline u8 arg_is_valid(const i32 i, const i32 argc, const char *argv[]) {
   return i + 1 < argc && argv[i + 1][0] != '-';
 }
 
