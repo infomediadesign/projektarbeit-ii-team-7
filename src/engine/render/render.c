@@ -1,6 +1,10 @@
 #include "render.h"
 #include "shaders/shaders.h"
 
+#include <game/game.h>
+
+#define MAX_RENDERABLES 2048
+
 void glfw_error_fun(int error_code, const char *error_message) {
   printf("\033[1;31m[GLFW Error]\033[0m %s\n", error_message);
 }
@@ -26,8 +30,11 @@ static inline const char *platform_name(i32 platform) {
 
 int render_perform(void *args) {
   ThreadData *const td = (ThreadData *)args;
+  mutex_t *lock = (mutex_t *)td->lock;
   GameState *const state = (GameState *)td->state;
   RenderState *const render_state = render_state_init();
+  Renderable *const renderables =
+      (Renderable *)calloc(MAX_RENDERABLES, sizeof(Renderable));
 
   if (game_is_debug(state))
     render_state->debug = 1;
@@ -93,19 +100,29 @@ int render_perform(void *args) {
 
   render_state->pipeline3d = pipeline3d->pipeline;
 
-  Renderable r = renderable_default();
-  renderable_make_rect(render_state, &r, -32, -32, 64, 64);
-  renderable_allocate_memory(render_state, &r);
-  renderable_send_memory(render_state, &r);
+  renderable_make_default(&renderables[0]);
+  renderable_make_default(&renderables[1]);
+  renderable_make_rect(render_state, &renderables[0], -32, -32, 64, 64);
+  renderable_make_rect(render_state, &renderables[1], -768, -432,
+                       render_state->window_width, 256);
+  renderable_allocate_memory(render_state, &renderables[0]);
+  renderable_allocate_memory(render_state, &renderables[1]);
+  renderable_send_memory(render_state, &renderables[0]);
+  renderable_send_memory(render_state, &renderables[1]);
+
+  renderables[0].active = GS_TRUE;
+  renderables[1].active = GS_TRUE;
 
   for (i32 i = 0; i < 6; i++) {
-    printf("[%i] = vec4(%f, %f, %f, %f)\n", i, r.vertices[i].x, r.vertices[i].y,
-           r.vertices[i].z, r.vertices[i].w);
+    printf("[%i] = vec4(%f, %f, %f, %f)\n", i, renderables[0].vertices[i].x,
+           renderables[0].vertices[i].y, renderables[0].vertices[i].z,
+           renderables[0].vertices[i].w);
   }
 
   u64 delay = 1000000 / state->fps_max;
   i64 start_time, end_time;
   u64 avg = 0;
+  const VkDeviceSize offsets[1] = {0};
 
   render_state->init_time = platform_time();
 
@@ -120,6 +137,8 @@ int render_perform(void *args) {
 
     glfwPollEvents();
 
+    game_adjust_renderables(state, lock, renderables, MAX_RENDERABLES);
+
     geyser_cmd_begin_draw(render_state);
     geyser_cmd_begin_renderpass(render_state);
 
@@ -128,13 +147,18 @@ int render_perform(void *args) {
 
     geyser_cmd_set_viewport(render_state);
 
-    VkDeviceSize offsets[1] = {0};
-    vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1, &r.vertex_buffer,
-                           offsets);
-    vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1, &r.uv_buffer,
-                           offsets);
+    for (u32 i = 0; i < MAX_RENDERABLES; i++) {
+      if (renderables[i].active == GS_TRUE &&
+          renderables[i].vertices_count > 0) {
+        vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1,
+                               &renderables[i].vertex_buffer, offsets);
+        vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1,
+                               &renderables[i].uv_buffer, offsets);
 
-    vkCmdDraw(render_state->command_buffer, 6, 1, 0, 0);
+        vkCmdDraw(render_state->command_buffer, renderables[i].vertices_count,
+                  1, 0, 0);
+      }
+    }
 
     geyser_cmd_end_renderpass(render_state);
     geyser_cmd_end_draw(render_state);
@@ -154,6 +178,11 @@ int render_perform(void *args) {
       platform_usleep(delay - (end_time - start_time));
   }
 
+  for (u32 i = 0; i < MAX_RENDERABLES; i++) {
+    renderable_free(render_state, &renderables[i]);
+  }
+
+  free(renderables);
   free(pipeline3d);
   geyser_destroy_vk(render_state);
   render_state_destroy(render_state);

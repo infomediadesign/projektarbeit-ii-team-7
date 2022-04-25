@@ -1,16 +1,30 @@
 #include "renderable.h"
 #include <string.h>
 
+// clang-format off
+static const Vector4 null_vec4 = {0.0f, 0.0f, 0.0f, 1.0f};
+static const Matrix4 null_mat4 = {
+  {1.0f, 0.0f, 0.0f, 0.0f},
+  {0.0f, 1.0f, 0.0f, 0.0f},
+  {0.0f, 0.0f, 1.0f, 0.0f},
+  {0.0f, 0.0f, 0.0f, 1.0f}
+};
+// clang-format on
+
+void renderable_make_default(Renderable *r) {
+  r->vertices = NULL;
+  r->uv = NULL;
+  r->vertices_count = 0U;
+  r->position = null_vec4;
+  r->angle = null_vec4;
+  r->transform_matrix = null_mat4;
+  r->active = GS_FALSE;
+}
+
 Renderable renderable_default() {
-  Renderable r = {.vertices = NULL,
-                  .uv = NULL,
-                  .vertices_count = 0U,
-                  .position = {0.0f, 0.0f, 0.0f, 1.0f},
-                  .angle = {0.0f, 0.0f, 0.0f, 1.0f},
-                  .transform_matrix = {{1.0f, 0.0f, 0.0f, 0.0f},
-                                       {0.0f, 1.0f, 0.0f, 0.0f},
-                                       {0.0f, 0.0f, 1.0f, 0.0f},
-                                       {0.0f, 0.0f, 0.0f, 1.0f}}};
+  Renderable r;
+
+  renderable_make_default(&r);
 
   return r;
 }
@@ -122,4 +136,9 @@ void renderable_make_rect(const RenderState *state, Renderable *r, const f32 x,
   memcpy(r->uv, uvmap, sizeof(Vector2) * 6);
 
   r->vertices_count = 6U;
+}
+
+void renderable_free(const RenderState *state, Renderable *r) {
+  vkFreeMemory(state->device, r->vertex_memory, NULL);
+  vkFreeMemory(state->device, r->uv_memory, NULL);
 }

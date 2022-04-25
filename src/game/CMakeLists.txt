@@ -12,6 +12,10 @@ set(game_source_files
 )
 
 include_directories("..")
+include_directories("${GLFW_DIR}/include")
+include_directories("${GLAD_DIR}/include")
+include_directories("${VULKAN_HEADERS_DIR}/include")
+include_directories("${STB_DIR}")
 
 add_library(game ${game_source_files})
-target_link_libraries(game PRIVATE logic input state render)
+target_link_libraries(game PRIVATE logic input state render glfw)

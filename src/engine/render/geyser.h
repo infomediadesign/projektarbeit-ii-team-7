@@ -19,6 +19,8 @@ extern "C" {
 #include "../types/vector.h"
 #include "render_state.h"
 
+typedef enum GeyserBool { GS_FALSE = 0, GS_TRUE = 1 } GeyserBool;
+
 typedef struct GeyserImage {
   VkImage image;
   VkDeviceMemory memory;
@@ -76,7 +78,7 @@ void geyser_init_vk(RenderState *state);
  *
  * @param state Rendering state
  */
-void geyser_destroy_vk(RenderState *restrict state);
+void geyser_destroy_vk(RenderState RESTRICTED_PTR state);
 
 void geyser_success_or_message(const VkResult res, const char *message);
 void geyser_fill_image_view_creation_structs(
@@ -88,16 +90,16 @@ GeyserImageView *geyser_create_image_view(RenderState *state,
 GeyserImageView *geyser_create_image_view_from_image(RenderState *state,
                                                      VkImage *img,
                                                      VkImageViewType type);
-u32 geyser_get_memory_type_index(const RenderState *restrict state,
+u32 geyser_get_memory_type_index(const RenderState RESTRICTED_PTR state,
                                  const VkMemoryPropertyFlagBits flag);
-GeyserImage *geyser_create_image(const RenderState *restrict state,
+GeyserImage *geyser_create_image(const RenderState RESTRICTED_PTR state,
                                  const Vector2 size);
-void geyser_allocate_image_memory(const RenderState *restrict state,
+void geyser_allocate_image_memory(const RenderState RESTRICTED_PTR state,
                                   GeyserImage *image);
-GeyserImage *geyser_create_and_allocate_image(const RenderState *restrict state,
+GeyserImage *geyser_create_and_allocate_image(const RenderState RESTRICTED_PTR state,
                                               const Vector2 size);
 GeyserPipeline *geyser_create_pipeline(
-    const RenderState *restrict state,
+    const RenderState RESTRICTED_PTR state,
     const VkDescriptorSetLayoutBinding descriptor_bindings[],
     const u32 descriptor_bindings_size,
     const VkPushConstantRange push_constant_ranges[],
@@ -113,13 +115,13 @@ void geyser_add_vertex_input_attribute(
     GeyserVertexInputDescription *description, const u32 location,
     const u32 binding, VkFormat format, const u32 offset);
 
-void geyser_cmd_begin_draw(RenderState *restrict state);
-void geyser_cmd_end_draw(RenderState *restrict state);
-void geyser_create_semaphore(const RenderState *restrict state,
+void geyser_cmd_begin_draw(RenderState RESTRICTED_PTR state);
+void geyser_cmd_end_draw(RenderState RESTRICTED_PTR state);
+void geyser_create_semaphore(const RenderState RESTRICTED_PTR state,
                              VkSemaphore *semaphore);
-void geyser_cmd_begin_renderpass(const RenderState *restrict state);
-void geyser_cmd_end_renderpass(const RenderState *restrict state);
-void geyser_cmd_set_viewport(const RenderState *restrict state);
+void geyser_cmd_begin_renderpass(const RenderState RESTRICTED_PTR state);
+void geyser_cmd_end_renderpass(const RenderState RESTRICTED_PTR state);
+void geyser_cmd_set_viewport(const RenderState RESTRICTED_PTR state);
 
 #ifdef __cplusplus
 }

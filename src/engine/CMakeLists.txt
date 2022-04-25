@@ -28,18 +28,21 @@ set(engine_source_files
   main.c
 )
 
+set(GLFW_DIR ../../vendor/glfw)
 set(GLAD_DIR ../../vendor/glad)
 set(VULKAN_HEADERS_DIR ../../vendor/vulkan-headers)
+set(STB_DIR ../../vendor/stb)
 
 include_directories("..")
 include_directories("${GLAD_DIR}/include")
 include_directories("${VULKAN_HEADERS_DIR}/include")
+include_directories("${STB_DIR}/")
 
 add_subdirectory(../../vendor/glfw ../../build/glfw)
+add_subdirectory(render ../../build/render)
 add_subdirectory(state ../../build/state)
 add_subdirectory(input ../../build/input)
 add_subdirectory(logic ../../build/logic)
-add_subdirectory(render ../../build/render)
 add_subdirectory(../game ../../build/game)
 
 set_target_properties(game PROPERTIES
@@ -49,7 +52,7 @@ set_target_properties(game PROPERTIES
 
 add_executable(miniflow ${engine_source_files})
 
-target_link_libraries(miniflow PRIVATE logic input state render glfw Threads::Threads game)
+target_link_libraries(miniflow PRIVATE render logic input state glfw Threads::Threads game)
 
 if (APPLE)
   target_link_libraries(${PROJECT_NAME} "-framework IOKit")
