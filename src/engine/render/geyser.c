@@ -573,6 +573,31 @@ void geyser_init_vk(RenderState *restrict state) {
 
   state->pre_draw_barrier = pre_draw_barrier;
   state->pre_present_barrier = pre_present_barrier;
+
+  memset(&state->viewport, 0, sizeof(state->viewport));
+  state->viewport.height = state->window_height;
+  state->viewport.width = state->window_width;
+  state->viewport.minDepth = 0.0f;
+  state->viewport.maxDepth = 1.0f;
+
+  memset(&state->scissor, 0, sizeof(state->scissor));
+  state->scissor.extent.width = state->window_width;
+  state->scissor.extent.height = state->window_height;
+  state->scissor.offset.x = 0;
+  state->scissor.offset.y = 0;
+
+  const VkDescriptorPoolSize descriptor_pool_size = {
+      .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+      .descriptorCount = GEYSER_MAX_TEXTURES};
+
+  const VkDescriptorPoolCreateInfo descriptor_pool_info = {
+      GEYSER_BASIC_VK_STRUCT_INFO(
+          VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO),
+      .maxSets = GEYSER_MAX_TEXTURES, .poolSizeCount = 1,
+      .pPoolSizes = &descriptor_pool_size};
+
+  vkCreateDescriptorPool(state->device, &descriptor_pool_info, NULL,
+                         &state->descriptor_pool);
 }
 
 void geyser_destroy_vk(RenderState *state) {
@@ -629,11 +654,11 @@ GeyserImageView *geyser_create_image_view(RenderState *state,
       .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED};
 
   geyser_success_or_message(vkCreateImage(state->device, &image_creation_info,
-                                          NULL, &gs_image_view->image),
+                                          NULL, &gs_image_view->base.image),
                             "Failed to create image!");
 
   VkMemoryRequirements memory_requirements;
-  vkGetImageMemoryRequirements(state->device, gs_image_view->image,
+  vkGetImageMemoryRequirements(state->device, gs_image_view->base.image,
                                &memory_requirements);
 
   const VkMemoryAllocateInfo image_allocation_info = {
@@ -644,18 +669,18 @@ GeyserImageView *geyser_create_image_view(RenderState *state,
 
   geyser_success_or_message(vkAllocateMemory(state->device,
                                              &image_allocation_info, NULL,
-                                             &gs_image_view->memory),
+                                             &gs_image_view->base.memory),
                             "Failed to allocate image memory!");
 
   geyser_success_or_message(vkBindImageMemory(state->device,
-                                              gs_image_view->image,
-                                              gs_image_view->memory, 0),
+                                              gs_image_view->base.image,
+                                              gs_image_view->base.memory, 0),
                             "Failed to bind image memory!");
 
   geyser_fill_image_view_creation_structs(state, &resource_range, &mapping,
                                           &image_view_creation_info);
 
-  image_view_creation_info.image = gs_image_view->image;
+  image_view_creation_info.image = gs_image_view->base.image;
   image_view_creation_info.viewType = type;
 
   if (vkCreateImageView(state->device, &image_view_creation_info, NULL,
@@ -676,7 +701,7 @@ GeyserImageView *geyser_create_image_view_from_image(RenderState *state,
   VkComponentMapping mapping;
   VkImageViewCreateInfo image_view_creation_info;
 
-  gs_image_view->image = *img;
+  gs_image_view->base.image = *img;
 
   geyser_fill_image_view_creation_structs(state, &resource_range, &mapping,
                                           &image_view_creation_info);
@@ -1082,19 +1107,40 @@ void geyser_cmd_end_renderpass(const RenderState *restrict state) {
 }
 
 void geyser_cmd_set_viewport(const RenderState *restrict state) {
-  VkViewport viewport;
-  memset(&viewport, 0, sizeof(viewport));
-  viewport.height = (float)state->window_height;
-  viewport.width = (float)state->window_width;
-  viewport.minDepth = (float)0.0f;
-  viewport.maxDepth = (float)1.0f;
-  vkCmdSetViewport(state->command_buffer, 0, 1, &viewport);
+  vkCmdSetViewport(state->command_buffer, 0, 1, &state->viewport);
+  vkCmdSetScissor(state->command_buffer, 0, 1, &state->scissor);
+}
 
-  VkRect2D scissor;
-  memset(&scissor, 0, sizeof(scissor));
-  scissor.extent.width = state->window_width;
-  scissor.extent.height = state->window_height;
-  scissor.offset.x = 0;
-  scissor.offset.y = 0;
-  vkCmdSetScissor(state->command_buffer, 0, 1, &scissor);
+GeyserSamplerView *geyser_create_sampler_view(RenderState *restrict state,
+                                              const Vector2 size) {
+  GeyserSamplerView *sampler_view =
+      (GeyserSamplerView *)malloc(sizeof(GeyserSamplerView));
+
+  sampler_view->base =
+      *geyser_create_image_view(state, size, VK_IMAGE_VIEW_TYPE_2D);
+
+  const VkSamplerCreateInfo sampler_info = {
+      .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+      .pNext = NULL,
+      .magFilter = VK_FILTER_NEAREST,
+      .minFilter = VK_FILTER_NEAREST,
+      .mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST,
+      .addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+      .addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+      .addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+      .mipLodBias = 0.0f,
+      .anisotropyEnable = VK_FALSE,
+      .maxAnisotropy = 1,
+      .compareOp = VK_COMPARE_OP_NEVER,
+      .minLod = 0.0f,
+      .maxLod = 0.0f,
+      .borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK,
+      .unnormalizedCoordinates = VK_FALSE,
+  };
+
+  geyser_success_or_message(vkCreateSampler(state->device, &sampler_info, NULL,
+                                            &sampler_view->sampler),
+                            "Failed to create a texture sampler!");
+
+  return sampler_view;
 }

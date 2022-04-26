@@ -12,7 +12,7 @@ extern "C" {
 typedef struct Renderable {
   Vector4 *vertices;
   Vector2 *uv;
-  GeyserImage texture;
+  GeyserSamplerView texture;
   u32 vertices_count;
   Vector4 position;
   Vector4 angle;
@@ -30,6 +30,7 @@ typedef struct Renderable {
 
 Renderable renderable_default();
 void renderable_make_default(Renderable *r);
+void renderable_load_texture(RenderState *state, Renderable *r);
 void renderable_allocate_memory(RenderState *state, Renderable *r);
 void renderable_send_memory(RenderState *state, Renderable *r);
 void renderable_make_rect(const RenderState *state, Renderable *r, const f32 x,

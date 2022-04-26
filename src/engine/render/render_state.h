@@ -17,9 +17,9 @@ extern "C" {
 // clang-format on
 
 typedef struct BackbufferView {
-  VkImageView view;
   VkImage image;
   VkDeviceMemory memory;
+  VkImageView view;
 } BackbufferView;
 
 /**
@@ -33,8 +33,8 @@ typedef struct RenderState {
   GLFWwindow *window;
 
   u8 debug;
-  u32 window_width;
-  u32 window_height;
+  f32 window_width;
+  f32 window_height;
   Time init_time;
 
   /* Persistent Vulkan-related stuff */
@@ -55,10 +55,11 @@ typedef struct RenderState {
   VkPipeline pipeline2d;
   VkPipeline pipeline3d;
   VkDescriptorPool descriptor_pool;
-  VkDescriptorSet descriptor_set;
   VkCommandPool command_pool;
   VkBuffer buffer;
   VkDeviceMemory memory;
+  VkViewport viewport;
+  VkRect2D scissor;
 
   /* Variable Vulkan-related stuff */
   VkCommandBuffer command_buffer;

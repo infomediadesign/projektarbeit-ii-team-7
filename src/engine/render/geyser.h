@@ -7,6 +7,7 @@ extern "C" {
 
 #define GEYSER_MINIMAL_VK_STRUCT_INFO(t) .sType = t, .pNext = NULL
 #define GEYSER_BASIC_VK_STRUCT_INFO(t) .sType = t, .pNext = NULL, .flags = 0
+#define GEYSER_MAX_TEXTURES 8196
 
 /**
  * Geyser is a minimalistic Vulkan middleware library.
@@ -16,6 +17,7 @@ extern "C" {
  * used with some adaptation.
  *
  */
+#include "../input/asset.h"
 #include "../types/vector.h"
 #include "render_state.h"
 
@@ -27,10 +29,14 @@ typedef struct GeyserImage {
 } GeyserImage;
 
 typedef struct GeyserImageView {
+  GeyserImage base;
   VkImageView view;
-  VkImage image;
-  VkDeviceMemory memory;
 } GeyserImageView;
+
+typedef struct GeyserSamplerView {
+  GeyserImageView base;
+  VkSampler sampler;
+} GeyserSamplerView;
 
 typedef struct GeyserPipeline {
   VkDescriptorSetLayout descriptor_set_layout;
@@ -90,14 +96,17 @@ GeyserImageView *geyser_create_image_view(RenderState *state,
 GeyserImageView *geyser_create_image_view_from_image(RenderState *state,
                                                      VkImage *img,
                                                      VkImageViewType type);
+GeyserSamplerView *geyser_create_sampler_view(RenderState RESTRICTED_PTR state,
+                                              const Vector2 size);
 u32 geyser_get_memory_type_index(const RenderState RESTRICTED_PTR state,
                                  const VkMemoryPropertyFlagBits flag);
 GeyserImage *geyser_create_image(const RenderState RESTRICTED_PTR state,
                                  const Vector2 size);
 void geyser_allocate_image_memory(const RenderState RESTRICTED_PTR state,
                                   GeyserImage *image);
-GeyserImage *geyser_create_and_allocate_image(const RenderState RESTRICTED_PTR state,
-                                              const Vector2 size);
+GeyserImage *
+geyser_create_and_allocate_image(const RenderState RESTRICTED_PTR state,
+                                 const Vector2 size);
 GeyserPipeline *geyser_create_pipeline(
     const RenderState RESTRICTED_PTR state,
     const VkDescriptorSetLayoutBinding descriptor_bindings[],
@@ -122,6 +131,8 @@ void geyser_create_semaphore(const RenderState RESTRICTED_PTR state,
 void geyser_cmd_begin_renderpass(const RenderState RESTRICTED_PTR state);
 void geyser_cmd_end_renderpass(const RenderState RESTRICTED_PTR state);
 void geyser_cmd_set_viewport(const RenderState RESTRICTED_PTR state);
+void geyser_set_image_memory(const RenderState RESTRICTED_PTR state,
+                             GeyserImage *image, Image *data);
 
 #ifdef __cplusplus
 }

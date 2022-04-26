@@ -109,14 +109,17 @@ void renderable_send_memory(RenderState *state, Renderable *r) {
 
 void renderable_make_rect(const RenderState *state, Renderable *r, const f32 x,
                           const f32 y, const f32 width, const f32 height) {
+  const f32 half_width = state->window_width * 0.5f;
+  const f32 half_height = state->window_height * 0.5f;
+
   // clang-format off
   Vector4 vertices[6] = {
-    {x / state->window_width,            y / state->window_height,           0.0f, 1.0f},
-    {x / state->window_width,           (y + height) / state->window_height, 0.0f, 1.0f},
-    {(x + width) / state->window_width,  y / state->window_height,           0.0f, 1.0f},
-    {(x + width) / state->window_width,  y / state->window_height,           0.0f, 1.0f},
-    {x / state->window_width,           (y + height) / state->window_height, 0.0f, 1.0f},
-    {(x + width) / state->window_width, (y + height) / state->window_height, 0.0f, 1.0f}
+    {-1.0f + (x / half_width),           -1.0f + (y / half_height),            0.0f, 1.0f},
+    {-1.0f + (x / half_width),           -1.0f + ((y + height) / half_height), 0.0f, 1.0f},
+    {-1.0f + ((x + width) / half_width), -1.0f + (y / half_height),            0.0f, 1.0f},
+    {-1.0f + ((x + width) / half_width), -1.0f + (y / half_height),            0.0f, 1.0f},
+    {-1.0f + (x / half_width),           -1.0f + ((y + height) / half_height), 0.0f, 1.0f},
+    {-1.0f + ((x + width) / half_width), -1.0f + ((y + height) / half_height), 0.0f, 1.0f}
   };
 
   Vector2 uvmap[6] = {

@@ -102,9 +102,10 @@ int render_perform(void *args) {
 
   renderable_make_default(&renderables[0]);
   renderable_make_default(&renderables[1]);
-  renderable_make_rect(render_state, &renderables[0], -32, -32, 64, 64);
-  renderable_make_rect(render_state, &renderables[1], -768, -432,
-                       render_state->window_width, 256);
+  renderable_make_rect(render_state, &renderables[0], 32,
+                       render_state->window_height - 96, 64, 64);
+  renderable_make_rect(render_state, &renderables[1], 32, 32,
+                       render_state->window_width - 64, 256);
   renderable_allocate_memory(render_state, &renderables[0]);
   renderable_allocate_memory(render_state, &renderables[1]);
   renderable_send_memory(render_state, &renderables[0]);

@@ -14,6 +14,8 @@ int logic_perform(void *args) {
     start_time = platform_time_usec();
 
     if (game_is_paused(state)) {
+      game_paused_tick(state, lock);
+
       platform_sleep(50);
 
       continue;
