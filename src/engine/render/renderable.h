@@ -12,7 +12,7 @@ extern "C" {
 typedef struct Renderable {
   Vector4 *vertices;
   Vector2 *uv;
-  GeyserSamplerView texture;
+  GeyserTexture texture;
   u32 vertices_count;
   Vector4 position;
   Vector4 angle;

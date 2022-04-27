@@ -33,10 +33,11 @@ typedef struct GeyserImageView {
   VkImageView view;
 } GeyserImageView;
 
-typedef struct GeyserSamplerView {
+typedef struct GeyserTexture {
   GeyserImageView base;
   VkSampler sampler;
-} GeyserSamplerView;
+  VkDescriptorSet descriptor_set;
+} GeyserTexture;
 
 typedef struct GeyserPipeline {
   VkDescriptorSetLayout descriptor_set_layout;
@@ -96,8 +97,13 @@ GeyserImageView *geyser_create_image_view(RenderState *state,
 GeyserImageView *geyser_create_image_view_from_image(RenderState *state,
                                                      VkImage *img,
                                                      VkImageViewType type);
-GeyserSamplerView *geyser_create_sampler_view(RenderState RESTRICTED_PTR state,
-                                              const Vector2 size);
+GeyserTexture *geyser_create_texture(RenderState RESTRICTED_PTR state,
+                                     const Vector2 size);
+void geyser_allocate_texture_descriptor_set(RenderState RESTRICTED_PTR state,
+                                            GeyserTexture *texture,
+                                            GeyserPipeline *pipeline);
+void geyser_update_texture_descriptor_set(RenderState RESTRICTED_PTR state,
+                                          GeyserTexture *texture);
 u32 geyser_get_memory_type_index(const RenderState RESTRICTED_PTR state,
                                  const VkMemoryPropertyFlagBits flag);
 GeyserImage *geyser_create_image(const RenderState RESTRICTED_PTR state,

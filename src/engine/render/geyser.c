@@ -665,7 +665,7 @@ GeyserImageView *geyser_create_image_view(RenderState *state,
       GEYSER_MINIMAL_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO),
       .allocationSize = memory_requirements.size,
       .memoryTypeIndex = geyser_get_memory_type_index(
-          state, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)};
+          state, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)};
 
   geyser_success_or_message(vkAllocateMemory(state->device,
                                              &image_allocation_info, NULL,
@@ -1111,13 +1111,11 @@ void geyser_cmd_set_viewport(const RenderState *restrict state) {
   vkCmdSetScissor(state->command_buffer, 0, 1, &state->scissor);
 }
 
-GeyserSamplerView *geyser_create_sampler_view(RenderState *restrict state,
-                                              const Vector2 size) {
-  GeyserSamplerView *sampler_view =
-      (GeyserSamplerView *)malloc(sizeof(GeyserSamplerView));
+GeyserTexture *geyser_create_texture(RenderState *restrict state,
+                                     const Vector2 size) {
+  GeyserTexture *texture = (GeyserTexture *)malloc(sizeof(GeyserTexture));
 
-  sampler_view->base =
-      *geyser_create_image_view(state, size, VK_IMAGE_VIEW_TYPE_2D);
+  texture->base = *geyser_create_image_view(state, size, VK_IMAGE_VIEW_TYPE_2D);
 
   const VkSamplerCreateInfo sampler_info = {
       .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
@@ -1138,9 +1136,59 @@ GeyserSamplerView *geyser_create_sampler_view(RenderState *restrict state,
       .unnormalizedCoordinates = VK_FALSE,
   };
 
-  geyser_success_or_message(vkCreateSampler(state->device, &sampler_info, NULL,
-                                            &sampler_view->sampler),
-                            "Failed to create a texture sampler!");
+  geyser_success_or_message(
+      vkCreateSampler(state->device, &sampler_info, NULL, &texture->sampler),
+      "Failed to create a texture sampler!");
 
-  return sampler_view;
+  return texture;
+}
+
+void geyser_allocate_texture_descriptor_set(RenderState *restrict state,
+                                            GeyserTexture *texture,
+                                            GeyserPipeline *pipeline) {
+  VkDescriptorSetAllocateInfo descriptor_info = {
+      .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+      .pNext = NULL,
+      .descriptorPool = state->descriptor_pool,
+      .descriptorSetCount = 1,
+      .pSetLayouts = &pipeline->descriptor_set_layout};
+
+  geyser_success_or_message(vkAllocateDescriptorSets(state->device,
+                                                     &descriptor_info,
+                                                     &texture->descriptor_set),
+                            "Failed to allocate a texture descriptor set!");
+}
+
+void geyser_update_texture_descriptor_set(RenderState *restrict state,
+                                          GeyserTexture *texture) {
+  VkDescriptorImageInfo descriptor_info;
+  VkWriteDescriptorSet descriptor_write;
+
+  descriptor_info.sampler = texture->sampler;
+  descriptor_info.imageView = texture->base.view;
+  descriptor_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+
+  memset(&descriptor_write, 0, sizeof(descriptor_write));
+
+  descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  descriptor_write.dstSet = texture->descriptor_set;
+  descriptor_write.descriptorCount = 1;
+  descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  descriptor_write.pImageInfo = &descriptor_info;
+
+  vkUpdateDescriptorSets(state->device, 1, &descriptor_write, 0, NULL);
+}
+
+void geyser_set_image_memory(const RenderState RESTRICTED_PTR state, GeyserImage *image, Image *image_data) {
+  const u32 size = image_data->width * image_data->height * 4;
+  void *data;
+
+  geyser_success_or_message(
+    vkMapMemory(state->device, image->memory, 0, size, 0, &data),
+    "Failed to map image memory!"
+  );
+
+  memcpy(data, image_data->data, size);
+
+  vkUnmapMemory(state->device, image->memory);
 }

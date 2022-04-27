@@ -71,16 +71,17 @@ int render_perform(void *args) {
   geyser_init_vk(render_state);
 
   const VkDescriptorSetLayoutBinding descriptor_bindings[] = {
+      {0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, NULL},
       {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_ALL_GRAPHICS,
        NULL},
-      {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_ALL_GRAPHICS,
-       NULL}};
+      {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_ALL_GRAPHICS, NULL},
+    };
 
   const VkPushConstantRange push_constant_range[] = {
       {VK_SHADER_STAGE_ALL_GRAPHICS, 0, 4}};
 
   GeyserVertexInputDescription vertex_input_description =
-      geyser_create_vertex_input_description(1U);
+      geyser_create_vertex_input_description();
 
   geyser_add_vertex_input_binding(&vertex_input_description, 0, 16,
                                   VK_VERTEX_INPUT_RATE_VERTEX);
@@ -93,7 +94,7 @@ int render_perform(void *args) {
                                     VK_FORMAT_R32G32_SFLOAT, 0);
 
   GeyserPipeline *pipeline3d = geyser_create_pipeline(
-      render_state, descriptor_bindings, 2, push_constant_range, 1,
+      render_state, descriptor_bindings, 3, push_constant_range, 1,
       unlit_generic_vert_data, unlit_generic_vert_data_size,
       unlit_generic_frag_data, unlit_generic_frag_data_size,
       &vertex_input_description);
@@ -114,11 +115,24 @@ int render_perform(void *args) {
   renderables[0].active = GS_TRUE;
   renderables[1].active = GS_TRUE;
 
-  for (i32 i = 0; i < 6; i++) {
-    printf("[%i] = vec4(%f, %f, %f, %f)\n", i, renderables[0].vertices[i].x,
-           renderables[0].vertices[i].y, renderables[0].vertices[i].z,
-           renderables[0].vertices[i].w);
-  }
+  /* texture test */
+
+  u32 test_tex[4] = {0xff0000ff, 0x00ff00ff, 0x0000ffff, 0xff00ffff};
+
+  Image test_img = {
+    .data = test_tex,
+    .width = 2,
+    .height = 2
+  };
+
+  const Vector2 test_img_size = {2, 2};
+  GeyserTexture *tex = geyser_create_texture(render_state, test_img_size);
+
+  geyser_set_image_memory(render_state, &tex->base.base, &test_img);
+  geyser_allocate_texture_descriptor_set(render_state, tex, pipeline3d);
+  geyser_update_texture_descriptor_set(render_state, tex);
+
+  /* end texture test */
 
   u64 delay = 1000000 / state->fps_max;
   i64 start_time, end_time;
@@ -155,6 +169,8 @@ int render_perform(void *args) {
                                &renderables[i].vertex_buffer, offsets);
         vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1,
                                &renderables[i].uv_buffer, offsets);
+        vkCmdBindDescriptorSets(render_state->command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                              pipeline3d->pipeline_layout, 0, 1, &tex->descriptor_set, 0, NULL);
 
         vkCmdDraw(render_state->command_buffer, renderables[i].vertices_count,
                   1, 0, 0);
