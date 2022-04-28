@@ -646,8 +646,9 @@ GeyserImageView *geyser_create_image_view(RenderState *state,
       .arrayLayers = 1,
       .samples = VK_SAMPLE_COUNT_1_BIT,
       .tiling = VK_IMAGE_TILING_OPTIMAL,
-      .usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
-               VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
+      .usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+               VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+               VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
       .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
       .queueFamilyIndexCount = state->queue_family_indices_count,
       .pQueueFamilyIndices = state->queue_family_indices,
@@ -1129,9 +1130,10 @@ GeyserTexture *geyser_create_texture(RenderState *restrict state,
       .mipLodBias = 0.0f,
       .anisotropyEnable = VK_FALSE,
       .maxAnisotropy = 1,
+      .compareEnable = VK_FALSE,
       .compareOp = VK_COMPARE_OP_NEVER,
       .minLod = 0.0f,
-      .maxLod = 0.0f,
+      .maxLod = 1.0f,
       .borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK,
       .unnormalizedCoordinates = VK_FALSE,
   };
@@ -1179,16 +1181,21 @@ void geyser_update_texture_descriptor_set(RenderState *restrict state,
   vkUpdateDescriptorSets(state->device, 1, &descriptor_write, 0, NULL);
 }
 
-void geyser_set_image_memory(const RenderState RESTRICTED_PTR state, GeyserImage *image, Image *image_data) {
+void geyser_set_image_memory(const RenderState RESTRICTED_PTR state,
+                             GeyserImage *image, Image *image_data) {
   const u32 size = image_data->width * image_data->height * 4;
   void *data;
 
   geyser_success_or_message(
-    vkMapMemory(state->device, image->memory, 0, size, 0, &data),
-    "Failed to map image memory!"
-  );
+      vkMapMemory(state->device, image->memory, 0, size, 0, &data),
+      "Failed to map image memory!");
 
-  memcpy(data, image_data->data, size);
+  for (u32 y = 0; y < image_data->height; y++) {
+    u32 *row = (u32 *)((u8 *)data + image_data->width * y * 4);
+
+    for (u32 x = 0; x < image_data->width; x++)
+      row[x] = image_data->data[y * image_data->width + x];
+  }
 
   vkUnmapMemory(state->device, image->memory);
 }

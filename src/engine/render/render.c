@@ -71,11 +71,8 @@ int render_perform(void *args) {
   geyser_init_vk(render_state);
 
   const VkDescriptorSetLayoutBinding descriptor_bindings[] = {
-      {0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, NULL},
-      {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_ALL_GRAPHICS,
-       NULL},
-      {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_ALL_GRAPHICS, NULL},
-    };
+      {0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1,
+       VK_SHADER_STAGE_FRAGMENT_BIT, NULL}};
 
   const VkPushConstantRange push_constant_range[] = {
       {VK_SHADER_STAGE_ALL_GRAPHICS, 0, 4}};
@@ -94,7 +91,7 @@ int render_perform(void *args) {
                                     VK_FORMAT_R32G32_SFLOAT, 0);
 
   GeyserPipeline *pipeline3d = geyser_create_pipeline(
-      render_state, descriptor_bindings, 3, push_constant_range, 1,
+      render_state, descriptor_bindings, 1, push_constant_range, 1,
       unlit_generic_vert_data, unlit_generic_vert_data_size,
       unlit_generic_frag_data, unlit_generic_frag_data_size,
       &vertex_input_description);
@@ -117,15 +114,12 @@ int render_perform(void *args) {
 
   /* texture test */
 
-  u32 test_tex[4] = {0xff0000ff, 0x00ff00ff, 0x0000ffff, 0xff00ffff};
+  u32 test_tex[8] = {0xff0000ff, 0xff00ff00, 0xffff0000, 0xffffff00,
+                     0xffff00ff, 0xff00ffff, 0xffffffff, 0xff7f7f7f};
 
-  Image test_img = {
-    .data = test_tex,
-    .width = 2,
-    .height = 2
-  };
+  Image test_img = {.data = test_tex, .width = 4, .height = 2};
 
-  const Vector2 test_img_size = {2, 2};
+  const Vector2 test_img_size = {4, 2};
   GeyserTexture *tex = geyser_create_texture(render_state, test_img_size);
 
   geyser_set_image_memory(render_state, &tex->base.base, &test_img);
@@ -169,8 +163,9 @@ int render_perform(void *args) {
                                &renderables[i].vertex_buffer, offsets);
         vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1,
                                &renderables[i].uv_buffer, offsets);
-        vkCmdBindDescriptorSets(render_state->command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                              pipeline3d->pipeline_layout, 0, 1, &tex->descriptor_set, 0, NULL);
+        vkCmdBindDescriptorSets(
+            render_state->command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+            pipeline3d->pipeline_layout, 0, 1, &tex->descriptor_set, 0, NULL);
 
         vkCmdDraw(render_state->command_buffer, renderables[i].vertices_count,
                   1, 0, 0);

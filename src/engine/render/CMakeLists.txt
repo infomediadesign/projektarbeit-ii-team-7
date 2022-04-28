@@ -18,4 +18,4 @@ set(GLAD_VK_FILES ${GLAD_DIR}/src/vulkan.c ${GLAD_DIR}/include/glad/vulkan.h)
 include_directories("${GLAD_DIR}/include")
 
 add_library(render ${engine_render_source_files} ${engine_render_header_files} ${GLAD_VK_FILES})
-target_link_libraries(render state glfw)
+target_link_libraries(render input state glfw)
