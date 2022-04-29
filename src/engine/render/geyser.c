@@ -645,7 +645,7 @@ GeyserImageView *geyser_create_image_view(RenderState *state,
       .mipLevels = 1,
       .arrayLayers = 1,
       .samples = VK_SAMPLE_COUNT_1_BIT,
-      .tiling = VK_IMAGE_TILING_OPTIMAL,
+      .tiling = VK_IMAGE_TILING_LINEAR,
       .usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT |
                VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
@@ -894,8 +894,8 @@ GeyserPipeline *geyser_create_pipeline(
   const VkPipelineDepthStencilStateCreateInfo stencil_state_info = {
       GEYSER_BASIC_VK_STRUCT_INFO(
           VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO),
-      .depthTestEnable = VK_TRUE,
-      .depthWriteEnable = VK_TRUE,
+      .depthTestEnable = VK_FALSE,
+      .depthWriteEnable = VK_FALSE,
       .depthCompareOp = VK_COMPARE_OP_LESS,
       .depthBoundsTestEnable = VK_FALSE,
       .stencilTestEnable = VK_FALSE};
@@ -909,10 +909,10 @@ GeyserPipeline *geyser_create_pipeline(
   VkPipelineColorBlendAttachmentState color_attachment_states[] = {
       {.blendEnable = VK_TRUE,
        .srcColorBlendFactor = VK_BLEND_FACTOR_SRC_COLOR,
-       .dstColorBlendFactor = VK_BLEND_FACTOR_DST_COLOR,
+       .dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR,
        .colorBlendOp = VK_BLEND_OP_ADD,
-       .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR,
-       .dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR,
+       .srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
+       .dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
        .alphaBlendOp = VK_BLEND_OP_ADD,
        .colorWriteMask = 0xF}};
 
@@ -920,7 +920,7 @@ GeyserPipeline *geyser_create_pipeline(
       GEYSER_BASIC_VK_STRUCT_INFO(
           VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO),
       .logicOpEnable = VK_FALSE,
-      .logicOp = VK_LOGIC_OP_AND,
+      .logicOp = VK_LOGIC_OP_COPY,
       .attachmentCount = 1,
       .pAttachments = color_attachment_states,
       .blendConstants = {1.0f, 1.0f, 1.0f, 1.0f}};
@@ -1129,7 +1129,7 @@ GeyserTexture *geyser_create_texture(RenderState *restrict state,
       .addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT,
       .mipLodBias = 0.0f,
       .anisotropyEnable = VK_FALSE,
-      .maxAnisotropy = 1,
+      .maxAnisotropy = 1.0,
       .compareEnable = VK_FALSE,
       .compareOp = VK_COMPARE_OP_NEVER,
       .minLod = 0.0f,

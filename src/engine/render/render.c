@@ -100,10 +100,12 @@ int render_perform(void *args) {
 
   renderable_make_default(&renderables[0]);
   renderable_make_default(&renderables[1]);
-  renderable_make_rect(render_state, &renderables[0], 32,
-                       render_state->window_height - 96, 64, 64);
-  renderable_make_rect(render_state, &renderables[1], 32, 32,
-                       render_state->window_width - 64, 256);
+  renderable_make_rect(render_state, &renderables[1], 32,
+                       render_state->window_height - 24,
+                       render_state->window_width - 64, 16);
+  renderable_make_rect(render_state, &renderables[0], 32, 32,
+                       render_state->window_width - 64,
+                       render_state->window_height - 64);
   renderable_allocate_memory(render_state, &renderables[0]);
   renderable_allocate_memory(render_state, &renderables[1]);
   renderable_send_memory(render_state, &renderables[0]);
@@ -114,17 +116,26 @@ int render_perform(void *args) {
 
   /* texture test */
 
-  u32 test_tex[8] = {0xff0000ff, 0xff00ff00, 0xffff0000, 0xffffff00,
-                     0xffff00ff, 0xff00ffff, 0xffffffff, 0xff7f7f7f};
+  u32 test_tex[65536];
 
-  Image test_img = {.data = test_tex, .width = 4, .height = 2};
+  for (u16 y = 0; y < 256; y++) {
+    for (u16 x = 0; x < 256; x++) {
+      test_tex[256 * y + x] = 0xffff0000 - (x << 16) + x + (y << 8);
+    }
+  }
 
-  const Vector2 test_img_size = {4, 2};
-  GeyserTexture *tex = geyser_create_texture(render_state, test_img_size);
+  Image test_img = {.data = test_tex, .width = 256, .height = 256};
 
-  geyser_set_image_memory(render_state, &tex->base.base, &test_img);
-  geyser_allocate_texture_descriptor_set(render_state, tex, pipeline3d);
-  geyser_update_texture_descriptor_set(render_state, tex);
+  const Vector2 test_img_size = {256, 256};
+  renderables[0].texture = *geyser_create_texture(render_state, test_img_size);
+
+  geyser_set_image_memory(render_state, &renderables[0].texture.base.base,
+                          &test_img);
+  geyser_allocate_texture_descriptor_set(render_state, &renderables[0].texture,
+                                         pipeline3d);
+  geyser_update_texture_descriptor_set(render_state, &renderables[0].texture);
+
+  renderables[1].texture = renderables[0].texture;
 
   /* end texture test */
 
@@ -165,7 +176,8 @@ int render_perform(void *args) {
                                &renderables[i].uv_buffer, offsets);
         vkCmdBindDescriptorSets(
             render_state->command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-            pipeline3d->pipeline_layout, 0, 1, &tex->descriptor_set, 0, NULL);
+            pipeline3d->pipeline_layout, 0, 1,
+            &renderables[i].texture.descriptor_set, 0, NULL);
 
         vkCmdDraw(render_state->command_buffer, renderables[i].vertices_count,
                   1, 0, 0);
