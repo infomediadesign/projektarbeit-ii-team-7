@@ -20,7 +20,7 @@ Time platform_time() {
   return t;
 }
 
-f64 platform_time_float() {
+f64 platform_time_f64() {
   Time t = platform_time();
 
   return t.usec / 1000000.0;

@@ -28,6 +28,15 @@ typedef struct Vector4 {
 Vector2 vector_default2();
 Vector3 vector_default3();
 Vector4 vector_default4();
+Vector4 vector_make4(const f32 x, const f32 y, const f32 z, const f32 w);
+Vector3 vector_make3(const f32 x, const f32 y, const f32 z);
+Vector2 vector_make2(const f32 x, const f32 y);
+Vector3 vector_add3(const Vector3 v1, const Vector3 v2);
+Vector3 vector_sub3(const Vector3 v1, const Vector3 v2);
+Vector3 vector_scale3(const Vector3 v1, const f32 scale);
+void vector_add3i(Vector3 *v1, const Vector3 v2);
+void vector_sub3i(Vector3 *v1, const Vector3 v2);
+void vector_scale3i(Vector3 *v1, const f32 scale);
 
 #ifdef __cplusplus
 }

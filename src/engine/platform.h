@@ -59,9 +59,9 @@ Time platform_time();
  * @brief Current time in seconds expressed as a float.
  *
  * ```
- * Time t = platform_time_float();
+ * Time t = platform_time_f64();
  *
- * if (t > 7.5f) {
+ * if (t > 7.5) {
  *   mine_bitcoin();
  *   explode_user_cpu();
  * }
@@ -69,7 +69,7 @@ Time platform_time();
  *
  * @return f64 Time Current time as a float.
  */
-f64 platform_time_float();
+f64 platform_time_f64();
 
 /**
  * @brief Current time in seconds.

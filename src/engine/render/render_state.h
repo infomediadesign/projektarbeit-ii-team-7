@@ -36,6 +36,7 @@ typedef struct RenderState {
   f32 window_width;
   f32 window_height;
   Time init_time;
+  u8 rendering;
 
   /* Persistent Vulkan-related stuff */
   VkInstance instance;

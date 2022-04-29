@@ -7,8 +7,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED 11)
 set(CMAKE_BUILD_TYPE Debug)
 
 set(game_source_files
+  entity.h
+  entity.cpp
   game.h
   game.cpp
+  interface.h
+  interface.cpp
 )
 
 include_directories("..")

@@ -5,7 +5,7 @@
 #include "state/state.h"
 #include "util.h"
 
-#include <game/game.h>
+#include <game/interface.h>
 
 int dummy(void *args) {
   ThreadData *const td = (ThreadData *)args;

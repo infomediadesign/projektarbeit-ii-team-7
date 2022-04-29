@@ -12,27 +12,24 @@ void flip_channels(u32 *data, const u32 size) {
   }
 }
 
-Image asset_load_image(const char *image_path) {
-  Image img = {.data = NULL};
+void asset_load_image(Image *img, const char *image_path) {
+  img->data = NULL;
   i32 image_width, image_height, _n;
 
-  u8 *data = stbi_load(image_path, &image_width, &image_height, &_n, 4);
+  u8 *data =
+      stbi_load(image_path, &image_width, &image_height, &_n, STBI_rgb_alpha);
 
   if (data == NULL) {
-    return img;
+    abort();
   }
 
   const u32 size = image_width * image_height * 4;
 
-  img.data = (u32 *)calloc(size, sizeof(u8));
-  img.width = image_width;
-  img.height = image_height;
+  img->data = (u32 *)data;
+  img->width = image_width;
+  img->height = image_height;
 
-  memcpy(img.data, data, size);
-
-  free(data);
-
-  flip_channels(img.data, image_width * image_height);
-
-  return img;
+  // flip_channels(img->data, image_width * image_height);
 }
+
+void asset_unload_image(Image *img) { stbi_image_free(img->data); }

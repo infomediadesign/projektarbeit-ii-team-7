@@ -19,6 +19,12 @@ typedef struct Renderable {
   Matrix4 transform_matrix;
   GeyserBool active;
 
+  /* Interpolation stuff */
+  Vector4 last_position;
+  Vector3 velocity;
+  f64 updated_at;
+
+  /* Graphics memory */
   VkBuffer vertex_buffer;
   VkDeviceMemory vertex_memory;
   VkDeviceSize vertex_memory_size;
@@ -36,6 +42,10 @@ void renderable_send_memory(RenderState *state, Renderable *r);
 void renderable_make_rect(const RenderState *state, Renderable *r, const f32 x,
                           const f32 y, const f32 width, const f32 height);
 void renderable_free(const RenderState *state, Renderable *r);
+void renderable_calc_matrix(Renderable *r);
+void renderable_interpolate(Renderable *r);
+void renderable_set_pos(Renderable *r, const Vector4 pos);
+void renderable_set_velocity(Renderable *r, const Vector3 vel);
 
 #ifdef __cplusplus
 }

@@ -8,6 +8,7 @@ RenderState *render_state_init() {
   state->window_width = 768.0f;
   state->window_height = 432.0f;
   state->debug = 0;
+  state->rendering = 0;
 
   return state;
 }

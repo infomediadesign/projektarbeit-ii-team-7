@@ -499,9 +499,9 @@ void geyser_init_vk(RenderState *restrict state) {
   const Vector2 screen_size = {state->window_width, state->window_height};
 
   for (u8 i = 0; i < state->swapchain_image_count; i++) {
-    state->backbuffers[i] =
-        *(BackbufferView *)geyser_create_image_view_from_image(
-            state, &state->swapchain_images[i], VK_IMAGE_VIEW_TYPE_2D_ARRAY);
+    geyser_create_image_view_from_image(
+        state, &state->swapchain_images[i], VK_IMAGE_VIEW_TYPE_2D_ARRAY,
+        (GeyserImageView *)&state->backbuffers[i]);
     fb_attachments[0] = state->backbuffers[i].view;
 
     if (vkCreateFramebuffer(state->device, &framebuffer_info, NULL,
@@ -628,11 +628,9 @@ void geyser_fill_image_view_creation_structs(
   creation_info->subresourceRange = *resource_range;
 }
 
-GeyserImageView *geyser_create_image_view(RenderState *state,
-                                          const Vector2 size,
-                                          VkImageViewType type) {
-  GeyserImageView *gs_image_view =
-      (GeyserImageView *)malloc(sizeof(GeyserImageView));
+void geyser_create_image_view(RenderState *state, const Vector2 size,
+                              VkImageViewType type,
+                              GeyserImageView *gs_image_view) {
   VkImageSubresourceRange resource_range;
   VkComponentMapping mapping;
   VkImageViewCreateInfo image_view_creation_info;
@@ -645,7 +643,7 @@ GeyserImageView *geyser_create_image_view(RenderState *state,
       .mipLevels = 1,
       .arrayLayers = 1,
       .samples = VK_SAMPLE_COUNT_1_BIT,
-      .tiling = VK_IMAGE_TILING_LINEAR,
+      .tiling = VK_IMAGE_TILING_OPTIMAL,
       .usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT |
                VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
                VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
@@ -666,7 +664,7 @@ GeyserImageView *geyser_create_image_view(RenderState *state,
       GEYSER_MINIMAL_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO),
       .allocationSize = memory_requirements.size,
       .memoryTypeIndex = geyser_get_memory_type_index(
-          state, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)};
+          state, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)};
 
   geyser_success_or_message(vkAllocateMemory(state->device,
                                              &image_allocation_info, NULL,
@@ -689,15 +687,11 @@ GeyserImageView *geyser_create_image_view(RenderState *state,
     printf("[Geyser Error] Unable to create image view!\n");
     abort();
   }
-
-  return gs_image_view;
 }
 
-GeyserImageView *geyser_create_image_view_from_image(RenderState *state,
-                                                     VkImage *img,
-                                                     VkImageViewType type) {
-  GeyserImageView *gs_image_view =
-      (GeyserImageView *)malloc(sizeof(GeyserImageView));
+void geyser_create_image_view_from_image(RenderState *state, VkImage *img,
+                                         VkImageViewType type,
+                                         GeyserImageView *gs_image_view) {
   VkImageSubresourceRange resource_range;
   VkComponentMapping mapping;
   VkImageViewCreateInfo image_view_creation_info;
@@ -715,8 +709,6 @@ GeyserImageView *geyser_create_image_view_from_image(RenderState *state,
     printf("[Geyser Error] Unable to create image view!\n");
     abort();
   }
-
-  return gs_image_view;
 }
 
 u32 geyser_get_memory_type_index(const RenderState *restrict state,
@@ -734,21 +726,20 @@ u32 geyser_get_memory_type_index(const RenderState *restrict state,
   return 0;
 }
 
-GeyserImage *geyser_create_image(const RenderState *restrict state,
-                                 const Vector2 size) {
-  GeyserImage *gi = (GeyserImage *)malloc(sizeof(GeyserImage));
-
+void geyser_create_image(const RenderState *restrict state, const Vector2 size,
+                         const VkImageTiling tiling, const VkFormat format,
+                         const VkImageUsageFlags usage, GeyserImage *gi) {
   const VkImageCreateInfo image_creation_info = {
       GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO),
       .imageType = VK_IMAGE_TYPE_2D,
-      .format = state->preferred_color_format,
+      .format = format,
       .extent = {.width = size.x, .height = size.y, .depth = 1},
       .mipLevels = 1,
       .arrayLayers = 1,
       .samples = VK_SAMPLE_COUNT_1_BIT,
-      .tiling = VK_IMAGE_TILING_OPTIMAL,
+      .tiling = tiling,
       .usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
-               VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
+               VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | usage,
       .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
       .queueFamilyIndexCount = state->queue_family_indices_count,
       .pQueueFamilyIndices = state->queue_family_indices,
@@ -757,11 +748,10 @@ GeyserImage *geyser_create_image(const RenderState *restrict state,
   geyser_success_or_message(
       vkCreateImage(state->device, &image_creation_info, NULL, &gi->image),
       "Failed to create image!");
-
-  return gi;
 }
 
 void geyser_allocate_image_memory(const RenderState *restrict state,
+                                  const uint32_t memory_type,
                                   GeyserImage *image) {
   VkMemoryRequirements memory_requirements;
   vkGetImageMemoryRequirements(state->device, image->image,
@@ -770,8 +760,7 @@ void geyser_allocate_image_memory(const RenderState *restrict state,
   const VkMemoryAllocateInfo image_allocation_info = {
       GEYSER_MINIMAL_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO),
       .allocationSize = memory_requirements.size,
-      .memoryTypeIndex = geyser_get_memory_type_index(
-          state, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)};
+      .memoryTypeIndex = geyser_get_memory_type_index(state, memory_type)};
 
   geyser_success_or_message(vkAllocateMemory(state->device,
                                              &image_allocation_info, NULL,
@@ -783,13 +772,15 @@ void geyser_allocate_image_memory(const RenderState *restrict state,
       "Failed to bind image memory!");
 }
 
-GeyserImage *geyser_create_and_allocate_image(const RenderState *restrict state,
-                                              const Vector2 size) {
-  GeyserImage *image = geyser_create_image(state, size);
-
-  geyser_allocate_image_memory(state, image);
-
-  return image;
+void geyser_create_and_allocate_image(const RenderState *restrict state,
+                                      const Vector2 size,
+                                      const VkImageTiling tiling,
+                                      const VkFormat format,
+                                      const VkImageUsageFlags usage,
+                                      const uint32_t memory_type,
+                                      GeyserImage *image) {
+  geyser_create_image(state, size, tiling, format, usage, image);
+  geyser_allocate_image_memory(state, memory_type, image);
 }
 
 GeyserPipeline *geyser_create_pipeline(
@@ -888,14 +879,14 @@ GeyserPipeline *geyser_create_pipeline(
       .sampleShadingEnable = VK_FALSE,
       .minSampleShading = 0.0f,
       .pSampleMask = NULL,
-      .alphaToCoverageEnable = VK_TRUE,
+      .alphaToCoverageEnable = VK_FALSE,
       .alphaToOneEnable = VK_FALSE};
 
   const VkPipelineDepthStencilStateCreateInfo stencil_state_info = {
       GEYSER_BASIC_VK_STRUCT_INFO(
           VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO),
-      .depthTestEnable = VK_FALSE,
-      .depthWriteEnable = VK_FALSE,
+      .depthTestEnable = VK_TRUE,
+      .depthWriteEnable = VK_TRUE,
       .depthCompareOp = VK_COMPARE_OP_LESS,
       .depthBoundsTestEnable = VK_FALSE,
       .stencilTestEnable = VK_FALSE};
@@ -908,8 +899,8 @@ GeyserPipeline *geyser_create_pipeline(
 
   VkPipelineColorBlendAttachmentState color_attachment_states[] = {
       {.blendEnable = VK_TRUE,
-       .srcColorBlendFactor = VK_BLEND_FACTOR_SRC_COLOR,
-       .dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR,
+       .srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
+       .dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
        .colorBlendOp = VK_BLEND_OP_ADD,
        .srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
        .dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
@@ -1112,11 +1103,9 @@ void geyser_cmd_set_viewport(const RenderState *restrict state) {
   vkCmdSetScissor(state->command_buffer, 0, 1, &state->scissor);
 }
 
-GeyserTexture *geyser_create_texture(RenderState *restrict state,
-                                     const Vector2 size) {
-  GeyserTexture *texture = (GeyserTexture *)malloc(sizeof(GeyserTexture));
-
-  texture->base = *geyser_create_image_view(state, size, VK_IMAGE_VIEW_TYPE_2D);
+void geyser_create_texture(RenderState *restrict state, const Vector2 size,
+                           GeyserTexture *texture) {
+  geyser_create_image_view(state, size, VK_IMAGE_VIEW_TYPE_2D, &texture->base);
 
   const VkSamplerCreateInfo sampler_info = {
       .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
@@ -1141,8 +1130,6 @@ GeyserTexture *geyser_create_texture(RenderState *restrict state,
   geyser_success_or_message(
       vkCreateSampler(state->device, &sampler_info, NULL, &texture->sampler),
       "Failed to create a texture sampler!");
-
-  return texture;
 }
 
 void geyser_allocate_texture_descriptor_set(RenderState *restrict state,
@@ -1181,13 +1168,43 @@ void geyser_update_texture_descriptor_set(RenderState *restrict state,
   vkUpdateDescriptorSets(state->device, 1, &descriptor_write, 0, NULL);
 }
 
-void geyser_set_image_memory(const RenderState RESTRICTED_PTR state,
+void geyser_set_image_memory(const RenderState *restrict state,
                              GeyserImage *image, Image *image_data) {
+  if (state->rendering) {
+    printf("[Geyser Error] Cannot set image memory during a render pass!\n");
+    abort();
+  }
+
   const u32 size = image_data->width * image_data->height * 4;
   void *data;
 
+  GeyserImage temp_img;
+
+  geyser_create_and_allocate_image(
+      state, vector_make2(image_data->width, image_data->height),
+      VK_IMAGE_TILING_LINEAR, VK_FORMAT_R8G8B8A8_SRGB,
+      VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+      &temp_img);
+
+  VkImageMemoryBarrier memory_barrier = {
+      .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+      .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+      .newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+      .image = temp_img.image,
+      .subresourceRange = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                           .baseMipLevel = 0,
+                           .levelCount = 1,
+                           .baseArrayLayer = 0,
+                           .layerCount = 1},
+      .srcAccessMask = 0,
+      .dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT};
+
+  vkCmdPipelineBarrier(state->command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                       VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1,
+                       &memory_barrier);
+
   geyser_success_or_message(
-      vkMapMemory(state->device, image->memory, 0, size, 0, &data),
+      vkMapMemory(state->device, temp_img.memory, 0, size, 0, &data),
       "Failed to map image memory!");
 
   for (u32 y = 0; y < image_data->height; y++) {
@@ -1197,5 +1214,66 @@ void geyser_set_image_memory(const RenderState RESTRICTED_PTR state,
       row[x] = image_data->data[y * image_data->width + x];
   }
 
-  vkUnmapMemory(state->device, image->memory);
+  vkUnmapMemory(state->device, temp_img.memory);
+
+  memory_barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+  memory_barrier.image = image->image;
+
+  vkCmdPipelineBarrier(state->command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                       VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1,
+                       &memory_barrier);
+
+  VkImageCopy copy_info = {
+      .srcSubresource = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                         .mipLevel = 0,
+                         .baseArrayLayer = 0,
+                         .layerCount = 1},
+      .srcOffset = {0, 0, 0},
+      .dstSubresource = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                         .mipLevel = 0,
+                         .baseArrayLayer = 0,
+                         .layerCount = 1},
+      .dstOffset = {0, 0, 0},
+      .extent = {image_data->width, image_data->height, 1}};
+
+  vkCmdCopyImage(state->command_buffer, temp_img.image,
+                 VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image->image,
+                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy_info);
+
+  memory_barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+  memory_barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
+
+  vkCmdPipelineBarrier(state->command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                       VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1,
+                       &memory_barrier);
+}
+
+void geyser_cmd_begin_staging(RenderState *restrict state) {
+  const VkCommandBufferBeginInfo cmd_begin_info = {
+      GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO),
+      .pInheritanceInfo = NULL};
+
+  vkBeginCommandBuffer(state->command_buffer, &cmd_begin_info);
+}
+
+void geyser_cmd_end_staging(RenderState *restrict state) {
+  vkEndCommandBuffer(state->command_buffer);
+
+  const VkFence no_fence = VK_NULL_HANDLE;
+  const VkSubmitInfo submit_info = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+                                    .pNext = NULL,
+                                    .waitSemaphoreCount = 0,
+                                    .pWaitSemaphores = NULL,
+                                    .pWaitDstStageMask = NULL,
+                                    .commandBufferCount = 1,
+                                    .pCommandBuffers = &state->command_buffer,
+                                    .signalSemaphoreCount = 0,
+                                    .pSignalSemaphores = NULL};
+
+  geyser_success_or_message(
+      vkQueueSubmit(state->queue, 1, &submit_info, no_fence),
+      "Failed to submit to queue!");
+
+  geyser_success_or_message(vkQueueWaitIdle(state->queue),
+                            "Failed to wait for queue idle state!");
 }

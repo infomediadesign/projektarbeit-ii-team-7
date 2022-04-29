@@ -1,6 +1,6 @@
 #include "logic.h"
 
-#include <game/game.h>
+#include <game/interface.h>
 
 int logic_perform(void *args) {
   ThreadData *const td = (ThreadData *)args;

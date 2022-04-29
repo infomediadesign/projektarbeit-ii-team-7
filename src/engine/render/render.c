@@ -1,7 +1,7 @@
 #include "render.h"
 #include "shaders/shaders.h"
 
-#include <game/game.h>
+#include <game/interface.h>
 
 #define MAX_RENDERABLES 2048
 
@@ -70,12 +70,14 @@ int render_perform(void *args) {
   render_state_create_window(render_state);
   geyser_init_vk(render_state);
 
+  geyser_cmd_begin_staging(render_state);
+
   const VkDescriptorSetLayoutBinding descriptor_bindings[] = {
       {0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1,
        VK_SHADER_STAGE_FRAGMENT_BIT, NULL}};
 
   const VkPushConstantRange push_constant_range[] = {
-      {VK_SHADER_STAGE_ALL_GRAPHICS, 0, 4}};
+      {VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(GeyserPushConstants)}};
 
   GeyserVertexInputDescription vertex_input_description =
       geyser_create_vertex_input_description();
@@ -100,16 +102,15 @@ int render_perform(void *args) {
 
   renderable_make_default(&renderables[0]);
   renderable_make_default(&renderables[1]);
-  renderable_make_rect(render_state, &renderables[1], 32,
-                       render_state->window_height - 24,
-                       render_state->window_width - 64, 16);
-  renderable_make_rect(render_state, &renderables[0], 32, 32,
-                       render_state->window_width - 64,
-                       render_state->window_height - 64);
+  renderable_make_rect(render_state, &renderables[0], 0, 0, 256, 256);
+  renderable_make_rect(render_state, &renderables[1], 0, 0, 256, 256);
   renderable_allocate_memory(render_state, &renderables[0]);
   renderable_allocate_memory(render_state, &renderables[1]);
   renderable_send_memory(render_state, &renderables[0]);
   renderable_send_memory(render_state, &renderables[1]);
+
+  renderable_set_pos(&renderables[0], vector_make4(32.0f, 32.0f, 1.0f, 1.0f));
+  renderable_set_pos(&renderables[1], vector_make4(300.0f, 32.0f, 1.0f, 0.9f));
 
   renderables[0].active = GS_TRUE;
   renderables[1].active = GS_TRUE;
@@ -120,14 +121,15 @@ int render_perform(void *args) {
 
   for (u16 y = 0; y < 256; y++) {
     for (u16 x = 0; x < 256; x++) {
-      test_tex[256 * y + x] = 0xffff0000 - (x << 16) + x + (y << 8);
+      test_tex[256 * y + x] = 0xffff0000 - (x << 16) + x + (y << 8) - (y << 24);
     }
   }
 
   Image test_img = {.data = test_tex, .width = 256, .height = 256};
 
-  const Vector2 test_img_size = {256, 256};
-  renderables[0].texture = *geyser_create_texture(render_state, test_img_size);
+  geyser_create_texture(render_state,
+                        vector_make2(test_img.width, test_img.height),
+                        &renderables[0].texture);
 
   geyser_set_image_memory(render_state, &renderables[0].texture.base.base,
                           &test_img);
@@ -138,6 +140,8 @@ int render_perform(void *args) {
   renderables[1].texture = renderables[0].texture;
 
   /* end texture test */
+
+  geyser_cmd_end_staging(render_state);
 
   u64 delay = 1000000 / state->fps_max;
   i64 start_time, end_time;
@@ -157,7 +161,13 @@ int render_perform(void *args) {
 
     glfwPollEvents();
 
+    geyser_cmd_begin_staging(render_state);
+
     game_adjust_renderables(state, lock, renderables, MAX_RENDERABLES);
+
+    geyser_cmd_end_staging(render_state);
+
+    render_state->rendering = 1;
 
     geyser_cmd_begin_draw(render_state);
     geyser_cmd_begin_renderpass(render_state);
@@ -170,6 +180,9 @@ int render_perform(void *args) {
     for (u32 i = 0; i < MAX_RENDERABLES; i++) {
       if (renderables[i].active == GS_TRUE &&
           renderables[i].vertices_count > 0) {
+        renderable_interpolate(&renderables[i]);
+        renderable_calc_matrix(&renderables[i]);
+
         vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1,
                                &renderables[i].vertex_buffer, offsets);
         vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1,
@@ -178,6 +191,10 @@ int render_perform(void *args) {
             render_state->command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
             pipeline3d->pipeline_layout, 0, 1,
             &renderables[i].texture.descriptor_set, 0, NULL);
+        vkCmdPushConstants(
+            render_state->command_buffer, pipeline3d->pipeline_layout,
+            VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(GeyserPushConstants),
+            &renderables[i].transform_matrix);
 
         vkCmdDraw(render_state->command_buffer, renderables[i].vertices_count,
                   1, 0, 0);
@@ -189,6 +206,7 @@ int render_perform(void *args) {
 
     vkDeviceWaitIdle(render_state->device);
 
+    render_state->rendering = 0;
     render_state->current_frame++;
 
     end_time = platform_time_usec();

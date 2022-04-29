@@ -13,7 +13,8 @@ typedef struct Image {
   u32 width;
 } Image;
 
-Image asset_load_image(const char *image_path);
+void asset_load_image(Image *img, const char *image_path);
+void asset_unload_image(Image *img);
 
 #ifdef __cplusplus
 }

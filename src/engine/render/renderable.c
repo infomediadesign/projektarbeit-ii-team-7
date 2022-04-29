@@ -1,7 +1,9 @@
 #include "renderable.h"
+#include "../util.h"
 #include <string.h>
 
 // clang-format off
+static const Vector3 null_vec3 = {0.0f, 0.0f, 0.0f};
 static const Vector4 null_vec4 = {0.0f, 0.0f, 0.0f, 1.0f};
 static const Matrix4 null_mat4 = {
   {1.0f, 0.0f, 0.0f, 0.0f},
@@ -16,9 +18,11 @@ void renderable_make_default(Renderable *r) {
   r->uv = NULL;
   r->vertices_count = 0U;
   r->position = null_vec4;
+  r->last_position = null_vec4;
   r->angle = null_vec4;
   r->transform_matrix = null_mat4;
   r->active = GS_FALSE;
+  r->velocity = null_vec3;
 }
 
 Renderable renderable_default() {
@@ -144,4 +148,31 @@ void renderable_make_rect(const RenderState *state, Renderable *r, const f32 x,
 void renderable_free(const RenderState *state, Renderable *r) {
   vkFreeMemory(state->device, r->vertex_memory, NULL);
   vkFreeMemory(state->device, r->uv_memory, NULL);
+}
+
+void renderable_calc_matrix(Renderable *r) {
+  /* The constants are the value of 1 pixel at 768x432 */
+  r->transform_matrix.w[0] = r->position.x * 0.0026f;
+  r->transform_matrix.w[1] = r->position.y * 0.0046f;
+  r->transform_matrix.w[2] = r->position.z;
+}
+
+void renderable_interpolate(Renderable *r) {
+  const f64 current_time = platform_time_f64();
+
+  r->position.x =
+      util_lerp_f32(current_time - r->updated_at, r->last_position.x,
+                    r->last_position.x + r->velocity.x);
+  r->position.y =
+      util_lerp_f32(current_time - r->updated_at, r->last_position.y,
+                    r->last_position.y + r->velocity.y);
+}
+
+void renderable_set_pos(Renderable *r, const Vector4 pos) {
+  r->position = pos;
+  r->last_position = pos;
+}
+
+void renderable_set_velocity(Renderable *r, const Vector3 vel) {
+  r->velocity = vel;
 }
