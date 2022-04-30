@@ -40,7 +40,8 @@ void renderable_allocate_memory(RenderState *state, Renderable *r) {
       .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
       .pNext = NULL,
       .size = sizeof(Vector4) * r->vertices_count,
-      .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+      .usage =
+          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
       .flags = 0,
   };
 
@@ -48,7 +49,8 @@ void renderable_allocate_memory(RenderState *state, Renderable *r) {
       .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
       .pNext = NULL,
       .size = sizeof(Vector2) * r->vertices_count,
-      .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+      .usage =
+          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
       .flags = 0,
   };
 
@@ -66,8 +68,7 @@ void renderable_allocate_memory(RenderState *state, Renderable *r) {
       GEYSER_MINIMAL_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO),
       .allocationSize = memory_requirements.size,
       .memoryTypeIndex = geyser_get_memory_type_index(
-          state, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)};
+          state, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)};
 
   vkGetBufferMemoryRequirements(state->device, r->uv_buffer,
                                 &memory_requirements);
@@ -76,8 +77,7 @@ void renderable_allocate_memory(RenderState *state, Renderable *r) {
       GEYSER_MINIMAL_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO),
       .allocationSize = memory_requirements.size,
       .memoryTypeIndex = geyser_get_memory_type_index(
-          state, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)};
+          state, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)};
 
   geyser_success_or_message(vkAllocateMemory(state->device,
                                              &vertex_memory_alloc_info, NULL,
@@ -90,25 +90,36 @@ void renderable_allocate_memory(RenderState *state, Renderable *r) {
 
   r->vertex_memory_size = vertex_memory_alloc_info.allocationSize;
   r->uv_memory_size = uv_memory_alloc_info.allocationSize;
-}
-
-void renderable_send_memory(RenderState *state, Renderable *r) {
-  void *data;
-
-  geyser_success_or_message(vkMapMemory(state->device, r->vertex_memory, 0,
-                                        r->vertex_memory_size, 0, &data),
-                            "Failed to map vertex memory!");
-  memcpy(data, r->vertices, sizeof(Vector4) * r->vertices_count);
-  vkUnmapMemory(state->device, r->vertex_memory);
-
-  geyser_success_or_message(
-      vkMapMemory(state->device, r->uv_memory, 0, r->uv_memory_size, 0, &data),
-      "Failed to map UV memory!");
-  memcpy(data, r->uv, sizeof(Vector2) * r->vertices_count);
-  vkUnmapMemory(state->device, r->uv_memory);
 
   vkBindBufferMemory(state->device, r->vertex_buffer, r->vertex_memory, 0);
   vkBindBufferMemory(state->device, r->uv_buffer, r->uv_memory, 0);
+}
+
+void renderable_send_memory(RenderState *state, Renderable *r) {
+  const u64 vertex_size = sizeof(Vector4) * r->vertices_count;
+  const u64 uv_size = sizeof(Vector2) * r->vertices_count;
+  void *data;
+
+  VkBufferCopy copy_info = {
+      .srcOffset = 0, .dstOffset = 0, .size = vertex_size};
+
+  geyser_success_or_message(vkMapMemory(state->device, state->memory, 0,
+                                        r->vertex_memory_size, 0, &data),
+                            "Failed to map vertex memory!");
+  memcpy(data, r->vertices, vertex_size);
+  memcpy(data + vertex_size, r->uv, uv_size);
+  vkUnmapMemory(state->device, state->memory);
+
+  vkCmdCopyBuffer(state->command_buffer, state->buffer, r->vertex_buffer, 1,
+                  &copy_info);
+
+  copy_info.srcOffset = vertex_size;
+  copy_info.size = uv_size;
+
+  vkCmdCopyBuffer(state->command_buffer, state->buffer, r->uv_buffer, 1,
+                  &copy_info);
+
+  geyser_cmd_submit_staging(state);
 }
 
 void renderable_make_rect(const RenderState *state, Renderable *r, const f32 x,

@@ -117,15 +117,8 @@ int render_perform(void *args) {
 
   /* texture test */
 
-  u32 test_tex[65536];
-
-  for (u16 y = 0; y < 256; y++) {
-    for (u16 x = 0; x < 256; x++) {
-      test_tex[256 * y + x] = 0xffff0000 - (x << 16) + x + (y << 8) - (y << 24);
-    }
-  }
-
-  Image test_img = {.data = test_tex, .width = 256, .height = 256};
+  Image test_img;
+  asset_load_image(&test_img, "/home/luna/Downloads/foks.png");
 
   geyser_create_texture(render_state,
                         vector_make2(test_img.width, test_img.height),

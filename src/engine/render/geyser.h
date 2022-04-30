@@ -149,10 +149,11 @@ void geyser_create_semaphore(const RenderState RESTRICTED_PTR state,
 void geyser_cmd_begin_renderpass(const RenderState RESTRICTED_PTR state);
 void geyser_cmd_end_renderpass(const RenderState RESTRICTED_PTR state);
 void geyser_cmd_set_viewport(const RenderState RESTRICTED_PTR state);
-void geyser_set_image_memory(const RenderState RESTRICTED_PTR state,
+void geyser_set_image_memory(RenderState RESTRICTED_PTR state,
                              GeyserImage *image, Image *data);
 void geyser_cmd_begin_staging(RenderState RESTRICTED_PTR state);
 void geyser_cmd_end_staging(RenderState RESTRICTED_PTR state);
+void geyser_cmd_submit_staging(RenderState RESTRICTED_PTR state);
 
 #ifdef __cplusplus
 }

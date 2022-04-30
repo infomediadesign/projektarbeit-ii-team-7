@@ -514,8 +514,8 @@ void geyser_init_vk(RenderState *restrict state) {
   const VkBufferCreateInfo general_buffer_info = {
       GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO),
       .usage =
-          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-      .size = util_mebibytes(256),
+          VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+      .size = util_mebibytes(256), /* BAR size */
       .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
       .queueFamilyIndexCount = state->queue_family_indices_count,
       .pQueueFamilyIndices = state->queue_family_indices};
@@ -524,9 +524,10 @@ void geyser_init_vk(RenderState *restrict state) {
 
   const VkMemoryAllocateInfo general_memory_allocation_info = {
       GEYSER_MINIMAL_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO),
-      .allocationSize = util_mebibytes(256),
+      .allocationSize = util_mebibytes(256), /* BAR size */
       .memoryTypeIndex = geyser_get_memory_type_index(
-          state, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)};
+          state, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)};
 
   vkAllocateMemory(state->device, &general_memory_allocation_info, NULL,
                    &state->memory);
@@ -1168,8 +1169,8 @@ void geyser_update_texture_descriptor_set(RenderState *restrict state,
   vkUpdateDescriptorSets(state->device, 1, &descriptor_write, 0, NULL);
 }
 
-void geyser_set_image_memory(const RenderState *restrict state,
-                             GeyserImage *image, Image *image_data) {
+void geyser_set_image_memory(RenderState *restrict state, GeyserImage *image,
+                             Image *image_data) {
   if (state->rendering) {
     printf("[Geyser Error] Cannot set image memory during a render pass!\n");
     abort();
@@ -1178,19 +1179,24 @@ void geyser_set_image_memory(const RenderState *restrict state,
   const u32 size = image_data->width * image_data->height * 4;
   void *data;
 
-  GeyserImage temp_img;
+  geyser_success_or_message(
+      vkMapMemory(state->device, state->memory, 0, size, 0, &data),
+      "Failed to map image memory!");
 
-  geyser_create_and_allocate_image(
-      state, vector_make2(image_data->width, image_data->height),
-      VK_IMAGE_TILING_LINEAR, VK_FORMAT_R8G8B8A8_SRGB,
-      VK_IMAGE_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-      &temp_img);
+  for (u32 y = 0; y < image_data->height; y++) {
+    u32 *row = (u32 *)((u8 *)data + image_data->width * y * 4);
+
+    for (u32 x = 0; x < image_data->width; x++)
+      row[x] = image_data->data[y * image_data->width + x];
+  }
+
+  vkUnmapMemory(state->device, state->memory);
 
   VkImageMemoryBarrier memory_barrier = {
       .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
       .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-      .newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-      .image = temp_img.image,
+      .newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+      .image = image->image,
       .subresourceRange = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
                            .baseMipLevel = 0,
                            .levelCount = 1,
@@ -1203,49 +1209,30 @@ void geyser_set_image_memory(const RenderState *restrict state,
                        VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1,
                        &memory_barrier);
 
-  geyser_success_or_message(
-      vkMapMemory(state->device, temp_img.memory, 0, size, 0, &data),
-      "Failed to map image memory!");
+  VkBufferImageCopy copy_info = {
+      .bufferOffset = 0,
+      .bufferRowLength = image_data->width,
+      .bufferImageHeight = image_data->height,
+      .imageSubresource = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                           .mipLevel = 0,
+                           .baseArrayLayer = 0,
+                           .layerCount = 1},
+      .imageOffset = {0, 0, 0},
+      .imageExtent = {image_data->width, image_data->height, 1}};
 
-  for (u32 y = 0; y < image_data->height; y++) {
-    u32 *row = (u32 *)((u8 *)data + image_data->width * y * 4);
-
-    for (u32 x = 0; x < image_data->width; x++)
-      row[x] = image_data->data[y * image_data->width + x];
-  }
-
-  vkUnmapMemory(state->device, temp_img.memory);
-
-  memory_barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-  memory_barrier.image = image->image;
-
-  vkCmdPipelineBarrier(state->command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                       VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1,
-                       &memory_barrier);
-
-  VkImageCopy copy_info = {
-      .srcSubresource = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                         .mipLevel = 0,
-                         .baseArrayLayer = 0,
-                         .layerCount = 1},
-      .srcOffset = {0, 0, 0},
-      .dstSubresource = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                         .mipLevel = 0,
-                         .baseArrayLayer = 0,
-                         .layerCount = 1},
-      .dstOffset = {0, 0, 0},
-      .extent = {image_data->width, image_data->height, 1}};
-
-  vkCmdCopyImage(state->command_buffer, temp_img.image,
-                 VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, image->image,
-                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy_info);
+  vkCmdCopyBufferToImage(state->command_buffer, state->buffer, image->image,
+                         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy_info);
 
   memory_barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
   memory_barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
+  memory_barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+  memory_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-  vkCmdPipelineBarrier(state->command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                       VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1,
-                       &memory_barrier);
+  vkCmdPipelineBarrier(state->command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                       VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0,
+                       NULL, 1, &memory_barrier);
+
+  geyser_cmd_submit_staging(state);
 }
 
 void geyser_cmd_begin_staging(RenderState *restrict state) {
@@ -1276,4 +1263,9 @@ void geyser_cmd_end_staging(RenderState *restrict state) {
 
   geyser_success_or_message(vkQueueWaitIdle(state->queue),
                             "Failed to wait for queue idle state!");
+}
+
+void geyser_cmd_submit_staging(RenderState *restrict state) {
+  geyser_cmd_end_staging(state);
+  geyser_cmd_begin_staging(state);
 }
