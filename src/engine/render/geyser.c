@@ -784,7 +784,7 @@ void geyser_create_and_allocate_image(const RenderState *restrict state,
   geyser_allocate_image_memory(state, memory_type, image);
 }
 
-GeyserPipeline *geyser_create_pipeline(
+void geyser_create_pipeline(
     const RenderState *restrict state,
     const VkDescriptorSetLayoutBinding descriptor_bindings[],
     const u32 descriptor_bindings_size,
@@ -792,9 +792,8 @@ GeyserPipeline *geyser_create_pipeline(
     const u32 push_constant_ranges_size, const u8 vertex_shader_data[],
     const u32 vertex_shader_data_size, const u8 fragment_shader_data[],
     const u32 fragment_shader_data_size,
-    GeyserVertexInputDescription *vertex_input_description) {
-  GeyserPipeline *pipe = (GeyserPipeline *)malloc(sizeof(GeyserPipeline));
-
+    GeyserVertexInputDescription *vertex_input_description,
+    GeyserPipeline *pipeline) {
   const VkDescriptorSetLayoutCreateInfo descriptor_layout_create_info = {
       GEYSER_BASIC_VK_STRUCT_INFO(
           VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO),
@@ -802,9 +801,9 @@ GeyserPipeline *geyser_create_pipeline(
       .pBindings = descriptor_bindings};
 
   vkCreateDescriptorSetLayout(state->device, &descriptor_layout_create_info,
-                              NULL, &pipe->descriptor_set_layout);
+                              NULL, &pipeline->descriptor_set_layout);
 
-  const VkDescriptorSetLayout layouts[] = {pipe->descriptor_set_layout};
+  const VkDescriptorSetLayout layouts[] = {pipeline->descriptor_set_layout};
 
   const VkPipelineLayoutCreateInfo pipeline_layout_info = {
       GEYSER_BASIC_VK_STRUCT_INFO(
@@ -814,7 +813,7 @@ GeyserPipeline *geyser_create_pipeline(
       .pPushConstantRanges = push_constant_ranges};
 
   vkCreatePipelineLayout(state->device, &pipeline_layout_info, NULL,
-                         &pipe->pipeline_layout);
+                         &pipeline->pipeline_layout);
 
   const VkShaderModuleCreateInfo vertex_shader_info = {
       GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO),
@@ -826,19 +825,20 @@ GeyserPipeline *geyser_create_pipeline(
       .pCode = (u32 *)fragment_shader_data};
 
   vkCreateShaderModule(state->device, &vertex_shader_info, NULL,
-                       &pipe->vertex_shader);
+                       &pipeline->vertex_shader);
   vkCreateShaderModule(state->device, &fragment_shader_info, NULL,
-                       &pipe->fragment_shader);
+                       &pipeline->fragment_shader);
 
   const VkPipelineShaderStageCreateInfo pipeline_shader_stages[] = {
       {GEYSER_BASIC_VK_STRUCT_INFO(
            VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO),
-       .stage = VK_SHADER_STAGE_VERTEX_BIT, .module = pipe->vertex_shader,
+       .stage = VK_SHADER_STAGE_VERTEX_BIT, .module = pipeline->vertex_shader,
        .pName = "main", .pSpecializationInfo = NULL},
       {GEYSER_BASIC_VK_STRUCT_INFO(
            VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO),
-       .stage = VK_SHADER_STAGE_FRAGMENT_BIT, .module = pipe->fragment_shader,
-       .pName = "main", .pSpecializationInfo = NULL},
+       .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+       .module = pipeline->fragment_shader, .pName = "main",
+       .pSpecializationInfo = NULL},
   };
 
   const VkPipelineVertexInputStateCreateInfo vertex_input_info = {
@@ -928,7 +928,7 @@ GeyserPipeline *geyser_create_pipeline(
   const VkGraphicsPipelineCreateInfo pipeline_info[] = {
       {GEYSER_BASIC_VK_STRUCT_INFO(
            VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO),
-       .layout = pipe->pipeline_layout, .renderPass = state->renderpass,
+       .layout = pipeline->pipeline_layout, .renderPass = state->renderpass,
        .stageCount = 2, .pStages = pipeline_shader_stages,
        .pVertexInputState = &vertex_input_info,
        .pInputAssemblyState = &input_assembly_info, .pTessellationState = NULL,
@@ -941,9 +941,7 @@ GeyserPipeline *geyser_create_pipeline(
        .basePipelineHandle = NULL, .basePipelineIndex = 0}};
 
   vkCreateGraphicsPipelines(state->device, NULL, 1, pipeline_info, NULL,
-                            &pipe->pipeline);
-
-  return pipe;
+                            &pipeline->pipeline);
 }
 
 GeyserVertexInputDescription geyser_create_vertex_input_description() {

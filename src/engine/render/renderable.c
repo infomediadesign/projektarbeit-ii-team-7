@@ -1,8 +1,10 @@
 #include "renderable.h"
 #include "../util.h"
+#include <math.h>
 #include <string.h>
 
 // clang-format off
+static const Vector3 one_vec3 = {1.0f, 1.0f, 1.0f};
 static const Vector3 null_vec3 = {0.0f, 0.0f, 0.0f};
 static const Vector4 null_vec4 = {0.0f, 0.0f, 0.0f, 1.0f};
 static const Matrix4 null_mat4 = {
@@ -19,10 +21,11 @@ void renderable_make_default(Renderable *r) {
   r->vertices_count = 0U;
   r->position = null_vec4;
   r->last_position = null_vec4;
-  r->angle = null_vec4;
+  r->rotation = null_vec4;
   r->transform_matrix = null_mat4;
   r->active = GS_FALSE;
   r->velocity = null_vec3;
+  r->scale = one_vec3;
 }
 
 Renderable renderable_default() {
@@ -122,19 +125,16 @@ void renderable_send_memory(RenderState *state, Renderable *r) {
   geyser_cmd_submit_staging(state);
 }
 
-void renderable_make_rect(const RenderState *state, Renderable *r, const f32 x,
-                          const f32 y, const f32 width, const f32 height) {
-  const f32 half_width = state->window_width * 0.5f;
-  const f32 half_height = state->window_height * 0.5f;
-
+void renderable_make_rect(const RenderState *state, Renderable *r,
+                          const f32 width, const f32 height) {
   // clang-format off
   Vector4 vertices[6] = {
-    {-1.0f + (x / half_width),           -1.0f + (y / half_height),            0.0f, 1.0f},
-    {-1.0f + (x / half_width),           -1.0f + ((y + height) / half_height), 0.0f, 1.0f},
-    {-1.0f + ((x + width) / half_width), -1.0f + (y / half_height),            0.0f, 1.0f},
-    {-1.0f + ((x + width) / half_width), -1.0f + (y / half_height),            0.0f, 1.0f},
-    {-1.0f + (x / half_width),           -1.0f + ((y + height) / half_height), 0.0f, 1.0f},
-    {-1.0f + ((x + width) / half_width), -1.0f + ((y + height) / half_height), 0.0f, 1.0f}
+    {-1.0f,         -1.0f,          0.0f, 1.0f},
+    {-1.0f,         -1.0f + height, 0.0f, 1.0f},
+    {-1.0f + width, -1.0f,          0.0f, 1.0f},
+    {-1.0f + width, -1.0f,          0.0f, 1.0f},
+    {-1.0f,         -1.0f + height, 0.0f, 1.0f},
+    {-1.0f + width, -1.0f + height, 0.0f, 1.0f}
   };
 
   Vector2 uvmap[6] = {
@@ -162,26 +162,64 @@ void renderable_free(const RenderState *state, Renderable *r) {
 }
 
 void renderable_calc_matrix(Renderable *r) {
-  /* The constants are the value of 1 pixel at 768x432 */
-  r->transform_matrix.w[0] = r->position.x * 0.0026f;
-  r->transform_matrix.w[1] = r->position.y * 0.0046f;
+  /* Translation */
+  r->transform_matrix.w[0] = r->position.x;
+  r->transform_matrix.w[1] = r->position.y;
   r->transform_matrix.w[2] = r->position.z;
+
+  /* Linear scale and unit quanterion rotation */
+  r->transform_matrix.x[0] = 1.0f - 2.0f * r->rotation.y * r->rotation.y -
+                             2.0f * r->rotation.z * r->rotation.z;
+  r->transform_matrix.x[1] = 2.0f * r->rotation.x * r->rotation.y +
+                             2.0f * r->rotation.w * r->rotation.z;
+  r->transform_matrix.x[2] = 2.0f * r->rotation.x * r->rotation.z -
+                             2.0f * r->rotation.w * r->rotation.y;
+
+  r->transform_matrix.y[0] = 2.0f * r->rotation.x * r->rotation.y -
+                             2.0f * r->rotation.w * r->rotation.z;
+  r->transform_matrix.y[1] = 1.0f - 2.0f * r->rotation.x * r->rotation.x -
+                             2.0f * r->rotation.z * r->rotation.z;
+  r->transform_matrix.y[2] = 2.0f * r->rotation.y * r->rotation.z -
+                             2.0f * r->rotation.w * r->rotation.x;
+
+  r->transform_matrix.z[0] = 2.0f * r->rotation.x * r->rotation.z +
+                             2.0f * r->rotation.w * r->rotation.y;
+  r->transform_matrix.z[1] = 2.0f * r->rotation.y * r->rotation.z +
+                             2.0f * r->rotation.w * r->rotation.x;
+  r->transform_matrix.z[2] = 1.0f - 2.0f * r->rotation.x * r->rotation.x -
+                             2.0f * r->rotation.y * r->rotation.y;
+
+  r->transform_matrix.x[0] *= r->scale.x;
+  r->transform_matrix.y[1] *= r->scale.y;
+  r->transform_matrix.z[2] *= r->scale.z;
 }
 
 void renderable_interpolate(Renderable *r) {
-  const f64 current_time = platform_time_f64();
+  const f64 delta = platform_time_f64() - r->updated_at;
 
-  r->position.x =
-      util_lerp_f32(current_time - r->updated_at, r->last_position.x,
-                    r->last_position.x + r->velocity.x);
-  r->position.y =
-      util_lerp_f32(current_time - r->updated_at, r->last_position.y,
-                    r->last_position.y + r->velocity.y);
+  r->position.x = util_lerp_f32(delta, r->last_position.x,
+                                r->last_position.x + r->velocity.x);
+  r->position.y = util_lerp_f32(delta, r->last_position.y,
+                                r->last_position.y + r->velocity.y);
+  r->position.z = util_lerp_f32(delta, r->last_position.z,
+                                r->last_position.z + r->velocity.z);
 }
 
 void renderable_set_pos(Renderable *r, const Vector4 pos) {
   r->position = pos;
   r->last_position = pos;
+}
+
+void renderable_set_rotation(Renderable *r, const Vector3 axis,
+                             const f32 rotation) {
+  if (!vector_is_normal3(&axis)) {
+    return;
+  }
+
+  r->rotation.x = axis.x * sinf(rotation * 0.5);
+  r->rotation.y = axis.y * sinf(rotation * 0.5);
+  r->rotation.z = axis.z * sinf(rotation * 0.5);
+  r->rotation.w = cosf(rotation * 0.5);
 }
 
 void renderable_set_velocity(Renderable *r, const Vector3 vel) {

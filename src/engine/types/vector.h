@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "../types.h"
+#include "numeric.h"
 
 typedef struct Vector2 {
   f32 x;
@@ -34,9 +34,13 @@ Vector2 vector_make2(const f32 x, const f32 y);
 Vector3 vector_add3(const Vector3 v1, const Vector3 v2);
 Vector3 vector_sub3(const Vector3 v1, const Vector3 v2);
 Vector3 vector_scale3(const Vector3 v1, const f32 scale);
+Vector3 vector_normal3(const Vector3 v1);
+f32 vector_length3(const Vector3 v);
 void vector_add3i(Vector3 *v1, const Vector3 v2);
 void vector_sub3i(Vector3 *v1, const Vector3 v2);
 void vector_scale3i(Vector3 *v1, const f32 scale);
+void vector_normal3i(Vector3 *v);
+u8 vector_is_normal3(const Vector3 *v);
 
 #ifdef __cplusplus
 }

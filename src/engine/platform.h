@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "types.h"
+#include "types/numeric.h"
 #include <stdio.h>
 #include <stdlib.h>
 

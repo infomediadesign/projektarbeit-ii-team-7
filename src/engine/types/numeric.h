@@ -8,6 +8,8 @@ extern "C" {
 #define RESTRICTED_PTR *restrict
 #endif
 
+#define MF_PI 3.14159265359
+
 #include <stdint.h>
 #include <stdlib.h>
 

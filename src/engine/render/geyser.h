@@ -56,7 +56,8 @@ typedef struct GeyserVertexInputDescription {
 } GeyserVertexInputDescription;
 
 typedef struct GeyserPushConstants {
-  Matrix4 mat;
+  Matrix4 transform;
+  Matrix4 camera;
 } GeyserPushConstants;
 
 /**
@@ -125,7 +126,7 @@ void geyser_create_and_allocate_image(const RenderState RESTRICTED_PTR state,
                                       const VkImageUsageFlags usage,
                                       const uint32_t memory_type,
                                       GeyserImage *image);
-GeyserPipeline *geyser_create_pipeline(
+void geyser_create_pipeline(
     const RenderState RESTRICTED_PTR state,
     const VkDescriptorSetLayoutBinding descriptor_bindings[],
     const u32 descriptor_bindings_size,
@@ -133,7 +134,8 @@ GeyserPipeline *geyser_create_pipeline(
     const u32 push_constant_ranges_size, const u8 vertex_shader_data[],
     const u32 vertex_shader_data_size, const u8 fragment_shader_data[],
     const u32 fragment_shader_data_size,
-    GeyserVertexInputDescription *vertex_input_description);
+    GeyserVertexInputDescription *vertex_input_description,
+    GeyserPipeline *pipeline);
 GeyserVertexInputDescription geyser_create_vertex_input_description();
 void geyser_add_vertex_input_binding(GeyserVertexInputDescription *description,
                                      const u32 binding, const u32 stride,

@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "../types.h"
+#include "numeric.h"
 
 typedef struct Matrix3 {
   f32 x[3];

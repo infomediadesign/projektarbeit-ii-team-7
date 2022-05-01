@@ -1,13 +1,13 @@
 #ifndef __GAME_GAME_H
 #define __GAME_GAME_H
 
-#define MAX_ENTITIES 8196
+#define MAX_ENTITIES 4096
 
 #include "entity.h"
 #include <engine/platform.h>
 #include <engine/render/renderable.h>
 #include <engine/state/state.h>
-#include <engine/types.h>
+#include <engine/types/numeric.h>
 
 class Game {
 private:

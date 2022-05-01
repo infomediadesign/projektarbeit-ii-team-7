@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#include "../types.h"
+#include "../types/numeric.h"
 
 typedef struct Image {
   u32 *data;

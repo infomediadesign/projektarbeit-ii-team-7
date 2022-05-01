@@ -12,6 +12,7 @@ extern "C" {
 #include "../platform.h"
 #include "../state/state.h"
 #include "../util.h"
+#include "../types/matrix.h"
 #include <glad/vulkan.h>
 #include <GLFW/glfw3.h>
 // clang-format on
@@ -21,6 +22,15 @@ typedef struct BackbufferView {
   VkDeviceMemory memory;
   VkImageView view;
 } BackbufferView;
+
+/* Copy of GeyserPipeline */
+typedef struct RsPipeline {
+  VkDescriptorSetLayout descriptor_set_layout;
+  VkPipelineLayout pipeline_layout;
+  VkShaderModule vertex_shader;
+  VkShaderModule fragment_shader;
+  VkPipeline pipeline;
+} RsPipeline;
 
 /**
  * @brief Stores all the information necessary for rendering.
@@ -38,6 +48,8 @@ typedef struct RenderState {
   Time init_time;
   u8 rendering;
 
+  Matrix4 camera_transform;
+
   /* Persistent Vulkan-related stuff */
   VkInstance instance;
   VkPhysicalDevice physical_device;
@@ -53,8 +65,7 @@ typedef struct RenderState {
   VkRenderPass renderpass;
   BackbufferView *backbuffers;
   VkFramebuffer *framebuffers;
-  VkPipeline pipeline2d;
-  VkPipeline pipeline3d;
+  RsPipeline pipeline;
   VkDescriptorPool descriptor_pool;
   VkCommandPool command_pool;
   VkBuffer buffer;

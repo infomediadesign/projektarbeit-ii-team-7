@@ -15,7 +15,7 @@ extern "C" {
   }
 
 #include "state/state.h"
-#include "types.h"
+#include "types/numeric.h"
 
 /**
  * @brief Data to be sent to logic threads.
@@ -36,18 +36,16 @@ typedef struct ThreadData {
   }
 
 static inline u64 util_kibibytes(const u64 kb) { return kb * 1024; }
-
 static inline u64 util_mebibytes(const u64 mb) { return mb * 1024 * 1024; }
-
 static inline u64 util_gibibytes(const u64 gb) {
   return gb * 1024 * 1024 * 1024;
 }
-
 static inline u64 util_kbytes(const u64 kb) { return kb * 1000; }
-
 static inline u64 util_mbytes(const u64 mb) { return mb * 1000000; }
-
 static inline u64 util_gbytes(const u64 gb) { return gb * 1000000000; }
+static inline f32 util_radians(const f32 deg) { return (deg * MF_PI) / 180; }
+static inline f32 util_degrees(const f32 rad) { return (rad * 180) / MF_PI; }
+static inline f32 util_meters(const f32 pixels) { return pixels * 0.001f; }
 
 LERP_FUNC(i64)
 LERP_FUNC(u64)

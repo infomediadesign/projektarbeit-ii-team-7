@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 #include "../platform.h"
-#include "../types.h"
+#include "../types/numeric.h"
 
 /**
  * @brief Current state of the game.

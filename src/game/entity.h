@@ -1,7 +1,7 @@
 #ifndef __GAME_ENTITY_H
 #define __GAME_ENTITY_H
 
-#include <engine/types.h>
+#include <engine/types/numeric.h>
 #include <engine/types/vector.h>
 #include <engine/util.h>
 

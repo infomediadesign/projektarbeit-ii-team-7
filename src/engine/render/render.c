@@ -3,7 +3,7 @@
 
 #include <game/interface.h>
 
-#define MAX_RENDERABLES 2048
+#define MAX_RENDERABLES 16384
 
 void glfw_error_fun(int error_code, const char *error_message) {
   printf("\033[1;31m[GLFW Error]\033[0m %s\n", error_message);
@@ -77,7 +77,8 @@ int render_perform(void *args) {
        VK_SHADER_STAGE_FRAGMENT_BIT, NULL}};
 
   const VkPushConstantRange push_constant_range[] = {
-      {VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(GeyserPushConstants)}};
+      {VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(GeyserPushConstants)},
+  };
 
   GeyserVertexInputDescription vertex_input_description =
       geyser_create_vertex_input_description();
@@ -92,25 +93,23 @@ int render_perform(void *args) {
   geyser_add_vertex_input_attribute(&vertex_input_description, 1, 1,
                                     VK_FORMAT_R32G32_SFLOAT, 0);
 
-  GeyserPipeline *pipeline3d = geyser_create_pipeline(
+  geyser_create_pipeline(
       render_state, descriptor_bindings, 1, push_constant_range, 1,
       unlit_generic_vert_data, unlit_generic_vert_data_size,
       unlit_generic_frag_data, unlit_generic_frag_data_size,
-      &vertex_input_description);
-
-  render_state->pipeline3d = pipeline3d->pipeline;
+      &vertex_input_description, (GeyserPipeline *)&render_state->pipeline);
 
   renderable_make_default(&renderables[0]);
   renderable_make_default(&renderables[1]);
-  renderable_make_rect(render_state, &renderables[0], 0, 0, 256, 256);
-  renderable_make_rect(render_state, &renderables[1], 0, 0, 256, 256);
+  renderable_make_rect(render_state, &renderables[0], 0.5f, 0.5f);
+  renderable_make_rect(render_state, &renderables[1], 0.5f, 0.5f);
   renderable_allocate_memory(render_state, &renderables[0]);
   renderable_allocate_memory(render_state, &renderables[1]);
   renderable_send_memory(render_state, &renderables[0]);
   renderable_send_memory(render_state, &renderables[1]);
 
-  renderable_set_pos(&renderables[0], vector_make4(32.0f, 32.0f, 1.0f, 1.0f));
-  renderable_set_pos(&renderables[1], vector_make4(300.0f, 32.0f, 1.0f, 0.9f));
+  renderable_set_pos(&renderables[0], vector_make4(0.0f, 0.1f, 0.0f, 1.0f));
+  renderable_set_pos(&renderables[1], vector_make4(0.5f, 0.6f, 0.0f, 0.9f));
 
   renderables[0].active = GS_TRUE;
   renderables[1].active = GS_TRUE;
@@ -126,8 +125,9 @@ int render_perform(void *args) {
 
   geyser_set_image_memory(render_state, &renderables[0].texture.base.base,
                           &test_img);
-  geyser_allocate_texture_descriptor_set(render_state, &renderables[0].texture,
-                                         pipeline3d);
+  geyser_allocate_texture_descriptor_set(
+      render_state, &renderables[0].texture,
+      (GeyserPipeline *)&render_state->pipeline);
   geyser_update_texture_descriptor_set(render_state, &renderables[0].texture);
 
   renderables[1].texture = renderables[0].texture;
@@ -166,15 +166,23 @@ int render_perform(void *args) {
     geyser_cmd_begin_renderpass(render_state);
 
     vkCmdBindPipeline(render_state->command_buffer,
-                      VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline3d->pipeline);
+                      VK_PIPELINE_BIND_POINT_GRAPHICS,
+                      render_state->pipeline.pipeline);
 
     geyser_cmd_set_viewport(render_state);
+
+    GeyserPushConstants push_constants = {.camera =
+                                              render_state->camera_transform};
 
     for (u32 i = 0; i < MAX_RENDERABLES; i++) {
       if (renderables[i].active == GS_TRUE &&
           renderables[i].vertices_count > 0) {
+        renderable_set_rotation(&renderables[i], vector_make3(0.0f, 0.0f, 1.0f),
+                                0.1f);
         renderable_interpolate(&renderables[i]);
         renderable_calc_matrix(&renderables[i]);
+
+        push_constants.transform = renderables[i].transform_matrix;
 
         vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1,
                                &renderables[i].vertex_buffer, offsets);
@@ -182,12 +190,12 @@ int render_perform(void *args) {
                                &renderables[i].uv_buffer, offsets);
         vkCmdBindDescriptorSets(
             render_state->command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-            pipeline3d->pipeline_layout, 0, 1,
+            render_state->pipeline.pipeline_layout, 0, 1,
             &renderables[i].texture.descriptor_set, 0, NULL);
-        vkCmdPushConstants(
-            render_state->command_buffer, pipeline3d->pipeline_layout,
-            VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(GeyserPushConstants),
-            &renderables[i].transform_matrix);
+        vkCmdPushConstants(render_state->command_buffer,
+                           render_state->pipeline.pipeline_layout,
+                           VK_SHADER_STAGE_VERTEX_BIT, 0,
+                           sizeof(GeyserPushConstants), &push_constants);
 
         vkCmdDraw(render_state->command_buffer, renderables[i].vertices_count,
                   1, 0, 0);
@@ -218,7 +226,6 @@ int render_perform(void *args) {
   }
 
   free(renderables);
-  free(pipeline3d);
   geyser_destroy_vk(render_state);
   render_state_destroy(render_state);
   glfwTerminate();

@@ -16,7 +16,7 @@ extern "C" {
 #include <engine/platform.h>
 #include <engine/render/renderable.h>
 #include <engine/state/state.h>
-#include <engine/types.h>
+#include <engine/types/numeric.h>
 
 void game_initialize(GameState *state);
 void game_tick(GameState *state, mutex_t *lock);

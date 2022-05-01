@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #include "../types/matrix.h"
+#include "../types/numeric.h"
 #include "geyser.h"
 #include "render_state.h"
 
@@ -15,7 +16,8 @@ typedef struct Renderable {
   GeyserTexture texture;
   u32 vertices_count;
   Vector4 position;
-  Vector4 angle;
+  Vector4 rotation;
+  Vector3 scale;
   Matrix4 transform_matrix;
   GeyserBool active;
 
@@ -39,12 +41,14 @@ void renderable_make_default(Renderable *r);
 void renderable_load_texture(RenderState *state, Renderable *r);
 void renderable_allocate_memory(RenderState *state, Renderable *r);
 void renderable_send_memory(RenderState *state, Renderable *r);
-void renderable_make_rect(const RenderState *state, Renderable *r, const f32 x,
-                          const f32 y, const f32 width, const f32 height);
+void renderable_make_rect(const RenderState *state, Renderable *r,
+                          const f32 width, const f32 height);
 void renderable_free(const RenderState *state, Renderable *r);
 void renderable_calc_matrix(Renderable *r);
 void renderable_interpolate(Renderable *r);
 void renderable_set_pos(Renderable *r, const Vector4 pos);
+void renderable_set_rotation(Renderable *r, const Vector3 axis,
+                             const f32 rotation);
 void renderable_set_velocity(Renderable *r, const Vector3 vel);
 
 #ifdef __cplusplus
