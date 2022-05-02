@@ -44,3 +44,20 @@ void quaternion_muli(Quaternion *q1, const Quaternion q2) {
   q1->z = q.z;
   q1->w = q.w;
 }
+
+Matrix4 quaternion_rotation_matrix(const Quaternion q) {
+  return matrix_make3(
+    /* x */
+    1.0f - 2.0f * q.y * q.y - 2.0f * q.z * q.z,
+    2.0f * q.x * q.y +2.0f * q.w * q.z,
+    2.0f * q.x * q.z -2.0f * q.w * q.y,
+    /* y */
+    2.0f * q.x * q.y -2.0f * q.w * q.z,
+    1.0f - 2.0f * q.x * q.x -2.0f * q.z * q.z,
+    2.0f * q.y * q.z -2.0f * q.w * q.x,
+    /* z */
+    2.0f * q.x * q.z +2.0f * q.w * q.y,
+    2.0f * q.y * q.z +2.0f * q.w * q.x,
+    1.0f - 2.0f * q.x * q.x -2.0f * q.y * q.y
+  );
+}

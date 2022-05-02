@@ -163,32 +163,12 @@ void renderable_free(const RenderState *state, Renderable *r) {
 }
 
 void renderable_calc_matrix(Renderable *r) {
+  r->transform_matrix = quaternion_rotation_matrix(r->rotation);
+
   /* Translation */
   r->transform_matrix.w[0] = r->position.x;
   r->transform_matrix.w[1] = r->position.y;
   r->transform_matrix.w[2] = r->position.z;
-
-  /* Linear scale and unit quanterion rotation */
-  r->transform_matrix.x[0] = 1.0f - 2.0f * r->rotation.y * r->rotation.y -
-                             2.0f * r->rotation.z * r->rotation.z;
-  r->transform_matrix.x[1] = 2.0f * r->rotation.x * r->rotation.y +
-                             2.0f * r->rotation.w * r->rotation.z;
-  r->transform_matrix.x[2] = 2.0f * r->rotation.x * r->rotation.z -
-                             2.0f * r->rotation.w * r->rotation.y;
-
-  r->transform_matrix.y[0] = 2.0f * r->rotation.x * r->rotation.y -
-                             2.0f * r->rotation.w * r->rotation.z;
-  r->transform_matrix.y[1] = 1.0f - 2.0f * r->rotation.x * r->rotation.x -
-                             2.0f * r->rotation.z * r->rotation.z;
-  r->transform_matrix.y[2] = 2.0f * r->rotation.y * r->rotation.z -
-                             2.0f * r->rotation.w * r->rotation.x;
-
-  r->transform_matrix.z[0] = 2.0f * r->rotation.x * r->rotation.z +
-                             2.0f * r->rotation.w * r->rotation.y;
-  r->transform_matrix.z[1] = 2.0f * r->rotation.y * r->rotation.z +
-                             2.0f * r->rotation.w * r->rotation.x;
-  r->transform_matrix.z[2] = 1.0f - 2.0f * r->rotation.x * r->rotation.x -
-                             2.0f * r->rotation.y * r->rotation.y;
 
   r->transform_matrix.x[0] *= r->scale.x;
   r->transform_matrix.y[1] *= r->scale.y;

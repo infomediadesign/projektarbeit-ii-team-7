@@ -7,6 +7,7 @@ extern "C" {
 
 #include "numeric.h"
 #include "vector.h"
+#include "matrix.h"
 
 typedef struct Quaternion {
   f32 x;
@@ -22,6 +23,7 @@ void quaternion_normalize(Quaternion *q);
 u8 quaternion_is_normal(const Quaternion *q);
 Quaternion quaternion_mul(const Quaternion q1, const Quaternion q2);
 void quaternion_muli(Quaternion *q1, const Quaternion q2);
+Matrix4 quaternion_rotation_matrix(const Quaternion q);
 
 #ifdef __cplusplus
 }
