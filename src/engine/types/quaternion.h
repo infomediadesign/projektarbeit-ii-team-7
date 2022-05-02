@@ -5,9 +5,9 @@
 extern "C" {
 #endif
 
+#include "matrix.h"
 #include "numeric.h"
 #include "vector.h"
-#include "matrix.h"
 
 typedef struct Quaternion {
   f32 x;
