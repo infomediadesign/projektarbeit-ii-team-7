@@ -99,40 +99,23 @@ int render_perform(void *args) {
       unlit_generic_frag_data, unlit_generic_frag_data_size,
       &vertex_input_description, (GeyserPipeline *)&render_state->pipeline);
 
-  renderable_make_default(&renderables[0]);
-  renderable_make_default(&renderables[1]);
-  renderable_make_rect(render_state, &renderables[0], 0.5f, 0.5f);
-  renderable_make_rect(render_state, &renderables[1], 0.5f, 0.5f);
-  renderable_allocate_memory(render_state, &renderables[0]);
-  renderable_allocate_memory(render_state, &renderables[1]);
-  renderable_send_memory(render_state, &renderables[0]);
-  renderable_send_memory(render_state, &renderables[1]);
+  /* Test-only rectangles */
 
-  renderable_set_pos(&renderables[0], vector_make4(0.0f, -0.5f, 0.0f, 1.0f));
-  renderable_set_pos(&renderables[1], vector_make4(-1.0f, -0.4f, 0.0f, 1.0f));
+  renderable_init_rect(render_state, &renderables[0], 0.5f, 0.5f);
+  renderable_init_rect(render_state, &renderables[1], 0.5f, 0.5f);
 
-  renderables[0].active = GS_TRUE;
-  renderables[1].active = GS_TRUE;
+  renderable_set_pos(&renderables[0], vector_make4(0.5f, -0.5f, 0.0f, 1.0f));
+  renderable_set_pos(&renderables[1], vector_make4(0.5f, -0.5f, 0.0f, 1.0f));
 
-  /* texture test */
+  renderable_set_scale(&renderables[0], (Vector3){2.0f, 2.0f, 1.0f});
 
-  Image test_img;
-  asset_load_image(&test_img, "/home/luna/Downloads/foks.png");
+  renderable_set_active(&renderables[0], GS_TRUE);
+  renderable_set_active(&renderables[1], GS_TRUE);
 
-  geyser_create_texture(render_state,
-                        vector_make2(test_img.width, test_img.height),
-                        &renderables[0].texture);
-
-  geyser_set_image_memory(render_state, &renderables[0].texture.base.base,
-                          &test_img);
-  geyser_allocate_texture_descriptor_set(
-      render_state, &renderables[0].texture,
-      (GeyserPipeline *)&render_state->pipeline);
-  geyser_update_texture_descriptor_set(render_state, &renderables[0].texture);
-
+  renderable_load_texture(render_state, &renderables[0], "assets/asteroid.png");
   renderables[1].texture = renderables[0].texture;
 
-  /* end texture test */
+  /* End test-only rectangles */
 
   geyser_cmd_end_staging(render_state);
 

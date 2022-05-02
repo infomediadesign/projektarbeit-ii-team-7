@@ -1,4 +1,7 @@
 #include "asset.h"
+#include "../platform.h"
+#include <stdlib.h>
+#include <string.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_ONLY_PNG
@@ -26,6 +29,8 @@ static const u32 missing_texture[256] = {
 };
 // clang-format on
 
+static const char *search_paths[5] = {"", "./", "../", "../../", "../../../"};
+
 void flip_channels(u32 *data, const u32 size) {
   for (u32 i = 0; i < size; i++) {
     data[i] = (data[i] & 0xff00ff00) | ((data[i] & 0x00ff0000) >> 16) |
@@ -33,7 +38,29 @@ void flip_channels(u32 *data, const u32 size) {
   }
 }
 
-void asset_load_image(Image *img, const char *image_path) {
+void asset_find(const char *asset_path, char *out) {
+  for (u8 i = 0; i < 5; i++) {
+    char final_path[256];
+
+    memset(final_path, 0, 256);
+
+    strcat(final_path, search_paths[i]);
+    strcat(final_path, asset_path);
+
+    if (access(final_path, F_OK) == 0) {
+      memset(out, 0, 256);
+      strcpy(out, final_path);
+
+      return;
+    }
+  }
+}
+
+void asset_load_image(Image *img, const char *asset_path) {
+  char image_path[256];
+
+  asset_find(asset_path, image_path);
+
   img->data = NULL;
   i32 image_width, image_height, _n;
 
@@ -41,7 +68,7 @@ void asset_load_image(Image *img, const char *image_path) {
       stbi_load(image_path, &image_width, &image_height, &_n, STBI_rgb_alpha);
 
   if (data == NULL) {
-    printf("Asset not found: %s\n", image_path);
+    printf("Asset not found: %s\n", asset_path);
 
     data = (u8 *)calloc(1024, 1);
     image_width = 16;

@@ -79,3 +79,18 @@ void vector_sub4i(Vector4 *v1, const Vector4 v2) {
   v1->z -= v2.z;
   v1->w -= v2.w;
 }
+
+Vector4 vector_neg(const Vector4 v) {
+  return (Vector4){-v.x, -v.y, -v.z, -v.w};
+}
+
+void vector_negi(Vector4 *v) {
+  v->x = -v->x;
+  v->y = -v->y;
+  v->z = -v->z;
+  v->w = -v->w;
+}
+
+Vector4 vector_add4(const Vector4 v1, const Vector4 v2) {
+  return (Vector4){v1.x + v2.x, v1.y + v2.y, v1.z + v2.z, v1.w + v2.w};
+}

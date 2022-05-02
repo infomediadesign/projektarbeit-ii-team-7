@@ -1,4 +1,5 @@
 #include "renderable.h"
+#include "../input/asset.h"
 #include "../util.h"
 #include <math.h>
 #include <string.h>
@@ -130,12 +131,12 @@ void renderable_make_rect(const RenderState *state, Renderable *r,
                           const f32 width, const f32 height) {
   // clang-format off
   Vector4 vertices[6] = {
-    {0.0f,  0.0f,   0.0f, 1.0f},
-    {0.0f,  height, 0.0f, 1.0f},
-    {width, 0.0f,   0.0f, 1.0f},
-    {width, 0.0f,   0.0f, 1.0f},
-    {0.0f,  height, 0.0f, 1.0f},
-    {width, height, 0.0f, 1.0f}
+    {-width * 0.5f,  -height * 0.5f,   0.0f, 1.0f},
+    {-width * 0.5f,  height * 0.5f, 0.0f, 1.0f},
+    {width * 0.5f, -height * 0.5f,   0.0f, 1.0f},
+    {width * 0.5f, -height * 0.5f,   0.0f, 1.0f},
+    {-width * 0.5f,  height * 0.5f, 0.0f, 1.0f},
+    {width * 0.5f, height * 0.5f, 0.0f, 1.0f}
   };
 
   Vector2 uvmap[6] = {
@@ -163,16 +164,21 @@ void renderable_free(const RenderState *state, Renderable *r) {
 }
 
 void renderable_calc_matrix(Renderable *r) {
-  r->transform_matrix = quaternion_rotation_matrix(r->rotation);
+  r->transform_matrix = null_mat4;
+
+  /* Scale */
+  r->transform_matrix.x[0] = r->scale.x;
+  r->transform_matrix.y[1] = r->scale.y;
+  r->transform_matrix.z[2] = r->scale.z;
+
+  /* Rotation */
+  r->transform_matrix =
+      matrix_mul(r->transform_matrix, quaternion_rotation_matrix(r->rotation));
 
   /* Translation */
   r->transform_matrix.w[0] = r->position.x;
   r->transform_matrix.w[1] = r->position.y;
   r->transform_matrix.w[2] = r->position.z;
-
-  r->transform_matrix.x[0] *= r->scale.x;
-  r->transform_matrix.y[1] *= r->scale.y;
-  r->transform_matrix.z[2] *= r->scale.z;
 }
 
 void renderable_interpolate(Renderable *r) {
@@ -197,12 +203,39 @@ void renderable_set_rotation(Renderable *r, const Vector3 axis,
     return;
   }
 
-  r->rotation.x = axis.x * sinf(rotation * 0.5);
-  r->rotation.y = axis.y * sinf(rotation * 0.5);
-  r->rotation.z = axis.z * sinf(rotation * 0.5);
-  r->rotation.w = cosf(rotation * 0.5);
+  r->rotation = quaternion_rotation(axis, rotation);
 }
 
 void renderable_set_velocity(Renderable *r, const Vector3 vel) {
   r->velocity = vel;
+}
+
+void renderable_load_texture(RenderState *state, Renderable *r,
+                             const char *image_path) {
+  Image tex_img;
+  asset_load_image(&tex_img, image_path);
+
+  geyser_create_texture(state, vector_make2(tex_img.width, tex_img.height),
+                        &r->texture);
+
+  geyser_set_image_memory(state, &r->texture.base.base, &tex_img);
+  geyser_allocate_texture_descriptor_set(state, &r->texture,
+                                         (GeyserPipeline *)&state->pipeline);
+  geyser_update_texture_descriptor_set(state, &r->texture);
+}
+
+void renderable_init_rect(RenderState *state, Renderable *r, const f32 width,
+                          const f32 height) {
+  renderable_make_default(r);
+  renderable_make_rect(state, r, width, height);
+  renderable_allocate_memory(state, r);
+  renderable_send_memory(state, r);
+}
+
+void renderable_set_scale(Renderable *r, const Vector3 scale) {
+  r->scale = scale;
+}
+
+void renderable_set_active(Renderable *r, GeyserBool active) {
+  r->active = active;
 }

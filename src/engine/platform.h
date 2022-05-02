@@ -15,10 +15,14 @@ extern "C" {
 #define WIN32_LEAN_AND_MEAN
 
 #include <Windows.h>
+#include <io.h>
 #include <profileapi.h>
 
 typedef HANDLE thread_t;
 typedef HANDLE mutex_t;
+
+#define F_OK 0
+#define access _access
 
 #else
 

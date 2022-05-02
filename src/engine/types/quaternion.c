@@ -9,6 +9,12 @@ Quaternion quaternion_from_vec(const Vector4 v) {
   return (Quaternion){v.x, v.y, v.z, v.w};
 }
 
+Quaternion quaternion_rotation(const Vector3 axis, const f32 rotation) {
+  return (Quaternion){axis.x * sinf(rotation * 0.5),
+                      axis.y * sinf(rotation * 0.5),
+                      axis.z * sinf(rotation * 0.5), cosf(rotation * 0.5)};
+}
+
 Quaternion quaternion_normal(const Quaternion q) {
   const f32 len = sqrt(q.w * q.w + q.x * q.x + q.y * q.y + q.z * q.z);
 
