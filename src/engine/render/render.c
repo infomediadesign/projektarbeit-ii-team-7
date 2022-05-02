@@ -108,8 +108,8 @@ int render_perform(void *args) {
   renderable_send_memory(render_state, &renderables[0]);
   renderable_send_memory(render_state, &renderables[1]);
 
-  renderable_set_pos(&renderables[0], vector_make4(0.0f, 0.1f, 0.0f, 1.0f));
-  renderable_set_pos(&renderables[1], vector_make4(0.5f, 0.6f, 0.0f, 0.9f));
+  renderable_set_pos(&renderables[0], vector_make4(0.0f, -0.5f, 0.0f, 1.0f));
+  renderable_set_pos(&renderables[1], vector_make4(-1.0f, -0.4f, 0.0f, 1.0f));
 
   renderables[0].active = GS_TRUE;
   renderables[1].active = GS_TRUE;
@@ -171,14 +171,15 @@ int render_perform(void *args) {
 
     geyser_cmd_set_viewport(render_state);
 
+    renderable_set_rotation(&renderables[0], vector_make3(0.0f, 0.0f, 1.0f),
+                            render_state->current_frame / 300.0f);
+
     GeyserPushConstants push_constants = {.camera =
                                               render_state->camera_transform};
 
     for (u32 i = 0; i < MAX_RENDERABLES; i++) {
       if (renderables[i].active == GS_TRUE &&
           renderables[i].vertices_count > 0) {
-        renderable_set_rotation(&renderables[i], vector_make3(0.0f, 0.0f, 1.0f),
-                                0.1f);
         renderable_interpolate(&renderables[i]);
         renderable_calc_matrix(&renderables[i]);
 

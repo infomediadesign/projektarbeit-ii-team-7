@@ -41,6 +41,8 @@ void vector_sub3i(Vector3 *v1, const Vector3 v2);
 void vector_scale3i(Vector3 *v1, const f32 scale);
 void vector_normal3i(Vector3 *v);
 u8 vector_is_normal3(const Vector3 *v);
+Vector4 vector_sub4(const Vector4 v1, const Vector4 v2);
+void vector_sub4i(Vector4 *v1, const Vector4 v2);
 
 #ifdef __cplusplus
 }

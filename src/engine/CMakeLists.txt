@@ -20,6 +20,8 @@ set(engine_source_files
   types/vector.h
   types/matrix.c
   types/matrix.h
+  types/quaternion.c
+  types/quaternion.h
   platform.c
   platform.h
   util.h

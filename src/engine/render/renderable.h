@@ -7,6 +7,8 @@ extern "C" {
 
 #include "../types/matrix.h"
 #include "../types/numeric.h"
+#include "../types/quaternion.h"
+#include "../types/vector.h"
 #include "geyser.h"
 #include "render_state.h"
 
@@ -16,7 +18,7 @@ typedef struct Renderable {
   GeyserTexture texture;
   u32 vertices_count;
   Vector4 position;
-  Vector4 rotation;
+  Quaternion rotation;
   Vector3 scale;
   Matrix4 transform_matrix;
   GeyserBool active;

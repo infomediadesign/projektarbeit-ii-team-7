@@ -7,6 +7,7 @@
 static const Vector3 one_vec3 = {1.0f, 1.0f, 1.0f};
 static const Vector3 null_vec3 = {0.0f, 0.0f, 0.0f};
 static const Vector4 null_vec4 = {0.0f, 0.0f, 0.0f, 1.0f};
+static const Quaternion null_quat = {0.0f, 0.0f, 0.0f, 1.0f};
 static const Matrix4 null_mat4 = {
   {1.0f, 0.0f, 0.0f, 0.0f},
   {0.0f, 1.0f, 0.0f, 0.0f},
@@ -21,7 +22,7 @@ void renderable_make_default(Renderable *r) {
   r->vertices_count = 0U;
   r->position = null_vec4;
   r->last_position = null_vec4;
-  r->rotation = null_vec4;
+  r->rotation = null_quat;
   r->transform_matrix = null_mat4;
   r->active = GS_FALSE;
   r->velocity = null_vec3;
@@ -129,12 +130,12 @@ void renderable_make_rect(const RenderState *state, Renderable *r,
                           const f32 width, const f32 height) {
   // clang-format off
   Vector4 vertices[6] = {
-    {-1.0f,         -1.0f,          0.0f, 1.0f},
-    {-1.0f,         -1.0f + height, 0.0f, 1.0f},
-    {-1.0f + width, -1.0f,          0.0f, 1.0f},
-    {-1.0f + width, -1.0f,          0.0f, 1.0f},
-    {-1.0f,         -1.0f + height, 0.0f, 1.0f},
-    {-1.0f + width, -1.0f + height, 0.0f, 1.0f}
+    {0.0f,  0.0f,   0.0f, 1.0f},
+    {0.0f,  height, 0.0f, 1.0f},
+    {width, 0.0f,   0.0f, 1.0f},
+    {width, 0.0f,   0.0f, 1.0f},
+    {0.0f,  height, 0.0f, 1.0f},
+    {width, height, 0.0f, 1.0f}
   };
 
   Vector2 uvmap[6] = {
