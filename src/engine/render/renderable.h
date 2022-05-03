@@ -19,7 +19,9 @@ typedef struct Renderable {
   u32 vertices_count;
   Vector4 position;
   Quaternion rotation;
-  Vector3 scale;
+  Vector2 scale;
+  Vector2 uv_offset;
+  Vector4 color;
   Matrix4 transform_matrix;
   GeyserBool active;
 
@@ -48,7 +50,7 @@ void renderable_free(const RenderState *state, Renderable *r);
 void renderable_calc_matrix(Renderable *r);
 void renderable_interpolate(Renderable *r);
 void renderable_set_pos(Renderable *r, const Vector4 pos);
-void renderable_set_scale(Renderable *r, const Vector3 scale);
+void renderable_set_scale(Renderable *r, const Vector2 scale);
 void renderable_set_active(Renderable *r, GeyserBool active);
 void renderable_set_rotation(Renderable *r, const Vector3 axis,
                              const f32 rotation);

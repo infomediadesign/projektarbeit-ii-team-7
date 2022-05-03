@@ -4,15 +4,19 @@
 #include <engine/types/numeric.h>
 #include <engine/types/vector.h>
 #include <engine/util.h>
+#include <vector>
 
 class Entity {
 private:
   u32 renderable_id;
   Vector3 position;
   Vector3 velocity;
-  Vector3 angle;
-  bool active;
+  Vector3 axis;
+  f32 angle;
   f64 updated_at;
+  bool active;
+  Entity *parent;
+  std::vector<Entity> attachments;
 
 public:
   Entity() : Entity(0U) {}
@@ -21,8 +25,10 @@ public:
     this->renderable_id = renr_id;
     this->position = {0.0f, 0.0f, 0.0f};
     this->velocity = {0.0f, 0.0f, 0.0f};
-    this->angle = {0.0f, 0.0f, 0.0f};
+    this->axis = {0.0f, 0.0f, 0.0f};
+    this->angle = 0.0f;
     this->updated_at = 0.0;
+    this->parent = nullptr;
   }
 
   bool is_active();

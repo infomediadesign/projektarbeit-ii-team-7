@@ -56,8 +56,12 @@ typedef struct GeyserVertexInputDescription {
 } GeyserVertexInputDescription;
 
 typedef struct GeyserPushConstants {
-  Matrix4 transform;
   Matrix4 camera;
+  Vector4 quaternion;
+  Vector4 position;
+  Vector4 vertex_color;
+  Vector2 scale;
+  Vector2 uv_offset;
 } GeyserPushConstants;
 
 /**

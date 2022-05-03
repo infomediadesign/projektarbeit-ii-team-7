@@ -5,7 +5,8 @@
 #include <string.h>
 
 // clang-format off
-static const Vector3 one_vec3 = {1.0f, 1.0f, 1.0f};
+static const Vector2 null_vec2 = {0.0f, 0.0f};
+static const Vector2 one_vec2 = {1.0f, 1.0f};
 static const Vector3 null_vec3 = {0.0f, 0.0f, 0.0f};
 static const Vector4 null_vec4 = {0.0f, 0.0f, 0.0f, 1.0f};
 static const Quaternion null_quat = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -27,7 +28,9 @@ void renderable_make_default(Renderable *r) {
   r->transform_matrix = null_mat4;
   r->active = GS_FALSE;
   r->velocity = null_vec3;
-  r->scale = one_vec3;
+  r->scale = one_vec2;
+  r->uv_offset = null_vec2;
+  r->color = (Vector4){1.0f, 1.0f, 1.0f, 1.0f};
 }
 
 Renderable renderable_default() {
@@ -169,7 +172,6 @@ void renderable_calc_matrix(Renderable *r) {
   /* Scale */
   r->transform_matrix.x[0] = r->scale.x;
   r->transform_matrix.y[1] = r->scale.y;
-  r->transform_matrix.z[2] = r->scale.z;
 
   /* Rotation */
   r->transform_matrix =
@@ -203,7 +205,7 @@ void renderable_set_rotation(Renderable *r, const Vector3 axis,
     return;
   }
 
-  r->rotation = quaternion_rotation(axis, rotation);
+  r->rotation = (Quaternion){axis.x, axis.y, axis.z, rotation};
 }
 
 void renderable_set_velocity(Renderable *r, const Vector3 vel) {
@@ -232,7 +234,7 @@ void renderable_init_rect(RenderState *state, Renderable *r, const f32 width,
   renderable_send_memory(state, r);
 }
 
-void renderable_set_scale(Renderable *r, const Vector3 scale) {
+void renderable_set_scale(Renderable *r, const Vector2 scale) {
   r->scale = scale;
 }
 

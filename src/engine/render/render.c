@@ -102,24 +102,16 @@ int render_perform(void *args) {
   /* Test-only rectangles */
 
   renderable_init_rect(render_state, &renderables[0], 0.5f, 0.5f);
-  renderable_init_rect(render_state, &renderables[1], 0.5f, 0.5f);
-
   renderable_set_pos(&renderables[0], vector_make4(0.5f, -0.5f, 0.0f, 1.0f));
-  renderable_set_pos(&renderables[1], vector_make4(0.5f, -0.5f, 0.0f, 1.0f));
-
-  renderable_set_scale(&renderables[0], (Vector3){2.0f, 2.0f, 1.0f});
-
+  renderable_set_scale(&renderables[0], (Vector2){2.0f, 2.0f});
   renderable_set_active(&renderables[0], GS_TRUE);
-  renderable_set_active(&renderables[1], GS_TRUE);
-
   renderable_load_texture(render_state, &renderables[0], "assets/asteroid.png");
-  renderables[1].texture = renderables[0].texture;
 
   /* End test-only rectangles */
 
   geyser_cmd_end_staging(render_state);
 
-  u64 delay = 1000000 / state->fps_max;
+  u64 delay = state->fps_max != 0 ? 1000000 / state->fps_max : 0;
   i64 start_time, end_time;
   u64 avg = 0;
   const VkDeviceSize offsets[1] = {0};
@@ -164,14 +156,31 @@ int render_perform(void *args) {
       if (renderables[i].active == GS_TRUE &&
           renderables[i].vertices_count > 0) {
         renderable_interpolate(&renderables[i]);
-        renderable_calc_matrix(&renderables[i]);
 
-        push_constants.transform = renderables[i].transform_matrix;
+        push_constants.quaternion = quaternion_to_vec(renderables[i].rotation);
+        push_constants.position = renderables[i].position;
+        push_constants.vertex_color = renderables[i].color;
+        push_constants.scale = renderables[i].scale;
+        push_constants.uv_offset = renderables[i].uv_offset;
 
-        vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1,
-                               &renderables[i].vertex_buffer, offsets);
-        vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1,
-                               &renderables[i].uv_buffer, offsets);
+        if (i != 0 && renderables[i].vertices_count ==
+                          renderables[i - 1].vertices_count) {
+          if (memcmp(renderables[i].vertex_buffer,
+                     renderables[i - 1].vertex_buffer,
+                     sizeof(renderables[i].vertex_buffer)) != 0)
+            vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1,
+                                   &renderables[i].vertex_buffer, offsets);
+          if (memcmp(renderables[i].uv_buffer, renderables[i - 1].uv_buffer,
+                     sizeof(renderables[i].uv_buffer)) != 0)
+            vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1,
+                                   &renderables[i].uv_buffer, offsets);
+        } else {
+          vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1,
+                                 &renderables[i].vertex_buffer, offsets);
+          vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1,
+                                 &renderables[i].uv_buffer, offsets);
+        }
+
         vkCmdBindDescriptorSets(
             render_state->command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
             render_state->pipeline.pipeline_layout, 0, 1,

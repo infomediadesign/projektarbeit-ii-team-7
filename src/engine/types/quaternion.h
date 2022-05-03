@@ -18,6 +18,7 @@ typedef struct Quaternion {
 
 Quaternion quaternion_make(const f32 x, const f32 y, const f32 z, const f32 w);
 Quaternion quaternion_from_vec(const Vector4 v);
+Vector4 quaternion_to_vec(const Quaternion q);
 Quaternion quaternion_rotation(const Vector3 axis, const f32 angle);
 Quaternion quaternion_normal(const Quaternion q);
 void quaternion_normalize(Quaternion *q);

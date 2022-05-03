@@ -8,17 +8,14 @@
 #include <engine/render/renderable.h>
 #include <engine/state/state.h>
 #include <engine/types/numeric.h>
+#include <vector>
 
 class Game {
 private:
-  Entity *entities;
-  u32 entity_count;
+  std::vector<Entity> entities;
 
 public:
-  Game() {
-    this->entities = new Entity[MAX_ENTITIES];
-    this->entity_count = 0;
-  }
+  Game() {}
 
   ~Game() { delete[] this->entities; }
 
