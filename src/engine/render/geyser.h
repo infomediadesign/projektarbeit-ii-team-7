@@ -99,6 +99,7 @@ void geyser_fill_image_view_creation_structs(
     VkComponentMapping *mapping, VkImageViewCreateInfo *creation_info);
 void geyser_create_image_view(RenderState *state, const Vector2 size,
                               VkImageViewType type,
+                              const VkImageUsageFlags usage,
                               GeyserImageView *gs_image_view);
 void geyser_create_image_view_from_image(RenderState *state, VkImage *img,
                                          VkImageViewType type,

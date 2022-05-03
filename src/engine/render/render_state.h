@@ -63,8 +63,8 @@ typedef struct RenderState {
   VkImage *swapchain_images;
   u32 swapchain_image_count;
   VkRenderPass renderpass;
-  BackbufferView *backbuffers;
-  VkFramebuffer *framebuffers;
+  BackbufferView backbuffer;
+  VkFramebuffer framebuffer;
   RsPipeline pipeline;
   VkDescriptorPool descriptor_pool;
   VkCommandPool command_pool;

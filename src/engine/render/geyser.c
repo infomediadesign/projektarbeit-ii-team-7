@@ -480,11 +480,6 @@ void geyser_init_vk(RenderState *restrict state) {
     abort();
   }
 
-  state->backbuffers = (BackbufferView *)malloc(sizeof(BackbufferView) *
-                                                state->swapchain_image_count);
-  state->framebuffers = (VkFramebuffer *)malloc(sizeof(VkFramebuffer) *
-                                                state->swapchain_image_count);
-
   VkImageView fb_attachments[1];
 
   VkFramebufferCreateInfo framebuffer_info = {
@@ -498,17 +493,17 @@ void geyser_init_vk(RenderState *restrict state) {
 
   const Vector2 screen_size = {state->window_width, state->window_height};
 
-  for (u8 i = 0; i < state->swapchain_image_count; i++) {
-    geyser_create_image_view_from_image(
-        state, &state->swapchain_images[i], VK_IMAGE_VIEW_TYPE_2D_ARRAY,
-        (GeyserImageView *)&state->backbuffers[i]);
-    fb_attachments[0] = state->backbuffers[i].view;
+  geyser_create_image_view(
+      state, (Vector2){state->window_width, state->window_height},
+      VK_IMAGE_VIEW_TYPE_2D, VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
+      (GeyserImageView *)&state->backbuffer);
 
-    if (vkCreateFramebuffer(state->device, &framebuffer_info, NULL,
-                            &state->framebuffers[i]) != VK_SUCCESS) {
-      printf("[Geyser Error] Failed to create a frame buffer!\n");
-      abort();
-    }
+  fb_attachments[0] = state->backbuffer.view;
+
+  if (vkCreateFramebuffer(state->device, &framebuffer_info, NULL,
+                          &state->framebuffer) != VK_SUCCESS) {
+    printf("[Geyser Error] Failed to create a frame buffer!\n");
+    abort();
   }
 
   const VkBufferCreateInfo general_buffer_info = {
@@ -556,7 +551,7 @@ void geyser_init_vk(RenderState *restrict state) {
       .srcAccessMask = 0,
       .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
       .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-      .newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      .newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
       .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
       .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
       .subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1}};
@@ -566,7 +561,7 @@ void geyser_init_vk(RenderState *restrict state) {
       .pNext = NULL,
       .srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
       .dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
-      .oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+      .oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
       .newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
       .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
       .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
@@ -623,7 +618,7 @@ void geyser_fill_image_view_creation_structs(
   creation_info->sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
   creation_info->pNext = NULL;
   creation_info->flags = 0;
-  creation_info->viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+  creation_info->viewType = VK_IMAGE_VIEW_TYPE_2D;
   creation_info->format = state->preferred_color_format;
   creation_info->components = *mapping;
   creation_info->subresourceRange = *resource_range;
@@ -631,6 +626,7 @@ void geyser_fill_image_view_creation_structs(
 
 void geyser_create_image_view(RenderState *state, const Vector2 size,
                               VkImageViewType type,
+                              const VkImageUsageFlags usage,
                               GeyserImageView *gs_image_view) {
   VkImageSubresourceRange resource_range;
   VkComponentMapping mapping;
@@ -647,7 +643,8 @@ void geyser_create_image_view(RenderState *state, const Vector2 size,
       .tiling = VK_IMAGE_TILING_OPTIMAL,
       .usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT |
                VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
-               VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+               VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
+               VK_IMAGE_USAGE_SAMPLED_BIT | usage,
       .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
       .queueFamilyIndexCount = state->queue_family_indices_count,
       .pQueueFamilyIndices = state->queue_family_indices,
@@ -1002,6 +999,35 @@ void geyser_cmd_begin_draw(RenderState *restrict state) {
 
   vkBeginCommandBuffer(state->command_buffer, &cmd_begin_info);
 
+  const VkImageMemoryBarrier backbuffer_barrier = {
+      .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+      .pNext = NULL,
+      .srcAccessMask = 0,
+      .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+      .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+      .newLayout = VK_IMAGE_LAYOUT_GENERAL,
+      .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+      .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+      .image = state->backbuffer.image,
+      .subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1}};
+
+  vkCmdPipelineBarrier(state->command_buffer,
+                       VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                       VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT |
+                           VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                       0, 0, NULL, 0, NULL, 1, &backbuffer_barrier);
+
+  const VkImageSubresourceRange res_range = {.aspectMask =
+                                                 VK_IMAGE_ASPECT_COLOR_BIT,
+                                             .baseMipLevel = 0,
+                                             .levelCount = 1,
+                                             .baseArrayLayer = 0,
+                                             .layerCount = 1};
+
+  vkCmdClearColorImage(state->command_buffer, state->backbuffer.image,
+                       VK_IMAGE_LAYOUT_GENERAL, &clear_color_value, 1,
+                       &res_range);
+
   state->pre_draw_barrier.image =
       state->swapchain_images[state->current_swapchain_image];
 
@@ -1013,6 +1039,42 @@ void geyser_cmd_begin_draw(RenderState *restrict state) {
 }
 
 void geyser_cmd_end_draw(RenderState *restrict state) {
+  const VkImageMemoryBarrier backbuffer_barrier = {
+      .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+      .pNext = NULL,
+      .srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+      .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT,
+      .oldLayout = VK_IMAGE_LAYOUT_GENERAL,
+      .newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+      .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+      .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+      .image = state->backbuffer.image,
+      .subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1}};
+
+  vkCmdPipelineBarrier(state->command_buffer,
+                       VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                       VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT |
+                           VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                       0, 0, NULL, 0, NULL, 1, &backbuffer_barrier);
+
+  const VkImageCopy copy_data = {
+      .srcSubresource = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                         .mipLevel = 0,
+                         .baseArrayLayer = 0,
+                         .layerCount = 1},
+      .srcOffset = {0.0f, 0.0f, 0.0f},
+      .dstSubresource = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                         .mipLevel = 0,
+                         .baseArrayLayer = 0,
+                         .layerCount = 1},
+      .dstOffset = {0.0f, 0.0f, 0.0f},
+      .extent = {state->window_width, state->window_height, 1.0f}};
+
+  vkCmdCopyImage(state->command_buffer, state->backbuffer.image,
+                 VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                 state->swapchain_images[state->current_swapchain_image],
+                 VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy_data);
+
   state->pre_present_barrier.image =
       state->swapchain_images[state->current_swapchain_image];
 
@@ -1080,7 +1142,7 @@ void geyser_cmd_begin_renderpass(const RenderState *restrict state) {
       .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
       .pNext = NULL,
       .renderPass = state->renderpass,
-      .framebuffer = state->framebuffers[state->current_swapchain_image],
+      .framebuffer = state->framebuffer,
       .renderArea.offset.x = 0,
       .renderArea.offset.y = 0,
       .renderArea.extent.width = state->window_width,
@@ -1104,7 +1166,8 @@ void geyser_cmd_set_viewport(const RenderState *restrict state) {
 
 void geyser_create_texture(RenderState *restrict state, const Vector2 size,
                            GeyserTexture *texture) {
-  geyser_create_image_view(state, size, VK_IMAGE_VIEW_TYPE_2D, &texture->base);
+  geyser_create_image_view(state, size, VK_IMAGE_VIEW_TYPE_2D, 0,
+                           &texture->base);
 
   const VkSamplerCreateInfo sampler_info = {
       .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,

@@ -3,7 +3,7 @@ with import <nixpkgs> {};
 gcc11Stdenv.mkDerivation {
   name = "env";
   nativeBuildInputs = [
-    (enableDebugging vulkan-headers)
+    vulkan-headers
     cmake
     gcc11
   ];
@@ -11,9 +11,9 @@ gcc11Stdenv.mkDerivation {
   buildInputs = [
     gdb
     clang
-    (enableDebugging vulkan-loader)
+    vulkan-loader
     vulkan-tools
-    (enableDebugging vulkan-validation-layers)
+    vulkan-validation-layers
     spirv-tools
     shaderc
     wayland
