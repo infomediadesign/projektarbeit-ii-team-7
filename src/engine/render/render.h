@@ -11,6 +11,7 @@ extern "C" {
 #include "geyser.h"
 #include "render_state.h"
 #include "renderable.h"
+
 #include <string.h>
 
 /**

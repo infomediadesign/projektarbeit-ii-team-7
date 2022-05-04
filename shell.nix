@@ -10,7 +10,7 @@ gcc11Stdenv.mkDerivation {
 
   buildInputs = [
     gdb
-    clang
+    clang_14
     vulkan-loader
     vulkan-tools
     vulkan-validation-layers

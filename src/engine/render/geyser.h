@@ -6,8 +6,8 @@ extern "C" {
 #endif
 
 #define GEYSER_MINIMAL_VK_STRUCT_INFO(t) .sType = t, .pNext = NULL
-#define GEYSER_BASIC_VK_STRUCT_INFO(t) .sType = t, .pNext = NULL, .flags = 0
-#define GEYSER_MAX_TEXTURES 8196
+#define GEYSER_BASIC_VK_STRUCT_INFO(t)   .sType = t, .pNext = NULL, .flags = 0
+#define GEYSER_MAX_TEXTURES              8196
 
 /**
  * Geyser is a minimalistic Vulkan middleware library.
@@ -99,65 +99,75 @@ void geyser_destroy_vk(RenderState RESTRICTED_PTR state);
 
 void geyser_success_or_message(const VkResult res, const char *message);
 void geyser_fill_image_view_creation_structs(
-    RenderState *state, VkImageSubresourceRange *resource_range,
-    VkComponentMapping *mapping, VkImageViewCreateInfo *creation_info);
-void geyser_create_image_view(RenderState *state, const Vector2 size,
-                              VkImageViewType type,
-                              const VkImageUsageFlags usage,
-                              GeyserImageView *gs_image_view);
-void geyser_create_image_view_from_image(RenderState *state, VkImage *img,
-                                         VkImageViewType type,
-                                         GeyserImageView *gs_image_view);
-void geyser_create_texture(RenderState RESTRICTED_PTR state, const Vector2 size,
-                           GeyserTexture *texture);
-void geyser_allocate_texture_descriptor_set(RenderState RESTRICTED_PTR state,
-                                            GeyserTexture *texture,
-                                            GeyserPipeline *pipeline);
-void geyser_update_texture_descriptor_set(RenderState RESTRICTED_PTR state,
-                                          GeyserTexture *texture);
-u32 geyser_get_memory_type_index(const RenderState RESTRICTED_PTR state,
-                                 const VkMemoryPropertyFlagBits flag);
-void geyser_create_image(const RenderState RESTRICTED_PTR state,
-                         const Vector2 size, const VkImageTiling tiling,
-                         const VkFormat format, const VkImageUsageFlags usage,
-                         GeyserImage *gi);
-void geyser_allocate_image_memory(const RenderState RESTRICTED_PTR state,
-                                  const uint32_t memory_type,
-                                  GeyserImage *image);
-void geyser_create_and_allocate_image(const RenderState RESTRICTED_PTR state,
-                                      const Vector2 size,
-                                      const VkImageTiling tiling,
-                                      const VkFormat format,
-                                      const VkImageUsageFlags usage,
-                                      const uint32_t memory_type,
-                                      GeyserImage *image);
+  RenderState *state,
+  VkImageSubresourceRange *resource_range,
+  VkComponentMapping *mapping,
+  VkImageViewCreateInfo *creation_info
+);
+void geyser_create_image_view(
+  RenderState *state,
+  const Vector2 size,
+  VkImageViewType type,
+  const VkImageUsageFlags usage,
+  GeyserImageView *gs_image_view
+);
+void geyser_create_image_view_from_image(
+  RenderState *state, VkImage *img, VkImageViewType type, GeyserImageView *gs_image_view
+);
+void geyser_create_texture(RenderState RESTRICTED_PTR state, const Vector2 size, GeyserTexture *texture);
+void geyser_allocate_texture_descriptor_set(
+  RenderState RESTRICTED_PTR state, GeyserTexture *texture, GeyserPipeline *pipeline
+);
+void geyser_update_texture_descriptor_set(RenderState RESTRICTED_PTR state, GeyserTexture *texture);
+u32 geyser_get_memory_type_index(const RenderState RESTRICTED_PTR state, const VkMemoryPropertyFlagBits flag);
+void geyser_create_image(
+  const RenderState RESTRICTED_PTR state,
+  const Vector2 size,
+  const VkImageTiling tiling,
+  const VkFormat format,
+  const VkImageUsageFlags usage,
+  GeyserImage *gi
+);
+void geyser_allocate_image_memory(
+  const RenderState RESTRICTED_PTR state, const uint32_t memory_type, GeyserImage *image
+);
+void geyser_create_and_allocate_image(
+  const RenderState RESTRICTED_PTR state,
+  const Vector2 size,
+  const VkImageTiling tiling,
+  const VkFormat format,
+  const VkImageUsageFlags usage,
+  const uint32_t memory_type,
+  GeyserImage *image
+);
 void geyser_create_pipeline(
-    const RenderState RESTRICTED_PTR state,
-    const VkDescriptorSetLayoutBinding descriptor_bindings[],
-    const u32 descriptor_bindings_size,
-    const VkPushConstantRange push_constant_ranges[],
-    const u32 push_constant_ranges_size, const u8 vertex_shader_data[],
-    const u32 vertex_shader_data_size, const u8 fragment_shader_data[],
-    const u32 fragment_shader_data_size,
-    GeyserVertexInputDescription *vertex_input_description,
-    GeyserPipeline *pipeline);
+  const RenderState RESTRICTED_PTR state,
+  const VkDescriptorSetLayoutBinding descriptor_bindings[],
+  const u32 descriptor_bindings_size,
+  const VkPushConstantRange push_constant_ranges[],
+  const u32 push_constant_ranges_size,
+  const u8 vertex_shader_data[],
+  const u32 vertex_shader_data_size,
+  const u8 fragment_shader_data[],
+  const u32 fragment_shader_data_size,
+  GeyserVertexInputDescription *vertex_input_description,
+  GeyserPipeline *pipeline
+);
 GeyserVertexInputDescription geyser_create_vertex_input_description();
-void geyser_add_vertex_input_binding(GeyserVertexInputDescription *description,
-                                     const u32 binding, const u32 stride,
-                                     const VkVertexInputRate input_rate);
+void geyser_add_vertex_input_binding(
+  GeyserVertexInputDescription *description, const u32 binding, const u32 stride, const VkVertexInputRate input_rate
+);
 void geyser_add_vertex_input_attribute(
-    GeyserVertexInputDescription *description, const u32 location,
-    const u32 binding, VkFormat format, const u32 offset);
+  GeyserVertexInputDescription *description, const u32 location, const u32 binding, VkFormat format, const u32 offset
+);
 
 void geyser_cmd_begin_draw(RenderState RESTRICTED_PTR state);
 void geyser_cmd_end_draw(RenderState RESTRICTED_PTR state);
-void geyser_create_semaphore(const RenderState RESTRICTED_PTR state,
-                             VkSemaphore *semaphore);
+void geyser_create_semaphore(const RenderState RESTRICTED_PTR state, VkSemaphore *semaphore);
 void geyser_cmd_begin_renderpass(const RenderState RESTRICTED_PTR state);
 void geyser_cmd_end_renderpass(const RenderState RESTRICTED_PTR state);
 void geyser_cmd_set_viewport(const RenderState RESTRICTED_PTR state);
-void geyser_set_image_memory(RenderState RESTRICTED_PTR state,
-                             GeyserImage *image, Image *data);
+void geyser_set_image_memory(RenderState RESTRICTED_PTR state, GeyserImage *image, Image *data);
 void geyser_cmd_begin_staging(RenderState RESTRICTED_PTR state);
 void geyser_cmd_end_staging(RenderState RESTRICTED_PTR state);
 void geyser_cmd_submit_staging(RenderState RESTRICTED_PTR state);

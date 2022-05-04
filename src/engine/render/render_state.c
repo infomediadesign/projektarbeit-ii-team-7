@@ -3,18 +3,17 @@
 RenderState *render_state_init() {
   RenderState *state = (RenderState *)malloc(sizeof(RenderState));
 
-  const Matrix4 null_mat4 = {{1.0f, 0.0f, 0.0f, 0.0f},
-                             {0.0f, 1.0f, 0.0f, 0.0f},
-                             {0.0f, 0.0f, 1.0f, 0.0f},
-                             {0.0f, 0.0f, 0.0f, 1.0f}};
+  const Matrix4 null_mat4 = {
+    { 1.0f, 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 1.0f }
+  };
 
-  state->current_frame = 0;
+  state->current_frame           = 0;
   state->current_swapchain_image = 0;
-  state->window_width = 768.0f;
-  state->window_height = 432.0f;
-  state->debug = 0;
-  state->rendering = 0;
-  state->camera_transform = null_mat4;
+  state->window_width            = 768.0f;
+  state->window_height           = 432.0f;
+  state->debug                   = 0;
+  state->rendering               = 0;
+  state->camera_transform        = null_mat4;
 
   state->camera_transform.y[1] = 768.0f / 432.0f;
   state->camera_transform.w[1] = 432.0f / 768.0f + 0.21f;
@@ -33,13 +32,11 @@ void render_state_refresh_callback(GLFWwindow *window) {}
 
 void render_state_resize_callback(GLFWwindow *window, i32 width, i32 height) {}
 
-void render_state_key_callback(GLFWwindow *window, i32 key, i32 scancode,
-                               i32 action, i32 mods) {}
+void render_state_key_callback(GLFWwindow *window, i32 key, i32 scancode, i32 action, i32 mods) {}
 
 void render_state_create_window(RenderState *state) {
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  state->window = glfwCreateWindow(state->window_width, state->window_height,
-                                   "Miniflow", NULL, NULL);
+  state->window = glfwCreateWindow(state->window_width, state->window_height, "Miniflow", NULL, NULL);
 
   glfwSetWindowUserPointer(state->window, state);
   glfwSetWindowRefreshCallback(state->window, render_state_refresh_callback);
@@ -47,6 +44,4 @@ void render_state_create_window(RenderState *state) {
   glfwSetKeyCallback(state->window, render_state_key_callback);
 }
 
-u8 render_state_should_close(RenderState *state) {
-  return glfwWindowShouldClose(state->window);
-}
+u8 render_state_should_close(RenderState *state) { return glfwWindowShouldClose(state->window); }

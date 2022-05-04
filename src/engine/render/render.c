@@ -1,4 +1,5 @@
 #include "render.h"
+
 #include "shaders/shaders.h"
 
 #include <game/interface.h>
@@ -11,30 +12,20 @@ void glfw_error_fun(int error_code, const char *error_message) {
 
 static inline const char *platform_name(i32 platform) {
   switch (platform) {
-  case GLFW_PLATFORM_WAYLAND:
-    return "Wayland";
-    break;
-  case GLFW_PLATFORM_X11:
-    return "X11";
-    break;
-  case GLFW_PLATFORM_COCOA:
-    return "Cocoa";
-    break;
-  case GLFW_PLATFORM_WIN32:
-    return "Win32";
-    break;
-  default:
-    return "Unknown";
+  case GLFW_PLATFORM_WAYLAND: return "Wayland"; break;
+  case GLFW_PLATFORM_X11: return "X11"; break;
+  case GLFW_PLATFORM_COCOA: return "Cocoa"; break;
+  case GLFW_PLATFORM_WIN32: return "Win32"; break;
+  default: return "Unknown";
   }
 }
 
 int render_perform(void *args) {
-  ThreadData *const td = (ThreadData *)args;
-  mutex_t *lock = (mutex_t *)td->lock;
-  GameState *const state = (GameState *)td->state;
+  ThreadData *const td            = (ThreadData *)args;
+  mutex_t *lock                   = (mutex_t *)td->lock;
+  GameState *const state          = (GameState *)td->state;
   RenderState *const render_state = render_state_init();
-  Renderable *const renderables =
-      (Renderable *)calloc(MAX_RENDERABLES, sizeof(Renderable));
+  Renderable *const renderables   = (Renderable *)calloc(MAX_RENDERABLES, sizeof(Renderable));
 
   if (game_is_debug(state))
     render_state->debug = 1;
@@ -73,37 +64,40 @@ int render_perform(void *args) {
   geyser_cmd_begin_staging(render_state);
 
   const VkDescriptorSetLayoutBinding descriptor_bindings[] = {
-      {0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1,
-       VK_SHADER_STAGE_FRAGMENT_BIT, NULL}};
-
-  const VkPushConstantRange push_constant_range[] = {
-      {VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(GeyserPushConstants)},
+    { 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, NULL }
   };
 
-  GeyserVertexInputDescription vertex_input_description =
-      geyser_create_vertex_input_description();
+  const VkPushConstantRange push_constant_range[] = {
+    { VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(GeyserPushConstants) },
+  };
 
-  geyser_add_vertex_input_binding(&vertex_input_description, 0, 16,
-                                  VK_VERTEX_INPUT_RATE_VERTEX);
-  geyser_add_vertex_input_binding(&vertex_input_description, 1, 8,
-                                  VK_VERTEX_INPUT_RATE_VERTEX);
+  GeyserVertexInputDescription vertex_input_description = geyser_create_vertex_input_description();
 
-  geyser_add_vertex_input_attribute(&vertex_input_description, 0, 0,
-                                    VK_FORMAT_R32G32B32A32_SFLOAT, 0);
-  geyser_add_vertex_input_attribute(&vertex_input_description, 1, 1,
-                                    VK_FORMAT_R32G32_SFLOAT, 0);
+  geyser_add_vertex_input_binding(&vertex_input_description, 0, 16, VK_VERTEX_INPUT_RATE_VERTEX);
+  geyser_add_vertex_input_binding(&vertex_input_description, 1, 8, VK_VERTEX_INPUT_RATE_VERTEX);
+
+  geyser_add_vertex_input_attribute(&vertex_input_description, 0, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 0);
+  geyser_add_vertex_input_attribute(&vertex_input_description, 1, 1, VK_FORMAT_R32G32_SFLOAT, 0);
 
   geyser_create_pipeline(
-      render_state, descriptor_bindings, 1, push_constant_range, 1,
-      unlit_generic_vert_data, unlit_generic_vert_data_size,
-      unlit_generic_frag_data, unlit_generic_frag_data_size,
-      &vertex_input_description, (GeyserPipeline *)&render_state->pipeline);
+    render_state,
+    descriptor_bindings,
+    1,
+    push_constant_range,
+    1,
+    unlit_generic_vert_data,
+    unlit_generic_vert_data_size,
+    unlit_generic_frag_data,
+    unlit_generic_frag_data_size,
+    &vertex_input_description,
+    (GeyserPipeline *)&render_state->pipeline
+  );
 
   /* Test-only rectangles */
 
   renderable_init_rect(render_state, &renderables[0], 0.5f, 0.5f);
   renderable_set_pos(&renderables[0], vector_make4(0.5f, -0.5f, 0.0f, 1.0f));
-  renderable_set_scale(&renderables[0], (Vector2){2.0f, 2.0f});
+  renderable_set_scale(&renderables[0], (Vector2) { 2.0f, 2.0f });
   renderable_set_active(&renderables[0], GS_TRUE);
   renderable_load_texture(render_state, &renderables[0], "assets/asteroid.png");
 
@@ -113,8 +107,8 @@ int render_perform(void *args) {
 
   u64 delay = state->fps_max != 0 ? 1000000 / state->fps_max : 0;
   i64 start_time, end_time;
-  u64 avg = 0;
-  const VkDeviceSize offsets[1] = {0};
+  u64 avg                       = 0;
+  const VkDeviceSize offsets[1] = { 0 };
 
   render_state->init_time = platform_time();
 
@@ -140,58 +134,54 @@ int render_perform(void *args) {
     geyser_cmd_begin_draw(render_state);
     geyser_cmd_begin_renderpass(render_state);
 
-    vkCmdBindPipeline(render_state->command_buffer,
-                      VK_PIPELINE_BIND_POINT_GRAPHICS,
-                      render_state->pipeline.pipeline);
+    vkCmdBindPipeline(render_state->command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, render_state->pipeline.pipeline);
 
     geyser_cmd_set_viewport(render_state);
 
-    renderable_set_rotation(&renderables[0], vector_make3(0.0f, 0.0f, 1.0f),
-                            render_state->current_frame / 300.0f);
+    renderable_set_rotation(&renderables[0], vector_make3(0.0f, 0.0f, 1.0f), render_state->current_frame / 300.0f);
 
-    GeyserPushConstants push_constants = {.camera =
-                                              render_state->camera_transform};
+    GeyserPushConstants push_constants = { .camera = render_state->camera_transform };
 
     for (u32 i = 0; i < MAX_RENDERABLES; i++) {
-      if (renderables[i].active == GS_TRUE &&
-          renderables[i].vertices_count > 0) {
+      if (renderables[i].active == GS_TRUE && renderables[i].vertices_count > 0) {
         renderable_interpolate(&renderables[i]);
 
-        push_constants.quaternion = quaternion_to_vec(renderables[i].rotation);
-        push_constants.position = renderables[i].position;
+        push_constants.quaternion   = quaternion_to_vec(renderables[i].rotation);
+        push_constants.position     = renderables[i].position;
         push_constants.vertex_color = renderables[i].color;
-        push_constants.scale = renderables[i].scale;
-        push_constants.uv_offset = renderables[i].uv_offset;
+        push_constants.scale        = renderables[i].scale;
+        push_constants.uv_offset    = renderables[i].uv_offset;
 
-        if (i != 0 && renderables[i].vertices_count ==
-                          renderables[i - 1].vertices_count) {
-          if (memcmp(renderables[i].vertex_buffer,
-                     renderables[i - 1].vertex_buffer,
-                     sizeof(renderables[i].vertex_buffer)) != 0)
-            vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1,
-                                   &renderables[i].vertex_buffer, offsets);
-          if (memcmp(renderables[i].uv_buffer, renderables[i - 1].uv_buffer,
-                     sizeof(renderables[i].uv_buffer)) != 0)
-            vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1,
-                                   &renderables[i].uv_buffer, offsets);
+        if (i != 0 && renderables[i].vertices_count == renderables[i - 1].vertices_count) {
+          if (memcmp(renderables[i].vertex_buffer, renderables[i - 1].vertex_buffer, sizeof(renderables[i].vertex_buffer)) != 0)
+            vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1, &renderables[i].vertex_buffer, offsets);
+          if (memcmp(renderables[i].uv_buffer, renderables[i - 1].uv_buffer, sizeof(renderables[i].uv_buffer)) != 0)
+            vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1, &renderables[i].uv_buffer, offsets);
         } else {
-          vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1,
-                                 &renderables[i].vertex_buffer, offsets);
-          vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1,
-                                 &renderables[i].uv_buffer, offsets);
+          vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1, &renderables[i].vertex_buffer, offsets);
+          vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1, &renderables[i].uv_buffer, offsets);
         }
 
         vkCmdBindDescriptorSets(
-            render_state->command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-            render_state->pipeline.pipeline_layout, 0, 1,
-            &renderables[i].texture.descriptor_set, 0, NULL);
-        vkCmdPushConstants(render_state->command_buffer,
-                           render_state->pipeline.pipeline_layout,
-                           VK_SHADER_STAGE_VERTEX_BIT, 0,
-                           sizeof(GeyserPushConstants), &push_constants);
+          render_state->command_buffer,
+          VK_PIPELINE_BIND_POINT_GRAPHICS,
+          render_state->pipeline.pipeline_layout,
+          0,
+          1,
+          &renderables[i].texture.descriptor_set,
+          0,
+          NULL
+        );
+        vkCmdPushConstants(
+          render_state->command_buffer,
+          render_state->pipeline.pipeline_layout,
+          VK_SHADER_STAGE_VERTEX_BIT,
+          0,
+          sizeof(GeyserPushConstants),
+          &push_constants
+        );
 
-        vkCmdDraw(render_state->command_buffer, renderables[i].vertices_count,
-                  1, 0, 0);
+        vkCmdDraw(render_state->command_buffer, renderables[i].vertices_count, 1, 0, 0);
       }
     }
 
@@ -214,9 +204,8 @@ int render_perform(void *args) {
       platform_usleep(delay - (end_time - start_time));
   }
 
-  for (u32 i = 0; i < MAX_RENDERABLES; i++) {
+  for (u32 i = 0; i < MAX_RENDERABLES; i++)
     renderable_free(render_state, &renderables[i]);
-  }
 
   free(renderables);
   geyser_destroy_vk(render_state);

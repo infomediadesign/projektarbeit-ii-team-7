@@ -8,12 +8,11 @@
 #include <game/interface.h>
 
 int dummy(void *args) {
-  ThreadData *const td = (ThreadData *)args;
+  ThreadData *const td   = (ThreadData *)args;
   GameState *const state = (GameState *)td->state;
 
-  while (!game_should_exit(state)) {
+  while (!game_should_exit(state))
     platform_sleep(100);
-  }
 
   return 0;
 }
@@ -35,25 +34,23 @@ int main(const int argc, const char *argv[]) {
 
   input_parse_args(state, argc, argv);
 
-  if (game_is_debug(state)) {
+  if (game_is_debug(state))
     DEBUG_MESSAGE("Debug mode is enabled.\n");
-  }
 
   game_initialize(state);
 
   /* Spawn threads */
-  ThreadData thread_data = {.state = state, .lock = &state_lock};
+  ThreadData thread_data = { .state = state, .lock = &state_lock };
 
   const thread_t render_thread = platform_spawn(render_perform, &thread_data);
-  const thread_t logic_thread = platform_spawn(logic_perform, &thread_data);
-  const thread_t input_thread = platform_spawn(dummy, &thread_data);
+  const thread_t logic_thread  = platform_spawn(logic_perform, &thread_data);
+  const thread_t input_thread  = platform_spawn(dummy, &thread_data);
 
   DEBUG_MESSAGE("Entering main loop...\n");
 
   /* Wait until game state tells us we should exit */
-  while (!game_should_exit(state)) {
+  while (!game_should_exit(state))
     platform_sleep(1000);
-  }
 
   printf("Exiting...\n");
 

@@ -15,6 +15,7 @@ extern "C" {
 #include "../types/matrix.h"
 #include <glad/vulkan.h>
 #include <GLFW/glfw3.h>
+
 // clang-format on
 
 typedef struct BackbufferView {

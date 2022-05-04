@@ -3,9 +3,9 @@
 #include <game/interface.h>
 
 int logic_perform(void *args) {
-  ThreadData *const td = (ThreadData *)args;
+  ThreadData *const td   = (ThreadData *)args;
   GameState *const state = (GameState *)td->state;
-  mutex_t *const lock = (mutex_t *)td->lock;
+  mutex_t *const lock    = (mutex_t *)td->lock;
 
   const i64 delay = 1000000 / state->tickrate;
   i64 start_time, end_time;

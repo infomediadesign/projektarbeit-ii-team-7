@@ -8,13 +8,13 @@ Time platform_time() {
   QueryPerformanceCounter(&curtime);
 
   const i64 usec = (i64)(curtime.QuadPart * 1000000 / freq.QuadPart);
-  Time t = {.sec = usec / 1000000, .usec = usec};
+  Time t         = { .sec = usec / 1000000, .usec = usec };
 #else
   struct timeval tv;
 
   gettimeofday(&tv, NULL);
 
-  Time t = {.sec = tv.tv_sec, .usec = tv.tv_sec * 1000000 + tv.tv_usec};
+  Time t = { .sec = tv.tv_sec, .usec = tv.tv_sec * 1000000 + tv.tv_usec };
 #endif
 
   return t;
@@ -92,7 +92,7 @@ void platform_sleep(const u64 milliseconds) {
 void platform_usleep(const u64 microseconds) {
 #ifdef _WIN32
   const u64 milliseconds = microseconds / 1000;
-  const u64 remainder = microseconds % 1000;
+  const u64 remainder    = microseconds % 1000;
   LARGE_INTEGER freq, curtime;
 
   if (milliseconds > 0)
@@ -113,7 +113,7 @@ void platform_usleep(const u64 microseconds) {
 void platform_nsleep(const u64 nanoseconds) {
 #ifdef _WIN32
   const u64 milliseconds = nanoseconds / 1000000;
-  const u64 remainder = nanoseconds % 1000000;
+  const u64 remainder    = nanoseconds % 1000000;
   LARGE_INTEGER freq, curtime;
 
   if (milliseconds > 0)
@@ -122,14 +122,12 @@ void platform_nsleep(const u64 nanoseconds) {
   QueryPerformanceFrequency(&freq);
   QueryPerformanceCounter(&curtime);
 
-  const u64 targettime =
-      curtime.QuadPart * 1000000000 / freq.QuadPart + remainder;
+  const u64 targettime = curtime.QuadPart * 1000000000 / freq.QuadPart + remainder;
 
   while (curtime.QuadPart * 1000000000 / freq.QuadPart < targettime)
     QueryPerformanceCounter(&curtime);
 #else
-  const struct timespec tv = {.tv_sec = nanoseconds / 1000000000,
-                              .tv_nsec = nanoseconds % 1000000000};
+  const struct timespec tv = { .tv_sec = nanoseconds / 1000000000, .tv_nsec = nanoseconds % 1000000000 };
 
   nanosleep(&tv, NULL);
 #endif

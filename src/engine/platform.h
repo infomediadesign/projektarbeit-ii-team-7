@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #include "types/numeric.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -21,7 +22,7 @@ extern "C" {
 typedef HANDLE thread_t;
 typedef HANDLE mutex_t;
 
-#define F_OK 0
+#define F_OK   0
 #define access _access
 
 #else

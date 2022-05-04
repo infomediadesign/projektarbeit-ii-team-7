@@ -1,4 +1,5 @@
 #include "matrix.h"
+
 #include <stdio.h>
 
 // clang-format off

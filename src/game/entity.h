@@ -20,15 +20,16 @@ private:
 
 public:
   Entity() : Entity(0U) {}
+
   Entity(const u32 renr_id) {
-    this->active = false;
+    this->active        = false;
     this->renderable_id = renr_id;
-    this->position = {0.0f, 0.0f, 0.0f};
-    this->velocity = {0.0f, 0.0f, 0.0f};
-    this->axis = {0.0f, 0.0f, 0.0f};
-    this->angle = 0.0f;
-    this->updated_at = 0.0;
-    this->parent = nullptr;
+    this->position      = { 0.0f, 0.0f, 0.0f };
+    this->velocity      = { 0.0f, 0.0f, 0.0f };
+    this->axis          = { 0.0f, 0.0f, 0.0f };
+    this->angle         = 0.0f;
+    this->updated_at    = 0.0;
+    this->parent        = nullptr;
   }
 
   bool is_active();

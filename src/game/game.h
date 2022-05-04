@@ -4,6 +4,7 @@
 #define MAX_ENTITIES 4096
 
 #include "entity.h"
+
 #include <engine/platform.h>
 #include <engine/render/renderable.h>
 #include <engine/state/state.h>
@@ -17,14 +18,13 @@ private:
 public:
   Game() {}
 
-  ~Game() { delete[] this->entities; }
+  ~Game() {}
 
   /* Events called from the engine */
   void update(GameState *state, mutex_t *lock);
   void update_lazy(GameState *state, mutex_t *lock);
   void update_paused(GameState *state, mutex_t *lock);
-  void update_renderables(GameState *state, mutex_t *lock,
-                          Renderable *renderables, const u32 renderables_count);
+  void update_renderables(GameState *state, mutex_t *lock, Renderable *renderables, const u32 renderables_count);
 };
 
 #endif

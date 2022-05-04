@@ -1,5 +1,7 @@
 #include "asset.h"
+
 #include "../platform.h"
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -29,13 +31,11 @@ static const u32 missing_texture[256] = {
 };
 // clang-format on
 
-static const char *search_paths[5] = {"", "./", "../", "../../", "../../../"};
+static const char *search_paths[5] = { "", "./", "../", "../../", "../../../" };
 
 void flip_channels(u32 *data, const u32 size) {
-  for (u32 i = 0; i < size; i++) {
-    data[i] = (data[i] & 0xff00ff00) | ((data[i] & 0x00ff0000) >> 16) |
-              ((data[i] & 0x000000ff) << 16);
-  }
+  for (u32 i = 0; i < size; i++)
+    data[i] = (data[i] & 0xff00ff00) | ((data[i] & 0x00ff0000) >> 16) | ((data[i] & 0x000000ff) << 16);
 }
 
 void asset_find(const char *asset_path, char *out) {
@@ -64,21 +64,20 @@ void asset_load_image(Image *img, const char *asset_path) {
   img->data = NULL;
   i32 image_width, image_height, _n;
 
-  u8 *data =
-      stbi_load(image_path, &image_width, &image_height, &_n, STBI_rgb_alpha);
+  u8 *data = stbi_load(image_path, &image_width, &image_height, &_n, STBI_rgb_alpha);
 
   if (data == NULL) {
     printf("Asset not found: %s\n", asset_path);
 
-    data = (u8 *)calloc(1024, 1);
-    image_width = 16;
+    data         = (u8 *)calloc(1024, 1);
+    image_width  = 16;
     image_height = 16;
 
     memcpy(data, (u8 *)missing_texture, 1024);
   }
 
-  img->data = (u32 *)data;
-  img->width = image_width;
+  img->data   = (u32 *)data;
+  img->width  = image_width;
   img->height = image_height;
 
   flip_channels(img->data, image_width * image_height);
