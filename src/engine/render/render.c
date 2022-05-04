@@ -99,16 +99,6 @@ int render_perform(void *args) {
     (GeyserPipeline *)&render_state->pipeline
   );
 
-  /* Test-only rectangles */
-
-  renderable_init_rect(render_state, &renderables[0], 0.5f, 0.5f);
-  renderable_set_pos(&renderables[0], vector_make4(0.5f, -0.5f, 0.0f, 1.0f));
-  renderable_set_scale(&renderables[0], (Vector2) { 2.0f, 2.0f });
-  renderable_set_active(&renderables[0], GS_TRUE);
-  renderable_load_texture(render_state, &renderables[0], "assets/asteroid.png");
-
-  /* End test-only rectangles */
-
   geyser_cmd_end_staging(render_state);
 
   u64 delay = state->fps_max != 0 ? 1000000 / state->fps_max : 0;
@@ -141,8 +131,6 @@ int render_perform(void *args) {
     vkCmdBindPipeline(render_state->command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, render_state->pipeline.pipeline);
 
     geyser_cmd_set_viewport(render_state);
-
-    renderable_set_rotation(&renderables[0], vector_make3(0.0f, 0.0f, 1.0f), render_state->current_frame / 300.0f);
 
     GeyserPushConstants push_constants = { .camera = render_state->camera_transform };
 

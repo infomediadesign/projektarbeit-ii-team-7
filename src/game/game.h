@@ -5,18 +5,25 @@
 
 #include "entity.h"
 
+#include <engine/input/input.h>
 #include <engine/platform.h>
 #include <engine/render/renderable.h>
 #include <engine/state/state.h>
 #include <engine/types/numeric.h>
+#include <memory>
 #include <vector>
 
 class Game {
 private:
   std::vector<Entity> entities;
+  std::shared_ptr<Entity> player;
+  InputState *input_state;
 
 public:
-  Game() {}
+  Game() {
+    this->input_state = nullptr;
+    this->player      = nullptr;
+  }
 
   ~Game() {}
 
@@ -25,6 +32,10 @@ public:
   void update_lazy(GameState *state, mutex_t *lock);
   void update_paused(GameState *state, mutex_t *lock);
   void update_renderables(GameState *state, mutex_t *lock, Renderable *renderables, const u32 renderables_count);
+  void create_bindings(GameState *state, mutex_t *lock, InputState *input_state);
+
+  /* Input stuff */
+  void process_input(GameState *state);
 };
 
 #endif

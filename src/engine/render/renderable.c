@@ -161,7 +161,6 @@ void renderable_free(const RenderState *state, Renderable *r) {
   vkFreeMemory(state->device, r->uv_memory, NULL);
   free(r->vertices);
   free(r->uv);
-  free(r);
 }
 
 void renderable_calc_matrix(Renderable *r) {

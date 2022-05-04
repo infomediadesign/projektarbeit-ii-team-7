@@ -15,3 +15,7 @@ void game_paused_tick(GameState *state, mutex_t *lock) { GAME->update_paused(sta
 void game_adjust_renderables(GameState *state, mutex_t *lock, Renderable *renderables, const u32 renderables_count) {
   GAME->update_renderables(state, lock, renderables, renderables_count);
 }
+
+void game_create_bindings(GameState *state, mutex_t *lock, InputState *input_state) {
+  GAME->create_bindings(state, lock, input_state);
+}

@@ -82,3 +82,9 @@ void vector_negi(Vector4 *v) {
 Vector4 vector_add4(const Vector4 v1, const Vector4 v2) {
   return (Vector4) { v1.x + v2.x, v1.y + v2.y, v1.z + v2.z, v1.w + v2.w };
 }
+
+f32 vector_dot3(const Vector3 v1, const Vector3 v2) { return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z; }
+
+f32 vector_dot4(const Vector4 v1, const Vector4 v2) { return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z + v1.w * v2.w; }
+
+Vector3 vector_from_matrix_comp3(const f32 *comps) { return (Vector3) { comps[0], comps[1], comps[2] }; }

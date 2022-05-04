@@ -46,6 +46,9 @@ Vector4 vector_sub4(const Vector4 v1, const Vector4 v2);
 Vector4 vector_neg(const Vector4 v);
 void vector_sub4i(Vector4 *v1, const Vector4 v2);
 void vector_negi(Vector4 *v);
+f32 vector_dot3(const Vector3 v1, const Vector3 v2);
+f32 vector_dot4(const Vector4 v1, const Vector4 v2);
+Vector3 vector_from_matrix_comp3(const f32 *comps);
 
 #ifdef __cplusplus
 }
