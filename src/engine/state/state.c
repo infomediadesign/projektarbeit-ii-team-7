@@ -12,6 +12,7 @@ GameState *game_default_state() {
   state->height             = 600U;
   state->fps_max            = 300U;
   state->preferred_platform = "wayland";
+  state->window             = NULL;
 
   return state;
 }

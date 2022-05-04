@@ -25,6 +25,7 @@ typedef struct GameState {
   u32 width;
   u32 height;
   char *preferred_platform;
+  void *window;
 } GameState;
 
 /**

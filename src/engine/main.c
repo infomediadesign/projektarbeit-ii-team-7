@@ -1,4 +1,5 @@
 #include "input/argparse.h"
+#include "input/input.h"
 #include "logic/logic.h"
 #include "platform.h"
 #include "render/render.h"
@@ -6,16 +7,6 @@
 #include "util.h"
 
 #include <game/interface.h>
-
-int dummy(void *args) {
-  ThreadData *const td   = (ThreadData *)args;
-  GameState *const state = (GameState *)td->state;
-
-  while (!game_should_exit(state))
-    platform_sleep(100);
-
-  return 0;
-}
 
 /**
  * @brief The main entry point of the engine executable
@@ -44,7 +35,7 @@ int main(const int argc, const char *argv[]) {
 
   const thread_t render_thread = platform_spawn(render_perform, &thread_data);
   const thread_t logic_thread  = platform_spawn(logic_perform, &thread_data);
-  const thread_t input_thread  = platform_spawn(dummy, &thread_data);
+  const thread_t input_thread  = platform_spawn(input_perform, &thread_data);
 
   DEBUG_MESSAGE("Entering main loop...\n");
 

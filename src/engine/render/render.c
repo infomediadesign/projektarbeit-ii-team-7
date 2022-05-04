@@ -65,6 +65,8 @@ int render_perform(void *args) {
   render_state_create_window(render_state);
   geyser_init_vk(render_state);
 
+  state->window = render_state->window;
+
   geyser_cmd_begin_staging(render_state);
 
   const VkDescriptorSetLayoutBinding descriptor_bindings[] = {
@@ -124,8 +126,6 @@ int render_perform(void *args) {
     }
 
     start_time = platform_time_usec();
-
-    glfwPollEvents();
 
     geyser_cmd_begin_staging(render_state);
 

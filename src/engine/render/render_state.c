@@ -28,20 +28,11 @@ void render_state_destroy(RenderState *state) {
   free(state);
 }
 
-void render_state_refresh_callback(GLFWwindow *window) {}
-
-void render_state_resize_callback(GLFWwindow *window, i32 width, i32 height) {}
-
-void render_state_key_callback(GLFWwindow *window, i32 key, i32 scancode, i32 action, i32 mods) {}
-
 void render_state_create_window(RenderState *state) {
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   state->window = glfwCreateWindow(state->window_width, state->window_height, "Miniflow", NULL, NULL);
 
   glfwSetWindowUserPointer(state->window, state);
-  glfwSetWindowRefreshCallback(state->window, render_state_refresh_callback);
-  glfwSetFramebufferSizeCallback(state->window, render_state_resize_callback);
-  glfwSetKeyCallback(state->window, render_state_key_callback);
 }
 
 u8 render_state_should_close(RenderState *state) { return glfwWindowShouldClose(state->window); }
