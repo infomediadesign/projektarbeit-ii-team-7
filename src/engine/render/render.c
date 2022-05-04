@@ -41,6 +41,8 @@ int render_perform(void *args) {
 
   if (!glfwInit()) {
     game_add_flag(state, GS_EXIT);
+    free(renderables);
+    render_state_destroy(render_state);
 
     return 1;
   }
@@ -52,6 +54,8 @@ int render_perform(void *args) {
 
     glfwTerminate();
     game_add_flag(state, GS_EXIT);
+    free(renderables);
+    render_state_destroy(render_state);
 
     return 1;
   }

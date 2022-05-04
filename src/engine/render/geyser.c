@@ -59,7 +59,7 @@ void geyser_init_vk(RenderState *restrict state) {
     vkEnumerateInstanceLayerProperties(&layer_count, NULL);
 
     if (layer_count > 0) {
-      VkLayerProperties *layer_properties = malloc(sizeof(VkLayerProperties) * layer_count);
+      VkLayerProperties *layer_properties = (VkLayerProperties *)malloc(sizeof(VkLayerProperties) * layer_count);
       vkEnumerateInstanceLayerProperties(&layer_count, layer_properties);
 
       for (u32 i = 0; i < layer_count; i++) {
@@ -141,7 +141,7 @@ void geyser_init_vk(RenderState *restrict state) {
     abort();
   }
 
-  VkPhysicalDevice *physical_devices = malloc(sizeof(VkPhysicalDevice) * device_count);
+  VkPhysicalDevice *physical_devices = (VkPhysicalDevice *)malloc(sizeof(VkPhysicalDevice) * device_count);
   vkEnumeratePhysicalDevices(state->instance, &device_count, physical_devices);
 
   /* Simply pick the first discrete GPU as our "ideal" GPU. */
@@ -182,7 +182,8 @@ void geyser_init_vk(RenderState *restrict state) {
     abort();
   }
 
-  VkQueueFamilyProperties *queue_properties = malloc(sizeof(VkQueueFamilyProperties) * queue_properties_count);
+  VkQueueFamilyProperties *queue_properties =
+    (VkQueueFamilyProperties *)malloc(sizeof(VkQueueFamilyProperties) * queue_properties_count);
   vkGetPhysicalDeviceQueueFamilyProperties(state->physical_device, &queue_properties_count, queue_properties);
 
   for (state->queue_family_index = 0; state->queue_family_index < queue_properties_count; state->queue_family_index++)
@@ -285,7 +286,8 @@ void geyser_init_vk(RenderState *restrict state) {
   }
 
   VkPresentModeKHR preferred_present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR;
-  VkPresentModeKHR *device_present_modes  = malloc(sizeof(VkPresentModeKHR) * device_present_mode_count);
+  VkPresentModeKHR *device_present_modes =
+    (VkPresentModeKHR *)malloc(sizeof(VkPresentModeKHR) * device_present_mode_count);
   vkGetPhysicalDeviceSurfacePresentModesKHR(
     state->physical_device, state->surface, &device_present_mode_count, device_present_modes
   );
@@ -310,7 +312,7 @@ void geyser_init_vk(RenderState *restrict state) {
     abort();
   }
 
-  VkSurfaceFormatKHR *surface_formats = malloc(sizeof(VkSurfaceFormatKHR) * format_count);
+  VkSurfaceFormatKHR *surface_formats = (VkSurfaceFormatKHR *)malloc(sizeof(VkSurfaceFormatKHR) * format_count);
   vkGetPhysicalDeviceSurfaceFormatsKHR(state->physical_device, state->surface, &format_count, surface_formats);
 
   state->preferred_color_format         = surface_formats[0].format;
@@ -375,7 +377,7 @@ void geyser_init_vk(RenderState *restrict state) {
     abort();
   }
 
-  VkImage *swapchain_images = malloc(sizeof(VkImage) * state->swapchain_image_count);
+  VkImage *swapchain_images = (VkImage *)malloc(sizeof(VkImage) * state->swapchain_image_count);
   vkGetSwapchainImagesKHR(state->device, state->swapchain, &state->swapchain_image_count, swapchain_images);
   state->swapchain_images = swapchain_images;
 
@@ -435,8 +437,6 @@ void geyser_init_vk(RenderState *restrict state) {
                                                .width           = state->window_width,
                                                .height          = state->window_height,
                                                .layers          = 1 };
-
-  const Vector2 screen_size = { state->window_width, state->window_height };
 
   geyser_create_image_view(
     state,

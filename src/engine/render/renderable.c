@@ -129,12 +129,12 @@ void renderable_send_memory(RenderState *state, Renderable *r) {
 void renderable_make_rect(const RenderState *state, Renderable *r, const f32 width, const f32 height) {
   // clang-format off
   Vector4 vertices[6] = {
-    {-width * 0.5f,  -height * 0.5f,   0.0f, 1.0f},
+    {-width * 0.5f, -height * 0.5f, 0.0f, 1.0f},
     {-width * 0.5f,  height * 0.5f, 0.0f, 1.0f},
-    {width * 0.5f, -height * 0.5f,   0.0f, 1.0f},
-    {width * 0.5f, -height * 0.5f,   0.0f, 1.0f},
+    { width * 0.5f, -height * 0.5f, 0.0f, 1.0f},
+    { width * 0.5f, -height * 0.5f, 0.0f, 1.0f},
     {-width * 0.5f,  height * 0.5f, 0.0f, 1.0f},
-    {width * 0.5f, height * 0.5f, 0.0f, 1.0f}
+    { width * 0.5f,  height * 0.5f, 0.0f, 1.0f}
   };
 
   Vector2 uvmap[6] = {
@@ -147,8 +147,8 @@ void renderable_make_rect(const RenderState *state, Renderable *r, const f32 wid
   };
   // clang-format on
 
-  r->vertices = malloc(sizeof(Vector4) * 6);
-  r->uv       = malloc(sizeof(Vector2) * 6);
+  r->vertices = (Vector4 *)malloc(sizeof(Vector4) * 6);
+  r->uv       = (Vector2 *)malloc(sizeof(Vector2) * 6);
 
   memcpy(r->vertices, vertices, sizeof(Vector4) * 6);
   memcpy(r->uv, uvmap, sizeof(Vector2) * 6);
@@ -159,6 +159,9 @@ void renderable_make_rect(const RenderState *state, Renderable *r, const f32 wid
 void renderable_free(const RenderState *state, Renderable *r) {
   vkFreeMemory(state->device, r->vertex_memory, NULL);
   vkFreeMemory(state->device, r->uv_memory, NULL);
+  free(r->vertices);
+  free(r->uv);
+  free(r);
 }
 
 void renderable_calc_matrix(Renderable *r) {

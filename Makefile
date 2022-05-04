@@ -27,8 +27,8 @@ lint:
 	find ./src -type f -name '*.hpp' -exec clang-format -i {} \;
 
 analyze:
-	find ./src -type f -name '*.c' -exec clang -Wno-unused-command-line-argument --analyze -Xanalyzer -analyzer-output=text {} \;
-	find ./src -type f -name '*.cpp' -exec clang -Wno-unused-command-line-argument --analyze -Xanalyzer -analyzer-output=text {} \;
+	find ./src -type f -name '*.c' -exec clang -Xanalyzer,--exclude,./vendor -I./src -I./vendor/glfw/include -I./vendor/stb -I./vendor/glad/include -I./vendor/vulkan-headers -Wno-unused-command-line-argument --analyze -Xanalyzer -analyzer-output=text {} \;
+	find ./src -type f -name '*.cpp' -exec clang -Xanalyzer,--exclude,./vendor -I./src -I./vendor/glfw/include -I./vendor/stb -I./vendor/glad/include -I./vendor/vulkan-headers -Wno-unused-command-line-argument --analyze -Xanalyzer -analyzer-output=text {} \;
 
 shaders:
 	rm -f ./src/engine/render/shaders/*.spv

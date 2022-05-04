@@ -8,7 +8,11 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_ONLY_PNG
 
+#ifndef __clang_analyzer__
 #include <stb_image.h>
+#else
+#define STBI_rgb_alpha 4
+#endif
 
 // clang-format off
 static const u32 missing_texture[256] = {
