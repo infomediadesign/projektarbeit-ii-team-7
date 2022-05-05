@@ -222,3 +222,5 @@ void renderable_init_rect(RenderState *state, Renderable *r, const f32 width, co
 void renderable_set_scale(Renderable *r, const Vector2 scale) { r->scale = scale; }
 
 void renderable_set_active(Renderable *r, GeyserBool active) { r->active = active; }
+
+void renderable_set_updated(Renderable *r, const f64 updated_at) { r->updated_at = updated_at; }

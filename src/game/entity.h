@@ -54,6 +54,9 @@ public:
   const std::string get_texture_path() const;
   const f32 get_angle() const;
   const Vector3 get_axis() const;
+  const Vector3 get_velocity() const;
+  const f32 get_angular_speed() const;
+  const f64 get_updated_at() const;
   void set_active(const bool state);
   void update(const f64 current_time);
   void rotate(const Vector3 axis, const f32 angle);

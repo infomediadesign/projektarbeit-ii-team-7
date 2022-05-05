@@ -50,6 +50,7 @@ void renderable_set_rotation(Renderable *r, const Vector3 axis, const f32 rotati
 void renderable_set_velocity(Renderable *r, const Vector3 vel);
 void renderable_load_texture(RenderState *state, Renderable *r, const char *image_path);
 void renderable_init_rect(RenderState *state, Renderable *r, const f32 width, const f32 height);
+void renderable_set_updated(Renderable *state, const f64 updated_at);
 
 #ifdef __cplusplus
 }

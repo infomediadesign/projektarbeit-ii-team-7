@@ -14,6 +14,12 @@ const f32 Entity::get_angle() const { return this->angle; }
 
 const Vector3 Entity::get_axis() const { return this->axis; }
 
+const Vector3 Entity::get_velocity() const { return this->velocity; }
+
+const f32 Entity::get_angular_speed() const { return this->angular_speed; }
+
+const f64 Entity::get_updated_at() const { return this->updated_at; }
+
 void Entity::set_active(const bool state) {
   this->active     = state;
   this->updated_at = platform_time_f64();

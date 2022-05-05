@@ -45,6 +45,8 @@ void Game::update_renderables(
 
       renderable_set_pos(r, vector3_to_vector4(ent->get_pos()));
       renderable_set_rotation(r, ent->get_axis(), -ent->get_angle() + util_radians(90));
+      renderable_set_velocity(r, ent->get_velocity());
+      renderable_set_updated(r, ent->get_updated_at());
     }
   }
 }
@@ -77,13 +79,25 @@ void Game::process_input(GameState *state) {
     if (this->player != nullptr) {
       switch (this->input_state->commands[i]) {
       case Cmd::FORWARD: this->player->set_velocity_x(0.75f); break;
-      case Cmd::BACK: this->player->set_velocity_x(-0.75f); break;
       case -Cmd::FORWARD:
-      case -Cmd::BACK: this->player->set_velocity_x(0.0f); break;
+        if (this->player->get_velocity().x > 0.0f)
+          this->player->set_velocity_x(0.0f);
+        break;
+      case Cmd::BACK: this->player->set_velocity_x(-0.75f); break;
+      case -Cmd::BACK:
+        if (this->player->get_velocity().x < 0.0f)
+          this->player->set_velocity_x(0.0f);
+        break;
       case Cmd::LEFT: this->player->rotate_continuous(vector_make3(0.0f, 0.0f, 1.0f), 0.05f); break;
-      case Cmd::RIGHT: this->player->rotate_continuous(vector_make3(0.0f, 0.0f, 1.0f), -0.05f); break;
       case -Cmd::LEFT:
-      case -Cmd::RIGHT: this->player->rotate_continuous(vector_make3(0.0f, 0.0f, 1.0f), 0.0f); break;
+        if (this->player->get_angular_speed() > 0.0f)
+          this->player->rotate_continuous(vector_make3(0.0f, 0.0f, 1.0f), 0.0f);
+        break;
+      case Cmd::RIGHT: this->player->rotate_continuous(vector_make3(0.0f, 0.0f, 1.0f), -0.05f); break;
+      case -Cmd::RIGHT:
+        if (this->player->get_angular_speed() < 0.0f)
+          this->player->rotate_continuous(vector_make3(0.0f, 0.0f, 1.0f), 0.0f);
+        break;
       default: break;
       }
     }
