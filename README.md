@@ -1,4 +1,4 @@
-# Dungeon Crawler: Limb-Tearer 3000®
+# Assemblia®
 
 Dungeon-Crawler where you replace your limbs with guns that you tore off of your enemies. 
 Battle System like Dragon Quest where you can target different weapons, limbs and body parts of enemies and shoot them off.
