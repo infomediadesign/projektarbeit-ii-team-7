@@ -13,31 +13,26 @@ extern "C" {
 #include "render_state.h"
 
 typedef struct Renderable {
+  Matrix4 transform_matrix;
+  Vector4 last_position;
+  Vector4 position;
+  Vector4 color;
+  Quaternion rotation;
+  GeyserTexture texture;
+  Vector3 velocity;
   Vector4 *vertices;
   Vector2 *uv;
-  GeyserTexture texture;
-  u32 vertices_count;
-  Vector4 position;
-  Quaternion rotation;
   Vector2 scale;
   Vector2 uv_offset;
-  Vector4 color;
-  Matrix4 transform_matrix;
-  GeyserBool active;
-
-  /* Interpolation stuff */
-  Vector4 last_position;
-  Vector3 velocity;
   f64 updated_at;
-
-  /* Graphics memory */
   VkBuffer vertex_buffer;
   VkDeviceMemory vertex_memory;
   VkDeviceSize vertex_memory_size;
-
   VkBuffer uv_buffer;
   VkDeviceMemory uv_memory;
   VkDeviceSize uv_memory_size;
+  u32 vertices_count;
+  GeyserBool active;
 } Renderable;
 
 Renderable renderable_default();

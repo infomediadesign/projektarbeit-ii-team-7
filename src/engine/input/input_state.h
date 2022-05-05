@@ -13,23 +13,23 @@ typedef struct KeyBind {
 } KeyBind;
 
 typedef struct Axis2 {
-  double x;
-  double y;
+  f64 x;
+  f64 y;
 } Axis2;
 
 typedef struct InputState {
   KeyBind *bindings;
-  u32 top_binding;
   i32 *commands;
-  u32 command_count;
   u32 *raw;
-  u32 raw_count;
   Axis2 mouse;
   Axis2 mouse_last;
   Axis2 left_stick;
   Axis2 left_stick_last;
   Axis2 right_stick;
   Axis2 right_stick_last;
+  u32 top_binding;
+  u32 command_count;
+  u32 raw_count;
 } InputState;
 
 InputState *input_state_default();

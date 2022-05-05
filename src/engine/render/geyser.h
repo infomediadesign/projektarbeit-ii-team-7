@@ -49,10 +49,10 @@ typedef struct GeyserPipeline {
 } GeyserPipeline;
 
 typedef struct GeyserVertexInputDescription {
-  u32 input_binding_description_size;
-  u32 input_attribute_description_size;
   VkVertexInputBindingDescription input_binding_descriptions[16];
   VkVertexInputAttributeDescription input_attribute_descriptions[16];
+  u32 input_binding_description_size;
+  u32 input_attribute_description_size;
 } GeyserVertexInputDescription;
 
 typedef struct GeyserPushConstants {

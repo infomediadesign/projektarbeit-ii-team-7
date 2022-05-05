@@ -49,6 +49,8 @@ void vector_negi(Vector4 *v);
 f32 vector_dot3(const Vector3 v1, const Vector3 v2);
 f32 vector_dot4(const Vector4 v1, const Vector4 v2);
 Vector3 vector_from_matrix_comp3(const f32 *comps);
+Vector4 vector3_to_vector4(const Vector3 v);
+void vector3_inspect(const Vector3 v);
 
 #ifdef __cplusplus
 }

@@ -41,17 +41,14 @@ typedef struct RsPipeline {
  *
  */
 typedef struct RenderState {
-  GLFWwindow *window;
-
-  u8 debug;
-  f32 window_width;
-  f32 window_height;
-  Time init_time;
-  u8 rendering;
-
   Matrix4 camera_transform;
-
-  /* Persistent Vulkan-related stuff */
+  RsPipeline pipeline;
+  BackbufferView backbuffer;
+  Time init_time;
+  u64 current_frame;
+  GLFWwindow *window;
+  u32 *queue_family_indices;
+  VkImage *swapchain_images;
   VkInstance instance;
   VkPhysicalDevice physical_device;
   VkPhysicalDeviceFeatures physical_device_features;
@@ -61,31 +58,28 @@ typedef struct RenderState {
   VkQueue queue;
   VkSurfaceKHR surface;
   VkSwapchainKHR swapchain;
-  VkImage *swapchain_images;
-  u32 swapchain_image_count;
   VkRenderPass renderpass;
-  BackbufferView backbuffer;
   VkFramebuffer framebuffer;
-  RsPipeline pipeline;
   VkDescriptorPool descriptor_pool;
   VkCommandPool command_pool;
   VkBuffer buffer;
   VkDeviceMemory memory;
   VkViewport viewport;
-  VkRect2D scissor;
-
-  /* Variable Vulkan-related stuff */
   VkCommandBuffer command_buffer;
   VkSemaphore image_semaphore;
   VkSemaphore draw_semaphore;
-  u32 current_swapchain_image;
-  u64 current_frame;
   VkFormat preferred_color_format;
-  u32 queue_family_index;
-  u32 *queue_family_indices;
-  u32 queue_family_indices_count;
   VkImageMemoryBarrier pre_draw_barrier;
   VkImageMemoryBarrier pre_present_barrier;
+  VkRect2D scissor;
+  f32 window_width;
+  f32 window_height;
+  u32 current_swapchain_image;
+  u32 queue_family_index;
+  u32 queue_family_indices_count;
+  u32 swapchain_image_count;
+  u8 debug;
+  u8 rendering;
 } RenderState;
 
 /**

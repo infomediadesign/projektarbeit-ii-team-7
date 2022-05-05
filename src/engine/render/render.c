@@ -119,7 +119,7 @@ int render_perform(void *args) {
 
     geyser_cmd_begin_staging(render_state);
 
-    game_adjust_renderables(state, lock, renderables, MAX_RENDERABLES);
+    game_adjust_renderables(state, lock, render_state, renderables, MAX_RENDERABLES);
 
     geyser_cmd_end_staging(render_state);
 

@@ -1,6 +1,7 @@
 #include "vector.h"
 
 #include <math.h>
+#include <stdio.h>
 
 Vector2 vector_default2() { return (Vector2) { 0.0f, 0.0f }; }
 
@@ -88,3 +89,7 @@ f32 vector_dot3(const Vector3 v1, const Vector3 v2) { return v1.x * v2.x + v1.y 
 f32 vector_dot4(const Vector4 v1, const Vector4 v2) { return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z + v1.w * v2.w; }
 
 Vector3 vector_from_matrix_comp3(const f32 *comps) { return (Vector3) { comps[0], comps[1], comps[2] }; }
+
+Vector4 vector3_to_vector4(const Vector3 v) { return (Vector4) { v.x, v.y, v.z, 1.0f }; }
+
+void vector3_inspect(const Vector3 v) { printf("Vector3 { %.2f, %.2f, %.2f }\n", v.x, v.y, v.z); }

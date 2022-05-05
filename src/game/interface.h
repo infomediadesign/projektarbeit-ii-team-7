@@ -15,6 +15,7 @@ extern "C" {
 
 #include <engine/input/input.h>
 #include <engine/platform.h>
+#include <engine/render/render_state.h>
 #include <engine/render/renderable.h>
 #include <engine/state/state.h>
 #include <engine/types/numeric.h>
@@ -23,7 +24,10 @@ void game_initialize(GameState *state);
 void game_tick(GameState *state, mutex_t *lock);
 void game_lazy_tick(GameState *state, mutex_t *lock);
 void game_paused_tick(GameState *state, mutex_t *lock);
-void game_adjust_renderables(GameState *state, mutex_t *lock, Renderable *renderables, const u32 renderables_count);
+/* todo: make it not require render_state */
+void game_adjust_renderables(
+  GameState *state, mutex_t *lock, RenderState *render_state, Renderable *renderables, const u32 renderables_count
+);
 void game_create_bindings(GameState *state, mutex_t *lock, InputState *input_state);
 
 #ifdef __cplusplus

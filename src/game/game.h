@@ -15,8 +15,8 @@
 
 class Game {
 private:
-  std::vector<Entity> entities;
-  std::shared_ptr<Entity> player;
+  std::vector<Entity *> entities;
+  Entity *player;
   InputState *input_state;
 
 public:
@@ -25,17 +25,25 @@ public:
     this->player      = nullptr;
   }
 
-  ~Game() {}
+  ~Game() {
+    for (Entity *ent : this->entities)
+      delete ent;
+  }
 
   /* Events called from the engine */
   void update(GameState *state, mutex_t *lock);
   void update_lazy(GameState *state, mutex_t *lock);
   void update_paused(GameState *state, mutex_t *lock);
-  void update_renderables(GameState *state, mutex_t *lock, Renderable *renderables, const u32 renderables_count);
+  void update_renderables(
+    GameState *state, mutex_t *lock, RenderState *render_state, Renderable *renderables, const u32 renderables_count
+  );
   void create_bindings(GameState *state, mutex_t *lock, InputState *input_state);
 
   /* Input stuff */
   void process_input(GameState *state);
+
+  /* Other stuff */
+  Entity *ent_create(Entity *parent = nullptr);
 };
 
 #endif

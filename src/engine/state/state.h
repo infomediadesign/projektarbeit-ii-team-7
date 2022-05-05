@@ -18,14 +18,14 @@ extern "C" {
  *
  */
 typedef struct GameState {
-  u32 flags;
+  void *window;
+  char *preferred_platform;
   u64 tick;
+  u32 flags;
   u32 tickrate;
   u32 fps_max;
   u32 width;
   u32 height;
-  char *preferred_platform;
-  void *window;
 } GameState;
 
 /**
