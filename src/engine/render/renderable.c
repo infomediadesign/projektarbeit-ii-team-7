@@ -114,7 +114,7 @@ void renderable_send_memory(RenderState *state, Renderable *r) {
     vkMapMemory(state->device, state->memory, 0, r->vertex_memory_size, 0, &data), "Failed to map vertex memory!"
   );
   memcpy(data, r->vertices, vertex_size);
-  memcpy(data + vertex_size, r->uv, uv_size);
+  memcpy((u8 *)data + vertex_size, r->uv, uv_size);
   vkUnmapMemory(state->device, state->memory);
 
   vkCmdCopyBuffer(state->command_buffer, state->buffer, r->vertex_buffer, 1, &copy_info);

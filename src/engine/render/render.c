@@ -120,6 +120,11 @@ int render_perform(void *args) {
 
     start_time = platform_time_usec();
 
+#ifdef _WIN32
+    /* And as always, Windows is SPECIAL */
+    glfwPollEvents();
+#endif
+
     geyser_cmd_begin_staging(render_state);
 
     game_adjust_renderables(state, lock, render_state, renderables, MAX_RENDERABLES);

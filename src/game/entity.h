@@ -37,26 +37,27 @@ public:
   Entity() : Entity(0U) {}
 
   Entity(const u32 entity_index) {
-    const size_t addr     = (size_t)this;
-    this->id              = crc64(&addr, sizeof(size_t));
-    this->entity_index    = entity_index;
-    this->ready           = false;
-    this->active          = false;
-    this->renderable_id   = 0U;
-    this->position        = { 0.0f, 0.0f, 0.0f };
-    this->velocity        = { 0.0f, 0.0f, 0.0f };
-    this->axis            = { 0.0f, 0.0f, 1.0f };
-    this->rotation_matrix = {
+    const size_t addr      = (size_t)this;
+    this->id               = crc64(&addr, sizeof(size_t));
+    this->entity_index     = entity_index;
+    this->ready            = false;
+    this->active           = false;
+    this->renderable_id    = 0U;
+    this->position         = { 0.0f, 0.0f, 0.0f };
+    this->velocity         = { 0.0f, 0.0f, 0.0f };
+    this->velocity_rotated = { 0.0f, 0.0f, 0.0f };
+    this->axis             = { 0.0f, 0.0f, 1.0f };
+    this->rotation_matrix  = {
       { 1.0f, 0.0f, 0.0f, 0.0f },
       { 0.0f, 1.0f, 0.0f, 0.0f },
       { 0.0f, 0.0f, 1.0f, 0.0f },
       { 0.0f, 0.0f, 0.0f, 1.0f },
     };
-    this->angle            = 0.0f;
-    this->angular_velocity = 0.0f;
-    this->updated_at       = 0.0;
-    this->parent           = nullptr;
-    this->texture_path     = "";
+    this->angle             = 0.0f;
+    this->angular_velocity  = 0.0f;
+    this->updated_at        = 0.0;
+    this->parent            = nullptr;
+    this->texture_path      = "";
   }
 
   const i64 get_id() const;

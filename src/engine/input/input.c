@@ -42,7 +42,9 @@ int input_perform(void *args) {
   game_create_bindings(state, lock, IS);
 
   while (!game_should_exit(state)) {
+#ifndef _WIN32
     glfwPollEvents();
+#endif
 
     platform_sleep(2);
   }
