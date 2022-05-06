@@ -70,7 +70,7 @@ const u64 crc64table[256] = {
  * @p: pointer to buffer over which CRC64 is run
  * @len: length of buffer @p
  */
-u64 crc64(const void *restrict p, const size_t len) {
+u64 crc64(const void *p, const size_t len) {
   size_t i, t;
   u64 crc = 0;
 

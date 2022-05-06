@@ -31,6 +31,7 @@ void renderable_make_default(Renderable *r) {
   r->rotation         = null_quat;
   r->transform_matrix = null_mat4;
   r->active           = GS_FALSE;
+  r->assigned_to      = -1;
   r->velocity         = null_vec3;
   r->scale            = one_vec2;
   r->uv_offset        = null_vec2;
@@ -213,7 +214,6 @@ void renderable_load_texture(RenderState *state, Renderable *r, const char *imag
 }
 
 void renderable_init_rect(RenderState *state, Renderable *r, const f32 width, const f32 height) {
-  renderable_make_default(r);
   renderable_make_rect(state, r, width, height);
   renderable_allocate_memory(state, r);
   renderable_send_memory(state, r);
@@ -224,3 +224,5 @@ void renderable_set_scale(Renderable *r, const Vector2 scale) { r->scale = scale
 void renderable_set_active(Renderable *r, GeyserBool active) { r->active = active; }
 
 void renderable_set_updated(Renderable *r, const f64 updated_at) { r->updated_at = updated_at; }
+
+void renderable_set_assigned(Renderable *r, i64 ent_id) { r->assigned_to = ent_id; }

@@ -7,7 +7,7 @@ extern "C" {
 
 #include "types/numeric.h"
 
-u64 crc64(const void *restrict p, const size_t len);
+u64 crc64(const void *p, const size_t len);
 
 #ifdef __cplusplus
 }

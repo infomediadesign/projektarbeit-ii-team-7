@@ -25,6 +25,7 @@ typedef struct Renderable {
   Vector2 scale;
   Vector2 uv_offset;
   f64 updated_at;
+  i64 assigned_to;
   VkBuffer vertex_buffer;
   VkDeviceMemory vertex_memory;
   VkDeviceSize vertex_memory_size;
@@ -46,6 +47,7 @@ void renderable_interpolate(Renderable *r);
 void renderable_set_pos(Renderable *r, const Vector4 pos);
 void renderable_set_scale(Renderable *r, const Vector2 scale);
 void renderable_set_active(Renderable *r, GeyserBool active);
+void renderable_set_assigned(Renderable *r, i64 ent_id);
 void renderable_set_rotation(Renderable *r, const Vector3 axis, const f32 rotation);
 void renderable_set_velocity(Renderable *r, const Vector3 vel);
 void renderable_load_texture(RenderState *state, Renderable *r, const char *image_path);

@@ -62,6 +62,9 @@ int render_perform(void *args) {
 
   printf("[GLFW] Selected platform: %s\n", platform_name(glfwGetPlatform()));
 
+  for (u32 i = 0; i < MAX_RENDERABLES; i++)
+    renderable_make_default(&renderables[i]);
+
   render_state_create_window(render_state);
   geyser_init_vk(render_state);
 

@@ -4,7 +4,11 @@
 
 static Game *GAME;
 
-void game_initialize(GameState *state) { GAME = new Game; }
+void game_initialize(GameState *state) {
+  GAME = new Game;
+
+  GAME->init(state);
+}
 
 void game_tick(GameState *state, mutex_t *lock) { GAME->update(state, lock); }
 

@@ -1,11 +1,13 @@
 #ifndef __GAME_ENTITY_H
 #define __GAME_ENTITY_H
 
+#include <engine/crc64.h>
 #include <engine/types/matrix.h>
 #include <engine/types/numeric.h>
 #include <engine/types/quaternion.h>
 #include <engine/types/vector.h>
 #include <engine/util.h>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -15,23 +17,32 @@ private:
   Quaternion quaternion;
   Vector3 position;
   Vector3 velocity;
+  Vector3 velocity_rotated;
   Vector3 axis;
   Entity *parent;
   std::vector<Entity> attachments;
   std::string texture_path;
+  i64 id;
   f64 updated_at;
   u32 renderable_id;
+  u32 entity_index;
   f32 angle;
-  f32 angular_speed;
+  f32 angular_velocity;
   bool ready;
   bool active;
+
+  void calc_rotated_velocity();
 
 public:
   Entity() : Entity(0U) {}
 
-  Entity(const u32 renr_id) {
+  Entity(const u32 entity_index) {
+    const size_t addr     = (size_t)this;
+    this->id              = crc64(&addr, sizeof(size_t));
+    this->entity_index    = entity_index;
+    this->ready           = false;
     this->active          = false;
-    this->renderable_id   = renr_id;
+    this->renderable_id   = 0U;
     this->position        = { 0.0f, 0.0f, 0.0f };
     this->velocity        = { 0.0f, 0.0f, 0.0f };
     this->axis            = { 0.0f, 0.0f, 1.0f };
@@ -41,31 +52,37 @@ public:
       { 0.0f, 0.0f, 1.0f, 0.0f },
       { 0.0f, 0.0f, 0.0f, 1.0f },
     };
-    this->angle         = 0.0f;
-    this->angular_speed = 0.0f;
-    this->updated_at    = 0.0;
-    this->parent        = nullptr;
-    this->texture_path  = "";
+    this->angle            = 0.0f;
+    this->angular_velocity = 0.0f;
+    this->updated_at       = 0.0;
+    this->parent           = nullptr;
+    this->texture_path     = "";
   }
 
+  const i64 get_id() const;
   const bool is_active() const;
+  const bool is_ready() const;
   const u32 get_renderable_id() const;
   const Vector3 get_pos() const;
   const std::string get_texture_path() const;
   const f32 get_angle() const;
   const Vector3 get_axis() const;
   const Vector3 get_velocity() const;
-  const f32 get_angular_speed() const;
+  const Vector3 get_velocity_rotated() const;
+  const f32 get_angular_velocity() const;
   const f64 get_updated_at() const;
+  const u32 get_entity_index() const;
   void set_active(const bool state);
   void update(const f64 current_time);
   void rotate(const Vector3 axis, const f32 angle);
-  void rotate_continuous(const Vector3 axis, const f32 angular_speed);
+  void rotate_continuous(const Vector3 axis, const f32 angular_velocity);
   void set_velocity(const Vector3 velocity);
   void set_velocity_x(const f32 velocity);
   void set_velocity_y(const f32 velocity);
   void set_parent(Entity *ent);
-  void set_texture_path(std::string path);
+  void set_texture_path(const std::string path);
+  void set_renderable_id(const u32 renderable_id);
+  void set_ready(const bool ready);
 };
 
 #endif
