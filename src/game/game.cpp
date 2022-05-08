@@ -18,6 +18,7 @@ void Game::init(GameState *state) {
   srand(platform_time_sec());
 
   this->player = this->ent_create();
+  this->player->set_entity_class(EntClass::PLAYER);
   this->player->set_texture_path("assets/ship.png");
   this->player->set_pos({ 0.0f, -0.4f, 0.0f });
   this->player->set_active(true);
@@ -31,9 +32,12 @@ void Game::update(GameState *state, mutex_t *lock) {
     input_flush(this->input_state);
   }
 
-  for (std::shared_ptr<Entity> ent : this->entities)
-    if (ent->is_active())
+  for (std::shared_ptr<Entity> ent : this->entities) {
+    if (ent->is_active() && !ent->should_be_removed() && ent->is_ready()) {
       ent->update(update_time);
+      this->check_collision(ent);
+    }
+  }
 
   const Vector3 player_pos = this->player->get_pos();
 
@@ -42,7 +46,7 @@ void Game::update(GameState *state, mutex_t *lock) {
 
 void Game::update_lazy(GameState *state, mutex_t *lock) {
   for (const std::shared_ptr<Entity> ent : this->entities)
-    if (ent->should_be_removed())
+    if (ent->should_be_removed() && !this->renderable_marked_for_deletion(ent->get_renderable_id()))
       this->dangling_renderables.push_back(ent->get_renderable_id());
 
   std::erase_if(this->entities, [](const std::shared_ptr<Entity> ent) {
@@ -70,7 +74,7 @@ void Game::update_renderables(
     if (r == nullptr)
       continue;
 
-    if (ent->is_active()) {
+    if (ent->is_active() && !ent->should_be_removed()) {
       if (!ent->is_ready()) {
         const u32 renderable_id = this->ent_assign_renderable(renderables, renderables_count, ent);
 
@@ -177,8 +181,11 @@ const u32 Game::ent_assign_renderable(
 }
 
 void Game::ent_remove(std::shared_ptr<Entity> ent) {
-  this->dangling_renderables.push_back(ent->get_renderable_id());
+  if (!this->renderable_marked_for_deletion(ent->get_renderable_id()))
+    this->dangling_renderables.push_back(ent->get_renderable_id());
+
   ent->set_should_remove(true);
+  ent->set_active(false);
 }
 
 void Game::spawn_projectile() {
@@ -187,6 +194,7 @@ void Game::spawn_projectile() {
   if (this->last_projectile_at + 0.5 <= current_time) {
     std::shared_ptr<Entity> projectile = this->ent_create();
 
+    projectile->set_entity_class(EntClass::PROJECTILE);
     projectile->set_texture_path("assets/beam.png");
     projectile->set_pos(this->player->get_pos());
     projectile->set_velocity_x(3.0f);
@@ -201,7 +209,7 @@ void Game::spawn_projectile() {
 void Game::spawn_asteroid() {
   const f64 current_time = platform_time_f64();
 
-  if (this->last_asteroid_at + 1.5 <= current_time) {
+  if (this->last_asteroid_at + 1.0 <= current_time) {
     std::shared_ptr<Entity> asteroid = this->ent_create();
 
     const f32 size = 1.0f + rand() % 15 / 10.0f;
@@ -215,6 +223,7 @@ void Game::spawn_asteroid() {
       pos.x = rand() % 2 == 0 ? -1.2f : 1.2f;
     }
 
+    asteroid->set_entity_class(EntClass::ASTEROID);
     asteroid->set_texture_path(pick_asteroid());
     asteroid->set_pos(pos);
     asteroid->set_velocity(
@@ -227,4 +236,29 @@ void Game::spawn_asteroid() {
 
     this->last_asteroid_at = current_time;
   }
+}
+
+void Game::check_collision(std::shared_ptr<Entity> ent) {
+  for (std::shared_ptr<Entity> target : this->entities) {
+    if (!target->is_active() || target->should_be_removed() || !ent->is_ready())
+      continue;
+
+    if (target->get_id() == ent->get_id())
+      continue;
+
+    if (ent->collides_with(target)) {
+      if (ent->get_entity_class() == EntClass::PROJECTILE && target->get_entity_class() == EntClass::ASTEROID) {
+        this->ent_remove(ent);
+        this->ent_remove(target);
+
+        break;
+      }
+    }
+  }
+}
+
+bool Game::renderable_marked_for_deletion(const u32 renderable_id) {
+  return !this->dangling_renderables.empty() &&
+         std::find(this->dangling_renderables.begin(), this->dangling_renderables.end(), renderable_id) ==
+           this->dangling_renderables.end();
 }

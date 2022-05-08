@@ -32,6 +32,27 @@ const bool Entity::should_be_removed() const { return this->should_remove; }
 
 const Vector2 Entity::get_scale() const { return this->scale; }
 
+const Vector3 Entity::get_aabb_min() const { return this->aabb_min; }
+
+const Vector3 Entity::get_aabb_max() const { return this->aabb_max; }
+
+const u32 Entity::get_entity_class() const { return this->ent_class; }
+
+const bool Entity::collides_with(const std::shared_ptr<Entity> ent) const {
+  const Vector3 target_min = vector_add3(ent->get_aabb_min(), ent->get_pos());
+  const Vector3 target_max = vector_add3(ent->get_aabb_max(), ent->get_pos());
+  const Vector3 aabb_min   = vector_add3(this->aabb_min, this->position);
+  const Vector3 aabb_max   = vector_add3(this->aabb_max, this->position);
+
+  if (aabb_min.x > target_max.x || aabb_max.x < target_min.x)
+    return false;
+
+  if (aabb_min.y > target_max.y || aabb_max.y < target_min.y)
+    return false;
+
+  return true;
+}
+
 void Entity::set_active(const bool state) {
   this->active     = state;
   this->updated_at = platform_time_f64();
@@ -110,3 +131,5 @@ void Entity::set_pos(const Vector3 position) { this->position = position; }
 void Entity::set_should_remove(const bool should_remove) { this->should_remove = should_remove; }
 
 void Entity::set_scale(const Vector2 scale) { this->scale = scale; }
+
+void Entity::set_entity_class(const EntClass entity_class) { this->ent_class = entity_class; }

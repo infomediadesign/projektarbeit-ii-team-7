@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+enum EntClass { UNKNOWN, PLAYER, PROJECTILE, ASTEROID };
+
 class Entity {
 private:
   Matrix4 rotation_matrix;
@@ -19,6 +21,8 @@ private:
   Vector3 position;
   Vector3 velocity;
   Vector3 velocity_rotated;
+  Vector3 aabb_min;
+  Vector3 aabb_max;
   Vector3 axis;
   Vector2 scale;
   std::shared_ptr<Entity> parent;
@@ -28,6 +32,7 @@ private:
   f64 updated_at;
   f64 created_at;
   f64 lifetime;
+  u32 ent_class;
   u32 renderable_id;
   u32 entity_index;
   f32 angle;
@@ -48,11 +53,14 @@ public:
     this->ready            = false;
     this->active           = false;
     this->should_remove    = false;
+    this->ent_class        = EntClass::UNKNOWN;
     this->renderable_id    = 0U;
     this->scale            = { 1.0f, 1.0f };
     this->position         = { 0.0f, 0.0f, 0.0f };
     this->velocity         = { 0.0f, 0.0f, 0.0f };
     this->velocity_rotated = { 0.0f, 0.0f, 0.0f };
+    this->aabb_min         = { -0.1f, -0.1f, 0.0f };
+    this->aabb_max         = { 0.1f, 0.1f, 0.0f };
     this->axis             = { 0.0f, 0.0f, 1.0f };
     this->rotation_matrix  = {
        { 1.0f, 0.0f, 0.0f, 0.0f },
@@ -84,6 +92,10 @@ public:
   const u32 get_entity_index() const;
   const bool should_be_removed() const;
   const Vector2 get_scale() const;
+  const Vector3 get_aabb_min() const;
+  const Vector3 get_aabb_max() const;
+  const bool collides_with(const std::shared_ptr<Entity> ent) const;
+  const u32 get_entity_class() const;
   void set_active(const bool state);
   void update(const f64 current_time);
   void rotate(const Vector3 axis, const f32 angle);
@@ -99,6 +111,7 @@ public:
   void set_pos(const Vector3 position);
   void set_should_remove(const bool should_remove);
   void set_scale(const Vector2 scale);
+  void set_entity_class(const EntClass ent_class);
 };
 
 #endif

@@ -46,6 +46,8 @@ public:
   /* Gameplay logic stuff */
   void spawn_projectile();
   void spawn_asteroid();
+  void check_collision(std::shared_ptr<Entity> ent);
+  bool renderable_marked_for_deletion(const u32 renderable_id);
 
   std::shared_ptr<Entity> ent_create(std::shared_ptr<Entity> parent = nullptr);
   const u32 ent_assign_renderable(
