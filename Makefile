@@ -6,7 +6,7 @@ configure:
 	cmake -B build -S src
 
 build:
-	cmake --build build
+	cmake --build build --config Debug
 
 release:
 	cmake --build build --config Release

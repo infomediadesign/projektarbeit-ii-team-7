@@ -8,6 +8,7 @@
 #include <engine/types/vector.h>
 #include <engine/util.h>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -19,17 +20,21 @@ private:
   Vector3 velocity;
   Vector3 velocity_rotated;
   Vector3 axis;
-  Entity *parent;
+  Vector2 scale;
+  std::shared_ptr<Entity> parent;
   std::vector<Entity> attachments;
   std::string texture_path;
   i64 id;
   f64 updated_at;
+  f64 created_at;
+  f64 lifetime;
   u32 renderable_id;
   u32 entity_index;
   f32 angle;
   f32 angular_velocity;
   bool ready;
   bool active;
+  bool should_remove;
 
   void calc_rotated_velocity();
 
@@ -42,22 +47,26 @@ public:
     this->entity_index     = entity_index;
     this->ready            = false;
     this->active           = false;
+    this->should_remove    = false;
     this->renderable_id    = 0U;
+    this->scale            = { 1.0f, 1.0f };
     this->position         = { 0.0f, 0.0f, 0.0f };
     this->velocity         = { 0.0f, 0.0f, 0.0f };
     this->velocity_rotated = { 0.0f, 0.0f, 0.0f };
     this->axis             = { 0.0f, 0.0f, 1.0f };
     this->rotation_matrix  = {
-      { 1.0f, 0.0f, 0.0f, 0.0f },
-      { 0.0f, 1.0f, 0.0f, 0.0f },
-      { 0.0f, 0.0f, 1.0f, 0.0f },
-      { 0.0f, 0.0f, 0.0f, 1.0f },
+       { 1.0f, 0.0f, 0.0f, 0.0f },
+       { 0.0f, 1.0f, 0.0f, 0.0f },
+       { 0.0f, 0.0f, 1.0f, 0.0f },
+       { 0.0f, 0.0f, 0.0f, 1.0f },
     };
-    this->angle             = 0.0f;
-    this->angular_velocity  = 0.0f;
-    this->updated_at        = 0.0;
-    this->parent            = nullptr;
-    this->texture_path      = "";
+    this->angle            = 0.0f;
+    this->angular_velocity = 0.0f;
+    this->updated_at       = 0.0;
+    this->parent           = nullptr;
+    this->texture_path     = "";
+    this->lifetime         = 0.0;
+    this->created_at       = platform_time_f64();
   }
 
   const i64 get_id() const;
@@ -73,6 +82,8 @@ public:
   const f32 get_angular_velocity() const;
   const f64 get_updated_at() const;
   const u32 get_entity_index() const;
+  const bool should_be_removed() const;
+  const Vector2 get_scale() const;
   void set_active(const bool state);
   void update(const f64 current_time);
   void rotate(const Vector3 axis, const f32 angle);
@@ -80,10 +91,14 @@ public:
   void set_velocity(const Vector3 velocity);
   void set_velocity_x(const f32 velocity);
   void set_velocity_y(const f32 velocity);
-  void set_parent(Entity *ent);
+  void set_parent(std::shared_ptr<Entity> ent);
   void set_texture_path(const std::string path);
   void set_renderable_id(const u32 renderable_id);
   void set_ready(const bool ready);
+  void set_lifetime(const f64 lifetime);
+  void set_pos(const Vector3 position);
+  void set_should_remove(const bool should_remove);
+  void set_scale(const Vector2 scale);
 };
 
 #endif

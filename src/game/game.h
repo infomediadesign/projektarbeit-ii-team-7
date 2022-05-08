@@ -15,20 +15,19 @@
 
 class Game {
 private:
-  std::vector<Entity *> entities;
+  std::vector<std::shared_ptr<Entity>> entities;
   std::vector<u32> dangling_renderables;
-  Entity *player;
+  std::shared_ptr<Entity> player;
   InputState *input_state;
+  f64 last_projectile_at;
+  f64 last_asteroid_at;
 
 public:
   Game() {
-    this->input_state = nullptr;
-    this->player      = nullptr;
-  }
-
-  ~Game() {
-    for (Entity *ent : this->entities)
-      delete ent;
+    this->input_state        = nullptr;
+    this->player             = nullptr;
+    this->last_projectile_at = 0.0;
+    this->last_asteroid_at   = 0.0;
   }
 
   /* Events called from the engine */
@@ -44,10 +43,15 @@ public:
   /* Input stuff */
   void process_input(GameState *state, const f64 update_time);
 
-  /* Other stuff */
-  Entity *ent_create(Entity *parent = nullptr);
-  const u32 ent_assign_renderable(Renderable *renderables, const u32 renderables_count, const Entity *ent) const;
-  void ent_remove(Entity *ent);
+  /* Gameplay logic stuff */
+  void spawn_projectile();
+  void spawn_asteroid();
+
+  std::shared_ptr<Entity> ent_create(std::shared_ptr<Entity> parent = nullptr);
+  const u32 ent_assign_renderable(
+    Renderable *renderables, const u32 renderables_count, const std::shared_ptr<Entity> ent
+  ) const;
+  void ent_remove(std::shared_ptr<Entity> ent);
 };
 
 #endif

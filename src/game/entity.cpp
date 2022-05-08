@@ -28,6 +28,10 @@ const Vector3 Entity::get_velocity_rotated() const { return this->velocity_rotat
 
 const u32 Entity::get_entity_index() const { return this->entity_index; }
 
+const bool Entity::should_be_removed() const { return this->should_remove; }
+
+const Vector2 Entity::get_scale() const { return this->scale; }
+
 void Entity::set_active(const bool state) {
   this->active     = state;
   this->updated_at = platform_time_f64();
@@ -35,6 +39,11 @@ void Entity::set_active(const bool state) {
 
 void Entity::update(const f64 current_time) {
   const f64 delta = current_time - this->updated_at;
+
+  if (lifetime > 0.0 && this->created_at + lifetime <= current_time) {
+    this->set_active(false);
+    this->should_remove = true;
+  }
 
   if (this->angular_velocity != 0.0f) {
     this->angle += this->angular_velocity * delta;
@@ -73,7 +82,7 @@ void Entity::set_velocity_y(const f32 velocity) {
   this->calc_rotated_velocity();
 }
 
-void Entity::set_parent(Entity *ent) { this->parent = ent; }
+void Entity::set_parent(std::shared_ptr<Entity> ent) { this->parent = ent; }
 
 void Entity::set_texture_path(const std::string path) { this->texture_path = path; }
 
@@ -93,3 +102,11 @@ void Entity::calc_rotated_velocity() {
 void Entity::set_renderable_id(const u32 renderable_id) { this->renderable_id = renderable_id; }
 
 void Entity::set_ready(const bool ready) { this->ready = ready; }
+
+void Entity::set_lifetime(const f64 lifetime) { this->lifetime = lifetime; }
+
+void Entity::set_pos(const Vector3 position) { this->position = position; }
+
+void Entity::set_should_remove(const bool should_remove) { this->should_remove = should_remove; }
+
+void Entity::set_scale(const Vector2 scale) { this->scale = scale; }
