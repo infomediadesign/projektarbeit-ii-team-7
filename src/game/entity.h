@@ -48,7 +48,7 @@ public:
   Entity() : Entity(0U) {}
 
   Entity(const u32 entity_index) {
-    const size_t addr      = (size_t)this + rand();
+    const size_t addr      = (size_t)this;
     this->id               = crc64(&addr, sizeof(size_t));
     this->entity_index     = entity_index;
     this->ready            = false;

@@ -34,7 +34,7 @@ void Game::update(GameState *state, mutex_t *lock) {
   }
 
   for (std::shared_ptr<Entity> ent : this->entities) {
-    if (ent->is_valid()) {
+    if (this->is_valid(ent)) {
       ent->update(update_time);
       this->check_collision(ent);
     }
@@ -96,7 +96,7 @@ void Game::update_renderables(
         r = &renderables[renderable_id];
       }
 
-      if (!r->active && ent->is_valid()) {
+      if (!r->active && this->is_valid(ent)) {
         renderable_init_rect(render_state, r, 0.1f, 0.1f);
         renderable_set_scale(r, ent->get_scale());
         renderable_load_texture(render_state, r, ent->get_texture_path().c_str());
@@ -277,7 +277,7 @@ void Game::spawn_split_asteroid(const std::shared_ptr<Entity> ent) {
 }
 
 void Game::check_collision(std::shared_ptr<Entity> ent) {
-  if (!ent->is_valid())
+  if (!this->is_valid(ent))
     return;
 
   for (std::shared_ptr<Entity> target : this->entities) {
@@ -323,8 +323,12 @@ void Game::clear_entities() {
 
 bool Game::can_delete_renderable(const u32 renderable_id) {
   for (std::shared_ptr<Entity> ent : this->entities)
-    if (ent->is_valid() && ent->get_renderable_id() == renderable_id)
+    if (this->is_valid(ent) && ent->get_renderable_id() == renderable_id)
       return false;
 
   return true;
+}
+
+bool Game::is_valid(const std::shared_ptr<Entity> ent) const {
+  return ent != nullptr && ent->is_valid();
 }

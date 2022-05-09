@@ -50,6 +50,7 @@ public:
   void check_collision(std::shared_ptr<Entity> ent);
   bool can_delete_renderable(const u32 renderable_id);
   void clear_entities();
+  bool is_valid(const std::shared_ptr<Entity> ent) const;
 
   std::shared_ptr<Entity> ent_create(std::shared_ptr<Entity> parent = nullptr);
   const u32 ent_assign_renderable(
