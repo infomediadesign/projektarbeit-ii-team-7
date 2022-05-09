@@ -64,6 +64,9 @@ void Game::update_renderables(
   GameState *state, mutex_t *lock, RenderState *render_state, Renderable *renderables, const u32 renderables_count
 ) {
   for (const u32 id : this->dangling_renderables) {
+    if (!this->can_delete_renderable(id))
+      continue;
+
     if (renderables[id].vertices != NULL && renderables[id].uv != NULL)
       renderable_free(render_state, &renderables[id]);
 
@@ -74,6 +77,10 @@ void Game::update_renderables(
   this->dangling_renderables.clear();
 
   for (std::shared_ptr<Entity> ent : this->entities) {
+    /* remove the following 2 lines free segfault, "smart" pointers aint so "smart" eh */
+    if (ent == nullptr)
+      continue;
+
     Renderable *r = &renderables[ent->get_renderable_id()];
 
     if (r == nullptr)
@@ -89,14 +96,14 @@ void Game::update_renderables(
         r = &renderables[renderable_id];
       }
 
-      if (!r->active) {
+      if (!r->active && ent->is_valid()) {
         renderable_init_rect(render_state, r, 0.1f, 0.1f);
         renderable_set_scale(r, ent->get_scale());
         renderable_load_texture(render_state, r, ent->get_texture_path().c_str());
         renderable_set_active(r, GS_TRUE);
       }
 
-      if (r->assigned_to != ent->get_id())
+      if (r->assigned_to != ent->get_id() && r->assigned_to != -1)
         throw std::runtime_error("Renderable is not assigned to the correct entity.");
 
       renderable_set_pos(r, vector3_to_vector4(ent->get_pos()));
@@ -213,11 +220,10 @@ void Game::spawn_projectile() {
 void Game::spawn_asteroid() {
   const f64 current_time = platform_time_f64();
 
-  if (this->last_asteroid_at + 1.0 <= current_time) {
+  if (this->last_asteroid_at + 3.0 <= current_time) {
     std::shared_ptr<Entity> asteroid = this->ent_create();
 
-    const f32 size = 1.0f + rand() % 15 / 10.0f;
-    Vector3 pos    = { -1.2f, -1.2f, 0.0f };
+    Vector3 pos = { -1.2f, -1.2f, 0.0f };
 
     if (rand() % 2 == 0) {
       pos.y = rand() % 2 == 0 ? -1.2f : 0.4f;
@@ -231,15 +237,43 @@ void Game::spawn_asteroid() {
     asteroid->set_texture_path(pick_asteroid());
     asteroid->set_pos(pos);
     asteroid->set_velocity(
-      vector_scale3(vector_normal3(vector_sub3(vector_make3(0.0f, -0.4f, 0.0f), pos)), 0.1f + rand() % 4 / 10.0f)
+      vector_scale3(vector_normal3(vector_sub3(vector_make3(0.0f, -0.4f, 0.0f), pos)), 0.1f + rand() % 4 / 20.0f)
     );
     asteroid->rotate_continuous(vector_make3(0.0f, 0.0f, 1.0f), -0.1 + rand() % 100 / 500.0f);
-    asteroid->set_scale({ size, size });
+    asteroid->set_scale({ 3.0f, 3.0f });
     asteroid->set_lifetime(30.0);
     asteroid->set_active(true);
 
     this->last_asteroid_at = current_time;
   }
+}
+
+void Game::spawn_split_asteroid(const std::shared_ptr<Entity> ent) {
+  if (ent->get_scale().x <= 1.0f)
+    return;
+
+  const f32 target_scale = ent->get_scale().x - 1.0f;
+
+  std::shared_ptr<Entity> first  = this->ent_create();
+  std::shared_ptr<Entity> second = this->ent_create();
+
+  first->set_entity_class(EntClass::ASTEROID);
+  first->set_texture_path(pick_asteroid());
+  first->set_pos(ent->get_pos());
+  first->set_velocity(vector_scale3(ent->get_velocity(), 1.2f));
+  first->rotate_continuous(vector_make3(0.0f, 0.0f, 1.0f), 0.45f);
+  first->set_scale({ target_scale, target_scale });
+  first->set_lifetime(30.0);
+  first->set_active(true);
+
+  second->set_entity_class(EntClass::ASTEROID);
+  second->set_texture_path(pick_asteroid());
+  second->set_pos(ent->get_pos());
+  second->set_velocity(vector_scale3(ent->get_velocity(), 1.2f));
+  second->rotate_continuous(vector_make3(0.0f, 0.0f, 1.0f), -0.45f);
+  second->set_scale({ target_scale, target_scale });
+  second->set_lifetime(30.0);
+  second->set_active(true);
 }
 
 void Game::check_collision(std::shared_ptr<Entity> ent) {
@@ -255,6 +289,8 @@ void Game::check_collision(std::shared_ptr<Entity> ent) {
 
     if (ent->collides_with(target)) {
       if (ent->get_entity_class() == EntClass::PROJECTILE && target->get_entity_class() == EntClass::ASTEROID) {
+        this->spawn_split_asteroid(target);
+
         this->ent_remove(ent);
         this->ent_remove(target);
 
@@ -267,11 +303,11 @@ void Game::check_collision(std::shared_ptr<Entity> ent) {
         gameover->set_texture_path("assets/gameover.png");
         gameover->set_entity_class(EntClass::GAMEOVER);
         gameover->set_scale({ 20.0f, 12.0f });
-        gameover->set_pos({ 0.0f, -0.4f, 0.0f });
+        gameover->set_pos({ 0.0f, -0.4f, 0.5f });
         gameover->rotate({ 0.0f, 0.0f, 1.0f }, util_radians(90));
         gameover->set_active(true);
 
-        // this->clear_entities();
+        this->clear_entities();
 
         break;
       }
@@ -283,4 +319,12 @@ void Game::clear_entities() {
   for (std::shared_ptr<Entity> target : this->entities)
     if (target->get_entity_class() != EntClass::PLAYER && target->get_entity_class() != EntClass::GAMEOVER)
       this->ent_remove(target);
+}
+
+bool Game::can_delete_renderable(const u32 renderable_id) {
+  for (std::shared_ptr<Entity> ent : this->entities)
+    if (ent->is_valid() && ent->get_renderable_id() == renderable_id)
+      return false;
+
+  return true;
 }
