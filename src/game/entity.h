@@ -1,6 +1,7 @@
 #ifndef __GAME_ENTITY_H
 #define __GAME_ENTITY_H
 
+#include <cstdlib>
 #include <engine/crc64.h>
 #include <engine/types/matrix.h>
 #include <engine/types/numeric.h>
@@ -12,7 +13,7 @@
 #include <string>
 #include <vector>
 
-enum EntClass { UNKNOWN, PLAYER, PROJECTILE, ASTEROID };
+enum EntClass { UNKNOWN, PLAYER, PROJECTILE, ASTEROID, GAMEOVER };
 
 class Entity {
 private:
@@ -47,7 +48,7 @@ public:
   Entity() : Entity(0U) {}
 
   Entity(const u32 entity_index) {
-    const size_t addr      = (size_t)this;
+    const size_t addr      = (size_t)this + rand();
     this->id               = crc64(&addr, sizeof(size_t));
     this->entity_index     = entity_index;
     this->ready            = false;
@@ -59,8 +60,8 @@ public:
     this->position         = { 0.0f, 0.0f, 0.0f };
     this->velocity         = { 0.0f, 0.0f, 0.0f };
     this->velocity_rotated = { 0.0f, 0.0f, 0.0f };
-    this->aabb_min         = { -0.1f, -0.1f, 0.0f };
-    this->aabb_max         = { 0.1f, 0.1f, 0.0f };
+    this->aabb_min         = { -0.05f, -0.05f, 0.0f };
+    this->aabb_max         = { 0.05f, 0.05f, 0.0f };
     this->axis             = { 0.0f, 0.0f, 1.0f };
     this->rotation_matrix  = {
        { 1.0f, 0.0f, 0.0f, 0.0f },
@@ -96,6 +97,7 @@ public:
   const Vector3 get_aabb_max() const;
   const bool collides_with(const std::shared_ptr<Entity> ent) const;
   const u32 get_entity_class() const;
+  const bool is_valid() const;
   void set_active(const bool state);
   void update(const f64 current_time);
   void rotate(const Vector3 axis, const f32 angle);

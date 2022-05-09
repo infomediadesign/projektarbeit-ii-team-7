@@ -38,11 +38,13 @@ const Vector3 Entity::get_aabb_max() const { return this->aabb_max; }
 
 const u32 Entity::get_entity_class() const { return this->ent_class; }
 
+const bool Entity::is_valid() const { return this->active && !this->should_remove && this->ready; }
+
 const bool Entity::collides_with(const std::shared_ptr<Entity> ent) const {
-  const Vector3 target_min = vector_add3(ent->get_aabb_min(), ent->get_pos());
-  const Vector3 target_max = vector_add3(ent->get_aabb_max(), ent->get_pos());
-  const Vector3 aabb_min   = vector_add3(this->aabb_min, this->position);
-  const Vector3 aabb_max   = vector_add3(this->aabb_max, this->position);
+  const Vector3 target_min = vector_add3(vector_scale3(ent->get_aabb_min(), ent->get_scale().x), ent->get_pos());
+  const Vector3 target_max = vector_add3(vector_scale3(ent->get_aabb_max(), ent->get_scale().x), ent->get_pos());
+  const Vector3 aabb_min   = vector_add3(vector_scale3(this->aabb_min, this->scale.x), this->position);
+  const Vector3 aabb_max   = vector_add3(vector_scale3(this->aabb_max, this->scale.x), this->position);
 
   if (aabb_min.x > target_max.x || aabb_max.x < target_min.x)
     return false;
@@ -64,6 +66,8 @@ void Entity::update(const f64 current_time) {
   if (lifetime > 0.0 && this->created_at + lifetime <= current_time) {
     this->set_active(false);
     this->should_remove = true;
+
+    return;
   }
 
   if (this->angular_velocity != 0.0f) {

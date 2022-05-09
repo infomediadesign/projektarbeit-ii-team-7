@@ -36,6 +36,7 @@ void renderable_make_default(Renderable *r) {
   r->scale            = one_vec2;
   r->uv_offset        = null_vec2;
   r->color            = (Vector4) { 1.0f, 1.0f, 1.0f, 1.0f };
+  r->updated_at       = 0.0;
 }
 
 Renderable renderable_default() {

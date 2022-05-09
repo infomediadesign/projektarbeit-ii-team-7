@@ -142,7 +142,16 @@ int render_perform(void *args) {
 
     GeyserPushConstants push_constants = { .camera = render_state->camera_transform };
 
+    u32 first = 0;
+
     for (u32 i = 0; i < MAX_RENDERABLES; i++) {
+      if (renderables[i].active == GS_TRUE && renderables[i].vertices != NULL) {
+        first = i;
+        break;
+      }
+    }
+
+    for (u32 i = first; i < MAX_RENDERABLES; i++) {
       if (renderables[i].active == GS_TRUE && renderables[i].vertices_count > 0) {
         renderable_interpolate(&renderables[i]);
 
@@ -152,10 +161,11 @@ int render_perform(void *args) {
         push_constants.scale        = renderables[i].scale;
         push_constants.uv_offset    = renderables[i].uv_offset;
 
-        if (i != 0 && renderables[i].vertices_count == renderables[i - 1].vertices_count) {
-          if (memcmp(renderables[i].vertex_buffer, renderables[i - 1].vertex_buffer, sizeof(renderables[i].vertex_buffer)) != 0)
+        if (i != first && renderables[i].vertices_count == renderables[i - 1].vertices_count) {
+          if (memcmp(renderables[i].vertices, renderables[i - 1].vertices, sizeof(Vector4) * renderables[i].vertices_count) != 0)
             vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1, &renderables[i].vertex_buffer, offsets);
-          if (memcmp(renderables[i].uv_buffer, renderables[i - 1].uv_buffer, sizeof(renderables[i].uv_buffer)) != 0)
+
+          if (memcmp(renderables[i].uv, renderables[i - 1].uv, sizeof(Vector2) * renderables[i].vertices_count) != 0)
             vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1, &renderables[i].uv_buffer, offsets);
         } else {
           vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1, &renderables[i].vertex_buffer, offsets);

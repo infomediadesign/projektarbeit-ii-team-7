@@ -2,6 +2,7 @@
 
 #include "binds.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <iostream>
 
@@ -33,7 +34,7 @@ void Game::update(GameState *state, mutex_t *lock) {
   }
 
   for (std::shared_ptr<Entity> ent : this->entities) {
-    if (ent->is_active() && !ent->should_be_removed() && ent->is_ready()) {
+    if (ent->is_valid()) {
       ent->update(update_time);
       this->check_collision(ent);
     }
@@ -46,14 +47,15 @@ void Game::update(GameState *state, mutex_t *lock) {
 
 void Game::update_lazy(GameState *state, mutex_t *lock) {
   for (const std::shared_ptr<Entity> ent : this->entities)
-    if (ent->should_be_removed() && !this->renderable_marked_for_deletion(ent->get_renderable_id()))
+    if (ent->should_be_removed())
       this->dangling_renderables.push_back(ent->get_renderable_id());
 
   std::erase_if(this->entities, [](const std::shared_ptr<Entity> ent) {
     return ent->should_be_removed();
   });
 
-  this->spawn_asteroid();
+  if (this->player->is_active())
+    this->spawn_asteroid();
 }
 
 void Game::update_paused(GameState *state, mutex_t *lock) {}
@@ -62,7 +64,10 @@ void Game::update_renderables(
   GameState *state, mutex_t *lock, RenderState *render_state, Renderable *renderables, const u32 renderables_count
 ) {
   for (const u32 id : this->dangling_renderables) {
-    renderable_free(render_state, &renderables[id]);
+    if (renderables[id].vertices != NULL && renderables[id].uv != NULL)
+      renderable_free(render_state, &renderables[id]);
+
+    renderable_set_active(&renderables[id], GS_FALSE);
     renderable_make_default(&renderables[id]);
   }
 
@@ -181,8 +186,7 @@ const u32 Game::ent_assign_renderable(
 }
 
 void Game::ent_remove(std::shared_ptr<Entity> ent) {
-  if (!this->renderable_marked_for_deletion(ent->get_renderable_id()))
-    this->dangling_renderables.push_back(ent->get_renderable_id());
+  this->dangling_renderables.push_back(ent->get_renderable_id());
 
   ent->set_should_remove(true);
   ent->set_active(false);
@@ -239,8 +243,11 @@ void Game::spawn_asteroid() {
 }
 
 void Game::check_collision(std::shared_ptr<Entity> ent) {
+  if (!ent->is_valid())
+    return;
+
   for (std::shared_ptr<Entity> target : this->entities) {
-    if (!target->is_active() || target->should_be_removed() || !ent->is_ready())
+    if (!target->is_valid())
       continue;
 
     if (target->get_id() == ent->get_id())
@@ -252,13 +259,28 @@ void Game::check_collision(std::shared_ptr<Entity> ent) {
         this->ent_remove(target);
 
         break;
+      } else if (ent->get_entity_class() == EntClass::PLAYER && target->get_entity_class() == EntClass::ASTEROID) {
+        ent->set_active(false);
+
+        std::shared_ptr<Entity> gameover = this->ent_create();
+
+        gameover->set_texture_path("assets/gameover.png");
+        gameover->set_entity_class(EntClass::GAMEOVER);
+        gameover->set_scale({ 20.0f, 12.0f });
+        gameover->set_pos({ 0.0f, -0.4f, 0.0f });
+        gameover->rotate({ 0.0f, 0.0f, 1.0f }, util_radians(90));
+        gameover->set_active(true);
+
+        // this->clear_entities();
+
+        break;
       }
     }
   }
 }
 
-bool Game::renderable_marked_for_deletion(const u32 renderable_id) {
-  return !this->dangling_renderables.empty() &&
-         std::find(this->dangling_renderables.begin(), this->dangling_renderables.end(), renderable_id) ==
-           this->dangling_renderables.end();
+void Game::clear_entities() {
+  for (std::shared_ptr<Entity> target : this->entities)
+    if (target->get_entity_class() != EntClass::PLAYER && target->get_entity_class() != EntClass::GAMEOVER)
+      this->ent_remove(target);
 }
