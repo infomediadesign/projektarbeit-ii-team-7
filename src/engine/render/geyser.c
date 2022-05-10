@@ -19,7 +19,7 @@ static GLADapiproc glad_vulkan_load_func_vk(void *user, const char *name) {
   return vkGetInstanceProcAddr((VkInstance)user, name);
 }
 
-inline const char *vk_result_name(VkResult res) {
+inline const char *vk_result_name(const VkResult res) {
   switch (res) {
   case VK_SUCCESS: return "Success"; break;
   case VK_NOT_READY: return "Not ready"; break;
