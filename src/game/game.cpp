@@ -51,7 +51,7 @@ void Game::update_lazy(GameState *state, mutex_t *lock) {
       this->dangling_renderables.push_back(ent->get_renderable_id());
 
   std::erase_if(this->entities, [](const std::shared_ptr<Entity> ent) {
-    return ent->should_be_removed();
+    return ent.get() == nullptr || ent->should_be_removed();
   });
 
   if (this->player->is_active())
@@ -78,7 +78,7 @@ void Game::update_renderables(
 
   for (std::shared_ptr<Entity> ent : this->entities) {
     /* remove the following 2 lines free segfault, "smart" pointers aint so "smart" eh */
-    if (ent == nullptr)
+    if (ent.get() == nullptr)
       continue;
 
     Renderable *r = &renderables[ent->get_renderable_id()];
@@ -281,7 +281,7 @@ void Game::check_collision(std::shared_ptr<Entity> ent) {
     return;
 
   for (std::shared_ptr<Entity> target : this->entities) {
-    if (!target->is_valid())
+    if (!this->is_valid(target))
       continue;
 
     if (target->get_id() == ent->get_id())
@@ -316,9 +316,13 @@ void Game::check_collision(std::shared_ptr<Entity> ent) {
 }
 
 void Game::clear_entities() {
-  for (std::shared_ptr<Entity> target : this->entities)
+  for (std::shared_ptr<Entity> target : this->entities) {
+    if (!this->is_valid(target))
+      continue;
+
     if (target->get_entity_class() != EntClass::PLAYER && target->get_entity_class() != EntClass::GAMEOVER)
       this->ent_remove(target);
+  }
 }
 
 bool Game::can_delete_renderable(const u32 renderable_id) {
@@ -329,4 +333,4 @@ bool Game::can_delete_renderable(const u32 renderable_id) {
   return true;
 }
 
-bool Game::is_valid(const std::shared_ptr<Entity> ent) const { return ent != nullptr && ent->is_valid(); }
+bool Game::is_valid(const std::shared_ptr<Entity> ent) const { return ent.get() != nullptr && ent->is_valid(); }
