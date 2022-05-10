@@ -10,6 +10,7 @@ extern "C" {
 #include "../types/quaternion.h"
 #include "../types/vector.h"
 #include "geyser.h"
+#include "memory.h"
 #include "render_state.h"
 
 typedef struct Renderable {
@@ -24,21 +25,16 @@ typedef struct Renderable {
   Vector2 *uv;
   Vector2 scale;
   Vector2 uv_offset;
+  MemoryPool *pool;
   f64 updated_at;
   i64 assigned_to;
-  VkBuffer vertex_buffer;
-  VkDeviceMemory vertex_memory;
-  VkDeviceSize vertex_memory_size;
-  VkBuffer uv_buffer;
-  VkDeviceMemory uv_memory;
-  VkDeviceSize uv_memory_size;
+  u64 offset;
   u32 vertices_count;
   GeyserBool active;
 } Renderable;
 
 Renderable renderable_default();
 void renderable_make_default(Renderable *r);
-void renderable_allocate_memory(RenderState *state, Renderable *r);
 void renderable_send_memory(RenderState *state, Renderable *r);
 void renderable_make_rect(const RenderState *state, Renderable *r, const f32 width, const f32 height);
 void renderable_free(const RenderState *state, Renderable *r);
@@ -52,7 +48,9 @@ void renderable_set_rotation(Renderable *r, const Vector3 axis, const f32 rotati
 void renderable_set_velocity(Renderable *r, const Vector3 vel);
 void renderable_load_texture(RenderState *state, Renderable *r, const char *image_path);
 void renderable_init_rect(RenderState *state, Renderable *r, const f32 width, const f32 height);
-void renderable_set_updated(Renderable *state, const f64 updated_at);
+void renderable_set_updated(Renderable *r, const f64 updated_at);
+u64 renderable_get_size(const Renderable *r);
+void renderable_assign_memory(RenderState *state, MemoryManager *m, Renderable *r);
 
 #ifdef __cplusplus
 }

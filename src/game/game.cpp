@@ -329,6 +329,4 @@ bool Game::can_delete_renderable(const u32 renderable_id) {
   return true;
 }
 
-bool Game::is_valid(const std::shared_ptr<Entity> ent) const {
-  return ent != nullptr && ent->is_valid();
-}
+bool Game::is_valid(const std::shared_ptr<Entity> ent) const { return ent != nullptr && ent->is_valid(); }

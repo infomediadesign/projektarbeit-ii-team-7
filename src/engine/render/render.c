@@ -72,6 +72,12 @@ int render_perform(void *args) {
 
   geyser_cmd_begin_staging(render_state);
 
+  MemoryManager *mm = (MemoryManager *)calloc(1, sizeof(MemoryManager));
+
+  memory_create_manager(render_state, mm);
+
+  render_state->memory_manager = (RsMemoryManager *)mm;
+
   const VkDescriptorSetLayoutBinding descriptor_bindings[] = {
     { 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, NULL }
   };
@@ -106,8 +112,8 @@ int render_perform(void *args) {
 
   u64 delay = state->fps_max != 0 ? 1000000 / state->fps_max : 0;
   i64 start_time, end_time;
-  u64 avg                       = 0;
-  const VkDeviceSize offsets[1] = { 0 };
+  u64 avg                 = 0;
+  VkDeviceSize offsets[1] = { 0 };
 
   render_state->init_time = platform_time();
 
@@ -153,6 +159,8 @@ int render_perform(void *args) {
 
     for (u32 i = first; i < MAX_RENDERABLES; i++) {
       if (renderables[i].active == GS_TRUE && renderables[i].vertices_count > 0) {
+        offsets[0] = renderables[i].offset;
+
         renderable_interpolate(&renderables[i]);
 
         push_constants.quaternion   = quaternion_to_vec(renderables[i].rotation);
@@ -162,14 +170,15 @@ int render_perform(void *args) {
         push_constants.uv_offset    = renderables[i].uv_offset;
 
         if (i != first && renderables[i].vertices_count == renderables[i - 1].vertices_count) {
-          if (memcmp(renderables[i].vertices, renderables[i - 1].vertices, sizeof(Vector4) * renderables[i].vertices_count) != 0)
-            vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1, &renderables[i].vertex_buffer, offsets);
-
-          if (memcmp(renderables[i].uv, renderables[i - 1].uv, sizeof(Vector2) * renderables[i].vertices_count) != 0)
-            vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1, &renderables[i].uv_buffer, offsets);
+          if (memcmp(renderables[i].vertices, renderables[i - 1].vertices, sizeof(Vector4) * renderables[i].vertices_count) != 0) {
+            vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1, &renderables[i].pool->buffer, offsets);
+            offsets[0] = renderables[i].offset + sizeof(Vector4) * renderables[i].vertices_count;
+            vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1, &renderables[i].pool->buffer, offsets);
+          }
         } else {
-          vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1, &renderables[i].vertex_buffer, offsets);
-          vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1, &renderables[i].uv_buffer, offsets);
+          vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1, &renderables[i].pool->buffer, offsets);
+          offsets[0] = renderables[i].offset + sizeof(Vector4) * renderables[i].vertices_count;
+          vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1, &renderables[i].pool->buffer, offsets);
         }
 
         vkCmdBindDescriptorSets(
@@ -182,6 +191,7 @@ int render_perform(void *args) {
           0,
           NULL
         );
+
         vkCmdPushConstants(
           render_state->command_buffer,
           render_state->pipeline.pipeline_layout,

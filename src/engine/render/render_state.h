@@ -33,6 +33,10 @@ typedef struct RsPipeline {
   VkPipeline pipeline;
 } RsPipeline;
 
+typedef struct RsMemoryManager {
+  void *pools;
+} RsMemoryManager;
+
 /**
  * @brief Stores all the information necessary for rendering.
  *
@@ -49,6 +53,7 @@ typedef struct RenderState {
   GLFWwindow *window;
   u32 *queue_family_indices;
   VkImage *swapchain_images;
+  RsMemoryManager *memory_manager;
   VkInstance instance;
   VkPhysicalDevice physical_device;
   VkPhysicalDeviceFeatures physical_device_features;

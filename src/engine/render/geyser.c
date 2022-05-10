@@ -19,6 +19,46 @@ static GLADapiproc glad_vulkan_load_func_vk(void *user, const char *name) {
   return vkGetInstanceProcAddr((VkInstance)user, name);
 }
 
+inline const char *vk_result_name(VkResult res) {
+  switch (res) {
+  case VK_SUCCESS: return "Success"; break;
+  case VK_NOT_READY: return "Not ready"; break;
+  case VK_TIMEOUT: return "Timeout"; break;
+  case VK_EVENT_SET: return "Event set"; break;
+  case VK_EVENT_RESET: return "Event reset"; break;
+  case VK_INCOMPLETE: return "Incomplete"; break;
+  case VK_ERROR_OUT_OF_HOST_MEMORY: return "Out of host memory"; break;
+  case VK_ERROR_OUT_OF_DEVICE_MEMORY: return "Out of device memory"; break;
+  case VK_ERROR_INITIALIZATION_FAILED: return "Initialization failed"; break;
+  case VK_ERROR_DEVICE_LOST: return "Device lost"; break;
+  case VK_ERROR_MEMORY_MAP_FAILED: return "Memory map failed"; break;
+  case VK_ERROR_LAYER_NOT_PRESENT: return "Layer not present"; break;
+  case VK_ERROR_EXTENSION_NOT_PRESENT: return "Extension not present"; break;
+  case VK_ERROR_FEATURE_NOT_PRESENT: return "Feature not present"; break;
+  case VK_ERROR_INCOMPATIBLE_DRIVER: return "Incompatible driver"; break;
+  case VK_ERROR_TOO_MANY_OBJECTS: return "Too many objects"; break;
+  case VK_ERROR_FORMAT_NOT_SUPPORTED: return "Format not supported"; break;
+  case VK_ERROR_FRAGMENTED_POOL: return "Fragmented pool"; break;
+  // Provided by VK_VERSION_1_1
+  case VK_ERROR_OUT_OF_POOL_MEMORY: return "Out of pool memory"; break;
+  // Provided by VK_VERSION_1_1
+  case VK_ERROR_INVALID_EXTERNAL_HANDLE: return "Invalid external handle"; break;
+  // Provided by VK_KHR_surface
+  case VK_ERROR_SURFACE_LOST_KHR: return "Surface lost"; break;
+  // Provided by VK_KHR_surface
+  case VK_ERROR_NATIVE_WINDOW_IN_USE_KHR: return "Native window in use"; break;
+  // Provided by VK_KHR_swapchain
+  case VK_SUBOPTIMAL_KHR: return "Suboptimal"; break;
+  // Provided by VK_KHR_swapchain
+  case VK_ERROR_OUT_OF_DATE_KHR: return "Out of date"; break;
+  // Provided by VK_KHR_display_swapchain
+  case VK_ERROR_INCOMPATIBLE_DISPLAY_KHR: return "Incompatible display"; break;
+  // Provided by VK_EXT_debug_report
+  case VK_ERROR_VALIDATION_FAILED_EXT: return "Validation failed"; break;
+  default: return "Unknown"; break;
+  }
+}
+
 VkBool32 debug_callback(
   VkDebugReportFlagsEXT _flags,
   VkDebugReportObjectTypeEXT _object_type,
@@ -35,7 +75,7 @@ VkBool32 debug_callback(
 
 void geyser_success_or_message(const VkResult res, const char *message) {
   if (res != VK_SUCCESS) {
-    printf("\033[1;31m[Geyser Error]\033[0m %s\n", message);
+    printf("\033[1;31m[Geyser Error]\033[0m %s (%s)\n", message, vk_result_name(res));
     abort();
   }
 }

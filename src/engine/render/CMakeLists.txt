@@ -1,6 +1,7 @@
 set(engine_render_source_files
   render_state.c
   geyser.c
+  memory.c
   renderable.c
   render.c
 )
@@ -8,6 +9,7 @@ set(engine_render_source_files
 set(engine_render_header_files
   render_state.h
   geyser.h
+  memory.h
   renderable.h
   render.h
 )

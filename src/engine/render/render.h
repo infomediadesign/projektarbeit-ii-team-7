@@ -9,6 +9,7 @@ extern "C" {
 #include "../state/state.h"
 #include "../util.h"
 #include "geyser.h"
+#include "memory.h"
 #include "render_state.h"
 #include "renderable.h"
 
