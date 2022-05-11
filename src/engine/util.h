@@ -11,7 +11,7 @@ extern "C" {
       return to;                                                             \
     else if (delta <= 0.0f)                                                  \
       return from;                                                           \
-    return from + (to - from) * delta;                                       \
+    return (T)(from + (to - from) * delta);                                       \
   }
 
 #include "state/state.h"
@@ -47,9 +47,9 @@ static inline u64 util_mbytes(const u64 mb) { return mb * 1000000; }
 
 static inline u64 util_gbytes(const u64 gb) { return gb * 1000000000; }
 
-static inline f32 util_radians(const f32 deg) { return (deg * MF_PI) / 180; }
+static inline f32 util_radians(const f32 deg) { return (deg * (f32)MF_PI) / 180.0f; }
 
-static inline f32 util_degrees(const f32 rad) { return (rad * 180) / MF_PI; }
+static inline f32 util_degrees(const f32 rad) { return (rad * 180.0f) / (f32)MF_PI; }
 
 static inline f32 util_meters(const f32 pixels) { return pixels * 0.001f; }
 

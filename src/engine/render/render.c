@@ -110,7 +110,7 @@ int render_perform(void *args) {
 
   geyser_cmd_end_staging(render_state);
 
-  u64 delay = state->fps_max != 0 ? 1000000 / state->fps_max : 0;
+  i64 delay = state->fps_max != 0 ? 1000000 / state->fps_max : 0;
   i64 start_time, end_time;
   u64 avg                 = 0;
   VkDeviceSize offsets[1] = { 0 };
@@ -218,7 +218,7 @@ int render_perform(void *args) {
     avg += (end_time - start_time);
     avg = avg >> 1;
 
-    printf("\ravg %lu fps %lu    ", avg, 1000000 / avg);
+    printf("\ravg %llu fps %llu    ", avg, 1000000 / avg);
 
     if (state->fps_max > 0 && (end_time - start_time) < delay)
       platform_usleep(delay - (end_time - start_time));

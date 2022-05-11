@@ -136,7 +136,7 @@ void renderable_calc_matrix(Renderable *r) {
 }
 
 void renderable_interpolate(Renderable *r) {
-  const f64 delta = platform_time_f64() - r->updated_at;
+  const f32 delta = (f32)(platform_time_f64() - r->updated_at);
 
   r->position.x = util_lerp_f32(delta, r->last_position.x, r->last_position.x + r->velocity.x);
   r->position.y = util_lerp_f32(delta, r->last_position.y, r->last_position.y + r->velocity.y);
@@ -161,7 +161,7 @@ void renderable_load_texture(RenderState *state, Renderable *r, const char *imag
   Image tex_img;
   asset_load_image(&tex_img, image_path);
 
-  geyser_create_texture(state, vector_make2(tex_img.width, tex_img.height), &r->texture);
+  geyser_create_texture(state, vector_make2((f32)tex_img.width, (f32)tex_img.height), &r->texture);
 
   geyser_set_image_memory(state, &r->texture.base.base, &tex_img);
   geyser_allocate_texture_descriptor_set(state, &r->texture, (GeyserPipeline *)&state->pipeline);

@@ -171,7 +171,7 @@ void Game::process_input(GameState *state, const f64 update_time) {
 }
 
 std::shared_ptr<Entity> Game::ent_create(std::shared_ptr<Entity> parent) {
-  std::shared_ptr<Entity> ent = std::make_shared<Entity>(this->entities.size());
+  std::shared_ptr<Entity> ent = std::make_shared<Entity>((u32)this->entities.size());
   ent->set_parent(parent);
 
   this->entities.push_back(ent);

@@ -330,7 +330,7 @@ void geyser_init_vk(RenderState *restrict state) {
     state->physical_device, state->surface, &device_present_mode_count, device_present_modes
   );
 
-  for (int i = 0; i < device_present_mode_count; i++) {
+  for (u32 i = 0; i < device_present_mode_count; i++) {
     if (device_present_modes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR) {
       preferred_present_mode = device_present_modes[i];
       break;
@@ -377,7 +377,7 @@ void geyser_init_vk(RenderState *restrict state) {
     abort();
   }
 
-  const VkExtent2D ext = { .width = state->window_width, .height = state->window_height };
+  const VkExtent2D ext = { .width = (u32)state->window_width, .height = (u32)state->window_height };
 
   VkSwapchainCreateInfoKHR swapchain_create_info = {
     GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR),
@@ -472,8 +472,8 @@ void geyser_init_vk(RenderState *restrict state) {
                                                .renderPass      = state->renderpass,
                                                .attachmentCount = 1,
                                                .pAttachments    = fb_attachments,
-                                               .width           = state->window_width,
-                                               .height          = state->window_height,
+                                               .width           = (u32)state->window_width,
+                                               .height          = (u32)state->window_height,
                                                .layers          = 1 };
 
   geyser_create_image_view(
@@ -557,8 +557,8 @@ void geyser_init_vk(RenderState *restrict state) {
   state->viewport.maxDepth = 1.0f;
 
   memset(&state->scissor, 0, sizeof(state->scissor));
-  state->scissor.extent.width  = state->window_width;
-  state->scissor.extent.height = state->window_height;
+  state->scissor.extent.width  = (u32)state->window_width;
+  state->scissor.extent.height = (u32)state->window_height;
   state->scissor.offset.x      = 0;
   state->scissor.offset.y      = 0;
 
@@ -620,7 +620,7 @@ void geyser_create_image_view(
   const VkImageCreateInfo image_creation_info = { GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO),
                                                   .imageType   = VK_IMAGE_TYPE_2D,
                                                   .format      = state->preferred_color_format,
-                                                  .extent      = { .width = size.x, .height = size.y, .depth = 1 },
+                                                  .extent      = { .width = (u32)size.x, .height = (u32)size.y, .depth = 1 },
                                                   .mipLevels   = 1,
                                                   .arrayLayers = 1,
                                                   .samples     = VK_SAMPLE_COUNT_1_BIT,
@@ -709,7 +709,7 @@ void geyser_create_image(
   const VkImageCreateInfo image_creation_info = { GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO),
                                                   .imageType   = VK_IMAGE_TYPE_2D,
                                                   .format      = format,
-                                                  .extent      = { .width = size.x, .height = size.y, .depth = 1 },
+                                                  .extent      = { .width = (u32)size.x, .height = (u32)size.y, .depth = 1 },
                                                   .mipLevels   = 1,
                                                   .arrayLayers = 1,
                                                   .samples     = VK_SAMPLE_COUNT_1_BIT,
@@ -1053,10 +1053,10 @@ void geyser_cmd_end_draw(RenderState *restrict state) {
 
   const VkImageCopy copy_data = {
     .srcSubresource = { .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .mipLevel = 0, .baseArrayLayer = 0, .layerCount = 1 },
-    .srcOffset      = { 0.0f, 0.0f, 0.0f },
+    .srcOffset      = { 0U, 0U, 0U },
     .dstSubresource = { .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .mipLevel = 0, .baseArrayLayer = 0, .layerCount = 1 },
-    .dstOffset      = { 0.0f, 0.0f, 0.0f },
-    .extent         = { state->window_width, state->window_height, 1.0f }
+    .dstOffset      = { 0U, 0U, 0U },
+    .extent         = { (u32)state->window_width, (u32)state->window_height, 1U }
   };
 
   vkCmdCopyImage(
@@ -1140,8 +1140,8 @@ void geyser_cmd_begin_renderpass(const RenderState *restrict state) {
     .framebuffer              = state->framebuffer,
     .renderArea.offset.x      = 0,
     .renderArea.offset.y      = 0,
-    .renderArea.extent.width  = state->window_width,
-    .renderArea.extent.height = state->window_height,
+    .renderArea.extent.width  = (u32)state->window_width,
+    .renderArea.extent.height = (u32)state->window_height,
     .clearValueCount          = 2,
     .pClearValues             = clear_values,
   };

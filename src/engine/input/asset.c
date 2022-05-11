@@ -48,12 +48,12 @@ void asset_find(const char *asset_path, char *out) {
 
     memset(final_path, 0, 256);
 
-    strcat(final_path, search_paths[i]);
-    strcat(final_path, asset_path);
+    strcat_s(final_path, 256, search_paths[i]);
+    strcat_s(final_path, 256, asset_path);
 
     if (access(final_path, F_OK) == 0) {
       memset(out, 0, 256);
-      strcpy(out, final_path);
+      strcpy_s(out, 256, final_path);
 
       return;
     }

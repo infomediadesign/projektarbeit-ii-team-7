@@ -30,7 +30,7 @@ void render_state_destroy(RenderState *state) {
 
 void render_state_create_window(RenderState *state) {
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  state->window = glfwCreateWindow(state->window_width, state->window_height, "Miniflow", NULL, NULL);
+  state->window = glfwCreateWindow((i32)state->window_width, (i32)state->window_height, "Miniflow", NULL, NULL);
 
   glfwSetWindowUserPointer(state->window, state);
 }
