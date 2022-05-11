@@ -218,7 +218,7 @@ int render_perform(void *args) {
     avg += (end_time - start_time);
     avg = avg >> 1;
 
-    printf("\ravg %llu fps %llu    ", avg, 1000000 / avg);
+    printf("\ravg %llu fps %llu    ", (long long unsigned int)avg, (long long unsigned int)(1000000 / avg));
 
     if (state->fps_max > 0 && (end_time - start_time) < delay)
       platform_usleep(delay - (end_time - start_time));
