@@ -1,5 +1,5 @@
-cmake -B build -S src
-cmake --build build
+cmake -DCMAKE_BUILD_TYPE=Debug -B build -S src
+cmake --build build --config Debug
 rmdir /Q /S dist
 mkdir dist
 mkdir dist\assets

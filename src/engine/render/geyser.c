@@ -9,8 +9,6 @@ static const VkSemaphoreCreateInfo semaphore_create_info = { .sType = VK_STRUCTU
 
 static const VkClearColorValue clear_color_value = { .float32 = { 0.0f, 0.0f, 0.0f, 1.0f } };
 
-static const VkImageSubresourceRange image_subresource_clear_range = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
-
 static GLADapiproc glad_vulkan_load_func(void *user, const char *name) {
   return glfwGetInstanceProcAddress((VkInstance)user, name);
 }

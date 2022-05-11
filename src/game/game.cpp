@@ -46,7 +46,7 @@ void Game::update(GameState *state, mutex_t *lock) {
 }
 
 void Game::update_lazy(GameState *state, mutex_t *lock) {
-  for (const std::shared_ptr<Entity> ent : this->entities)
+  for (std::shared_ptr<Entity> ent : this->entities)
     if (ent->should_be_removed())
       this->dangling_renderables.push_back(ent->get_renderable_id());
 

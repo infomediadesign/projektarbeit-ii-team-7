@@ -3,16 +3,17 @@
 all: configure build
 
 configure:
-	cmake -B build -S src
+	cmake -DCMAKE_BUILD_TYPE=Debug -B build -S src
 
 build:
 	cmake --build build --config Debug
 
 release:
+	cmake -DCMAKE_BUILD_TYPE=Release -B build -S src
 	cmake --build build --config Release
 
 dist:
-	cmake -B build -S src
+	cmake -DCMAKE_BUILD_TYPE=Release -B build -S src
 	cmake --build build --config Release
 	rm -rf dist
 	mkdir dist
@@ -39,3 +40,4 @@ shaders:
 
 clean:
 	rm -rf build/
+	rm -rf dist/
