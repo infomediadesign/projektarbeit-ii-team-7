@@ -1,3 +1,6 @@
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED 11)
+
 set(engine_input_source_files
   asset.c
   argparse.c
