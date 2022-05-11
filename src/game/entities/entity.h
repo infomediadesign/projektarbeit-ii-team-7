@@ -27,7 +27,7 @@ private:
   Vector3 axis;
   Vector2 scale;
   std::shared_ptr<Entity> parent;
-  std::vector<Entity> attachments;
+  std::vector<std::shared_ptr<Entity>> attachments;
   std::string texture_path;
   i64 id;
   f64 updated_at;

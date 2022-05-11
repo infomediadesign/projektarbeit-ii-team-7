@@ -22,6 +22,12 @@ typedef struct MemoryManager {
   MemoryPool *pools;
 } MemoryManager;
 
+/**
+ * @brief Creates a memory manager.
+ * 
+ * @param state The render state.
+ * @param m The memory manager struct to write to.
+ */
 void memory_create_manager(RenderState *state, MemoryManager *m);
 void memory_allocate_pool(RenderState *state, MemoryPool *m);
 void memory_extend_pool(RenderState *state, MemoryPool *pool);

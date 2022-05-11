@@ -3,7 +3,7 @@
 
 #define MAX_ENTITIES 4096
 
-#include "entity.h"
+#include "entities/entity.h"
 
 #include <engine/input/input.h>
 #include <engine/platform.h>

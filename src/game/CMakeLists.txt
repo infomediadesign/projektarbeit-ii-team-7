@@ -7,8 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED 20)
 set(CMAKE_BUILD_TYPE Debug)
 
 set(game_source_files
-  entity.h
-  entity.cpp
+  entities/entity.h
+  entities/entity.cpp
   game.h
   game.cpp
   interface.h
