@@ -1,6 +1,9 @@
 #ifndef __ENGINE_RENDER_MEMORY_H
 #define __ENGINE_RENDER_MEMORY_H
 
+/* Size of memory pool blocks, in mebibytes (MUST be a multiple of 64) */
+#define MEMORY_POOL_SIZE 64LU
+
 #include "geyser.h"
 #include "render_state.h"
 
@@ -22,6 +25,11 @@ typedef struct MemoryManager {
   MemoryPool *pools;
 } MemoryManager;
 
+typedef struct FreeMemoryBlock {
+  MemoryPool *pool;
+  FreeList *free;
+} FreeMemoryBlock;
+
 /**
  * @brief Creates a memory manager.
  * 
@@ -31,6 +39,7 @@ typedef struct MemoryManager {
 void memory_create_manager(RenderState *state, MemoryManager *m);
 void memory_allocate_pool(RenderState *state, MemoryPool *m);
 void memory_extend_pool(RenderState *state, MemoryPool *pool);
-FreeList *memory_find_free_block(const MemoryPool *m, const u64 size);
+FreeList *memory_pool_find_free_block(const MemoryPool *m, const u64 size);
+void memory_find_free_block(RenderState *state, MemoryManager *m, const u64 size, FreeMemoryBlock *block);
 
 #endif

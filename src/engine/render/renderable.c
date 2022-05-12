@@ -6,18 +6,19 @@
 #include <math.h>
 #include <string.h>
 
+static const Vector2 null_vec2    = { 0.0f, 0.0f };
+static const Vector2 one_vec2     = { 1.0f, 1.0f };
+static const Vector3 null_vec3    = { 0.0f, 0.0f, 0.0f };
+static const Vector4 null_vec4    = { 0.0f, 0.0f, 0.0f, 1.0f };
+static const Quaternion null_quat = { 0.0f, 0.0f, 0.0f, 1.0f };
+
 // clang-format off
 
-static const Vector2 null_vec2 = {0.0f, 0.0f};
-static const Vector2 one_vec2 = {1.0f, 1.0f};
-static const Vector3 null_vec3 = {0.0f, 0.0f, 0.0f};
-static const Vector4 null_vec4 = {0.0f, 0.0f, 0.0f, 1.0f};
-static const Quaternion null_quat = {0.0f, 0.0f, 0.0f, 1.0f};
 static const Matrix4 null_mat4 = {
-  {1.0f, 0.0f, 0.0f, 0.0f},
-  {0.0f, 1.0f, 0.0f, 0.0f},
-  {0.0f, 0.0f, 1.0f, 0.0f},
-  {0.0f, 0.0f, 0.0f, 1.0f}
+  { 1.0f, 0.0f, 0.0f, 0.0f },
+  { 0.0f, 1.0f, 0.0f, 0.0f },
+  { 0.0f, 0.0f, 1.0f, 0.0f },
+  { 0.0f, 0.0f, 0.0f, 1.0f }
 };
 
 // clang-format on
@@ -187,29 +188,14 @@ u64 renderable_get_size(const Renderable *r) {
 }
 
 void renderable_assign_memory(RenderState *state, MemoryManager *m, Renderable *r) {
-  const u64 size   = renderable_get_size(r);
-  FreeList *l      = NULL;
-  MemoryPool *pool = m->pools;
+  const u64 size = renderable_get_size(r);
+  FreeMemoryBlock mblock;
 
-  while (pool != NULL) {
-    l = memory_find_free_block(pool, size);
+  memory_find_free_block(state, m, size, &mblock);
 
-    if (l != NULL)
-      break;
+  r->offset = mblock.free->offset;
+  r->pool   = mblock.pool;
 
-    pool = pool->next;
-  }
-
-  if (l == NULL) {
-    memory_extend_pool(state, m->pools);
-    renderable_assign_memory(state, m, r);
-
-    return;
-  }
-
-  r->offset = l->offset;
-  r->pool   = pool;
-
-  l->offset += size;
-  l->size -= size;
+  mblock.free->offset += size;
+  mblock.free->size -= size;
 }

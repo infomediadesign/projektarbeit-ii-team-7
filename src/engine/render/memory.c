@@ -12,14 +12,14 @@ void memory_allocate_pool(RenderState *state, MemoryPool *mp) {
   mp->free         = (FreeList *)calloc(1, sizeof(FreeList));
   mp->free->next   = NULL;
   mp->free->offset = 0;
-  mp->free->size   = util_mebibytes(64);
+  mp->free->size   = util_mebibytes(MEMORY_POOL_SIZE);
 
   VkMemoryRequirements memory_requirements;
 
   const VkBufferCreateInfo buffer_info = {
     .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
     .pNext = NULL,
-    .size  = util_mebibytes(64),
+    .size  = util_mebibytes(MEMORY_POOL_SIZE),
     .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
     .flags = 0,
   };
@@ -55,7 +55,7 @@ void memory_extend_pool(RenderState *state, MemoryPool *pool) {
   memory_allocate_pool(state, pool->next);
 }
 
-FreeList *memory_find_free_block(const MemoryPool *m, const u64 size) {
+FreeList *memory_pool_find_free_block(const MemoryPool *m, const u64 size) {
   FreeList *l = m->free;
 
   while (l != NULL) {
@@ -66,4 +66,35 @@ FreeList *memory_find_free_block(const MemoryPool *m, const u64 size) {
   }
 
   return l;
+}
+
+void memory_find_free_block(RenderState *state, MemoryManager *m, const u64 size, FreeMemoryBlock *block) {
+  if (size > util_mebibytes(MEMORY_POOL_SIZE)) {
+    printf(
+      "[Geyser Error] Cannot assign more than %lu MiB of GPU memory! (%lu bytes requested)\n", MEMORY_POOL_SIZE, size
+    );
+    abort();
+  }
+
+  FreeList *l      = NULL;
+  MemoryPool *pool = m->pools;
+
+  while (pool != NULL) {
+    l = memory_pool_find_free_block(pool, size);
+
+    if (l != NULL)
+      break;
+
+    pool = pool->next;
+  }
+
+  if (l == NULL) {
+    memory_extend_pool(state, m->pools);
+    memory_find_free_block(state, m, size, block);
+
+    return;
+  }
+
+  block->pool = pool;
+  block->free = l;
 }
