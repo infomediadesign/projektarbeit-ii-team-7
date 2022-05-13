@@ -466,31 +466,6 @@ void geyser_init_vk(RenderState *restrict state) {
     abort();
   }
 
-  VkImageView fb_attachments[1];
-
-  VkFramebufferCreateInfo framebuffer_info = { GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO),
-                                               .renderPass      = state->renderpass,
-                                               .attachmentCount = 1,
-                                               .pAttachments    = fb_attachments,
-                                               .width           = (u32)state->window_width,
-                                               .height          = (u32)state->window_height,
-                                               .layers          = 1 };
-
-  geyser_create_image_view(
-    state,
-    (Vector2) { state->window_width, state->window_height },
-    VK_IMAGE_VIEW_TYPE_2D,
-    VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
-    (GeyserImageView *)&state->backbuffer
-  );
-
-  fb_attachments[0] = state->backbuffer.view;
-
-  if (vkCreateFramebuffer(state->device, &framebuffer_info, NULL, &state->framebuffer) != VK_SUCCESS) {
-    printf("[Geyser Error] Failed to create a frame buffer!\n");
-    abort();
-  }
-
   const VkBufferCreateInfo general_buffer_info = { GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO),
                                                    .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
                                                             VK_BUFFER_USAGE_TRANSFER_DST_BIT,
@@ -611,6 +586,7 @@ void geyser_create_image_view(
   const Vector2 size,
   VkImageViewType type,
   const VkImageUsageFlags usage,
+  MemoryManager *mm,
   GeyserImageView *gs_image_view
 ) {
   VkImageSubresourceRange resource_range;
@@ -618,9 +594,9 @@ void geyser_create_image_view(
   VkImageViewCreateInfo image_view_creation_info;
 
   const VkImageCreateInfo image_creation_info = { GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO),
-                                                  .imageType   = VK_IMAGE_TYPE_2D,
-                                                  .format      = state->preferred_color_format,
-                                                  .extent      = { .width = (u32)size.x, .height = (u32)size.y, .depth = 1 },
+                                                  .imageType = VK_IMAGE_TYPE_2D,
+                                                  .format    = state->preferred_color_format,
+                                                  .extent = { .width = (u32)size.x, .height = (u32)size.y, .depth = 1 },
                                                   .mipLevels   = 1,
                                                   .arrayLayers = 1,
                                                   .samples     = VK_SAMPLE_COUNT_1_BIT,
@@ -641,19 +617,20 @@ void geyser_create_image_view(
   VkMemoryRequirements memory_requirements;
   vkGetImageMemoryRequirements(state->device, gs_image_view->base.image, &memory_requirements);
 
-  const VkMemoryAllocateInfo image_allocation_info = {
-    GEYSER_MINIMAL_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO),
-    .allocationSize  = memory_requirements.size,
-    .memoryTypeIndex = geyser_get_memory_type_index(state, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
-  };
+  FreeMemoryBlock mblock;
+
+  memory_find_free_block(state, mm, memory_requirements.alignment, memory_requirements.size, &mblock);
+
+  gs_image_view->base.pool   = mblock.pool;
+  gs_image_view->base.offset = mblock.free->offset;
+
+  mblock.free->offset += memory_requirements.size;
+  mblock.free->size -= memory_requirements.size;
 
   geyser_success_or_message(
-    vkAllocateMemory(state->device, &image_allocation_info, NULL, &gs_image_view->base.memory),
-    "Failed to allocate image memory!"
-  );
-
-  geyser_success_or_message(
-    vkBindImageMemory(state->device, gs_image_view->base.image, gs_image_view->base.memory, 0),
+    vkBindImageMemory(
+      state->device, gs_image_view->base.image, gs_image_view->base.pool->memory, gs_image_view->base.offset
+    ),
     "Failed to bind image memory!"
   );
 
@@ -707,9 +684,9 @@ void geyser_create_image(
   GeyserImage *gi
 ) {
   const VkImageCreateInfo image_creation_info = { GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO),
-                                                  .imageType   = VK_IMAGE_TYPE_2D,
-                                                  .format      = format,
-                                                  .extent      = { .width = (u32)size.x, .height = (u32)size.y, .depth = 1 },
+                                                  .imageType = VK_IMAGE_TYPE_2D,
+                                                  .format    = format,
+                                                  .extent = { .width = (u32)size.x, .height = (u32)size.y, .depth = 1 },
                                                   .mipLevels   = 1,
                                                   .arrayLayers = 1,
                                                   .samples     = VK_SAMPLE_COUNT_1_BIT,
@@ -726,36 +703,35 @@ void geyser_create_image(
   );
 }
 
-void geyser_allocate_image_memory(const RenderState *restrict state, const uint32_t memory_type, GeyserImage *image) {
+void geyser_allocate_image_memory(RenderState *restrict state, MemoryManager *mm, GeyserImage *image) {
   VkMemoryRequirements memory_requirements;
   vkGetImageMemoryRequirements(state->device, image->image, &memory_requirements);
 
-  const VkMemoryAllocateInfo image_allocation_info = {
-    GEYSER_MINIMAL_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO),
-    .allocationSize  = memory_requirements.size,
-    .memoryTypeIndex = geyser_get_memory_type_index(state, memory_type)
-  };
+  FreeMemoryBlock mblock;
+
+  memory_find_free_block(state, mm, memory_requirements.alignment, memory_requirements.size, &mblock);
+
+  image->pool   = mblock.pool;
+  image->offset = mblock.free->offset;
+
+  mblock.free->offset += memory_requirements.size;
+  mblock.free->size -= memory_requirements.size;
 
   geyser_success_or_message(
-    vkAllocateMemory(state->device, &image_allocation_info, NULL, &image->memory), "Failed to allocate image memory!"
-  );
-
-  geyser_success_or_message(
-    vkBindImageMemory(state->device, image->image, image->memory, 0), "Failed to bind image memory!"
+    vkBindImageMemory(state->device, image->image, image->pool->memory, image->offset), "Failed to bind image memory!"
   );
 }
 
 void geyser_create_and_allocate_image(
-  const RenderState *restrict state,
+  RenderState *restrict state,
   const Vector2 size,
   const VkImageTiling tiling,
   const VkFormat format,
   const VkImageUsageFlags usage,
-  const uint32_t memory_type,
   GeyserImage *image
 ) {
   geyser_create_image(state, size, tiling, format, usage, image);
-  geyser_allocate_image_memory(state, memory_type, image);
+  geyser_allocate_image_memory(state, (MemoryManager *)state->memory_manager, image);
 }
 
 void geyser_create_pipeline(
@@ -1157,7 +1133,9 @@ void geyser_cmd_set_viewport(const RenderState *restrict state) {
 }
 
 void geyser_create_texture(RenderState *restrict state, const Vector2 size, GeyserTexture *texture) {
-  geyser_create_image_view(state, size, VK_IMAGE_VIEW_TYPE_2D, 0, &texture->base);
+  geyser_create_image_view(
+    state, size, VK_IMAGE_VIEW_TYPE_2D, 0, (MemoryManager *)state->memory_manager, &texture->base
+  );
 
   const VkSamplerCreateInfo sampler_info = {
     .sType                   = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
@@ -1330,4 +1308,32 @@ void geyser_cmd_end_staging(RenderState *restrict state) {
 void geyser_cmd_submit_staging(RenderState *restrict state) {
   geyser_cmd_end_staging(state);
   geyser_cmd_begin_staging(state);
+}
+
+void geyser_create_backbuffer(RenderState *restrict state) {
+  VkImageView fb_attachments[1];
+
+  VkFramebufferCreateInfo framebuffer_info = { GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO),
+                                               .renderPass      = state->renderpass,
+                                               .attachmentCount = 1,
+                                               .pAttachments    = fb_attachments,
+                                               .width           = (u32)state->window_width,
+                                               .height          = (u32)state->window_height,
+                                               .layers          = 1 };
+
+  geyser_create_image_view(
+    state,
+    (Vector2) { state->window_width, state->window_height },
+    VK_IMAGE_VIEW_TYPE_2D,
+    VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
+    (MemoryManager *)state->memory_manager,
+    (GeyserImageView *)&state->backbuffer
+  );
+
+  fb_attachments[0] = state->backbuffer.view;
+
+  geyser_success_or_message(
+    vkCreateFramebuffer(state->device, &framebuffer_info, NULL, &state->framebuffer),
+    "Failed to create a frame buffer!\n"
+  );
 }

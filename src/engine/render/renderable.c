@@ -97,24 +97,8 @@ void renderable_make_rect(const RenderState *state, Renderable *r, const f32 wid
   r->vertices_count = 6U;
 }
 
-void renderable_free(const RenderState *state, Renderable *r) {
-  const u64 size = renderable_get_size(r);
-
-  FreeList *l = r->pool->free;
-
-  FreeList *new_freelist = (FreeList *)calloc(1, sizeof(FreeList));
-  new_freelist->next     = l;
-  new_freelist->offset   = r->offset;
-  new_freelist->size     = size;
-
-  if (r->offset + size == l->offset) {
-    new_freelist->size += l->size;
-    new_freelist->next = l->next;
-
-    free(l);
-  }
-
-  r->pool->free = new_freelist;
+void renderable_free(Renderable *r) {
+  memory_free_block(r->pool, r->offset, renderable_get_size(r));
 
   free(r->vertices);
   free(r->uv);
@@ -191,7 +175,7 @@ void renderable_assign_memory(RenderState *state, MemoryManager *m, Renderable *
   const u64 size = renderable_get_size(r);
   FreeMemoryBlock mblock;
 
-  memory_find_free_block(state, m, size, &mblock);
+  memory_find_free_block(state, m, 0, size, &mblock);
 
   r->offset = mblock.free->offset;
   r->pool   = mblock.pool;

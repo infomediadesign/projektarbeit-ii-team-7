@@ -20,7 +20,8 @@ extern "C" {
 
 typedef struct BackbufferView {
   VkImage image;
-  VkDeviceMemory memory;
+  void *pool;
+  u64 offset;
   VkImageView view;
 } BackbufferView;
 

@@ -11,7 +11,7 @@ extern "C" {
       return to;                                                             \
     else if (delta <= 0.0f)                                                  \
       return from;                                                           \
-    return (T)(from + (to - from) * delta);                                       \
+    return (T)(from + (to - from) * delta);                                  \
   }
 
 #include "state/state.h"

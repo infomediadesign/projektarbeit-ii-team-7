@@ -4,7 +4,6 @@
 /* Size of memory pool blocks, in mebibytes (MUST be a multiple of 64) */
 #define MEMORY_POOL_SIZE 64LU
 
-#include "geyser.h"
 #include "render_state.h"
 
 typedef struct FreeList {
@@ -32,7 +31,7 @@ typedef struct FreeMemoryBlock {
 
 /**
  * @brief Creates a memory manager.
- * 
+ *
  * @param state The render state.
  * @param m The memory manager struct to write to.
  */
@@ -40,6 +39,10 @@ void memory_create_manager(RenderState *state, MemoryManager *m);
 void memory_allocate_pool(RenderState *state, MemoryPool *m);
 void memory_extend_pool(RenderState *state, MemoryPool *pool);
 FreeList *memory_pool_find_free_block(const MemoryPool *m, const u64 size);
-void memory_find_free_block(RenderState *state, MemoryManager *m, const u64 size, FreeMemoryBlock *block);
+FreeList *memory_pool_find_free_block_aligned(const MemoryPool *m, const u64 alignment, const u64 size);
+void memory_find_free_block(
+  RenderState *state, MemoryManager *m, const u64 alignment, const u64 size, FreeMemoryBlock *block
+);
+void memory_free_block(MemoryPool *pool, const u64 offset, const u64 size);
 
 #endif

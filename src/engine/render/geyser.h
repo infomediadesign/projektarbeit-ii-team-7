@@ -20,13 +20,15 @@ extern "C" {
 #include "../input/asset.h"
 #include "../types/matrix.h"
 #include "../types/vector.h"
+#include "memory.h"
 #include "render_state.h"
 
 typedef enum GeyserBool { GS_FALSE = 0, GS_TRUE = 1 } GeyserBool;
 
 typedef struct GeyserImage {
   VkImage image;
-  VkDeviceMemory memory;
+  MemoryPool *pool;
+  u64 offset;
 } GeyserImage;
 
 typedef struct GeyserImageView {
@@ -99,15 +101,25 @@ void geyser_destroy_vk(RenderState RESTRICTED_PTR state);
 
 /**
  * @brief Ensures result is VK_SUCCESS or aborts with a message.
- * 
+ *
  * @param res A result of any Vulkan function.
  * @param message A message to display if the result is not VK_SUCCESS.
  */
 void geyser_success_or_message(const VkResult res, const char *message);
 
 /**
+ * @brief Creates the backbuffer and framebuffer.
+ *
+ * Dumbly enough this is required to run after the full vulkan initialization,
+ * after the memory manager has been initialized.
+ *
+ * @param state The render state.
+ */
+void geyser_create_backbuffer(RenderState RESTRICTED_PTR state);
+
+/**
  * @brief Internal function to fill image view structs.
- * 
+ *
  * @param state The Render state.
  * @param resource_range The resource range struct to fill.
  * @param mapping The color channel mapping struct to fill.
@@ -122,7 +134,7 @@ void geyser_fill_image_view_creation_structs(
 
 /**
  * @brief Creates a new image view.
- * 
+ *
  * @param state The render state.
  * @param size Image size.
  * @param type The type of image view as defined by VkImageViewTypeBits.
@@ -134,12 +146,13 @@ void geyser_create_image_view(
   const Vector2 size,
   VkImageViewType type,
   const VkImageUsageFlags usage,
+  MemoryManager *mm,
   GeyserImageView *gs_image_view
 );
 
 /**
  * @brief Creates a new image view from VkImage.
- * 
+ *
  * @param state The render state.
  * @param img Image to create the view from.
  * @param type The type of the image view as defined by VkImageViewTypeBits.
@@ -151,7 +164,7 @@ void geyser_create_image_view_from_image(
 
 /**
  * @brief Creates a new texture (image view, sampler and descriptor set).
- * 
+ *
  * @param state The render state.
  * @param size Size of the texture.
  * @param texture The texture to write to.
@@ -160,7 +173,7 @@ void geyser_create_texture(RenderState RESTRICTED_PTR state, const Vector2 size,
 
 /**
  * @brief Allocates texture's descriptor set.
- * 
+ *
  * @param state The render state.
  * @param texture The texture, whose descriptor set should be allocated.
  * @param pipeline The pipeline to use.
@@ -171,7 +184,7 @@ void geyser_allocate_texture_descriptor_set(
 
 /**
  * @brief Updates texture descriptor set (e.g. when texture image is updated).
- * 
+ *
  * @param state The render state.
  * @param texture The texture, whose descriptor set should be updated.
  */
@@ -179,7 +192,7 @@ void geyser_update_texture_descriptor_set(RenderState RESTRICTED_PTR state, Geys
 
 /**
  * @brief Gets the memory index of the memory supporting the required properties.
- * 
+ *
  * @param state The render state.
  * @param flag The required memory properties.
  * @return u32 The index of the memory.
@@ -188,7 +201,7 @@ u32 geyser_get_memory_type_index(const RenderState RESTRICTED_PTR state, const V
 
 /**
  * @brief Creates a new image.
- * 
+ *
  * @param state The render state.
  * @param size The size of the image in pixels.
  * @param tiling Tiling flags as defined by VkImageTilingBits
@@ -207,20 +220,18 @@ void geyser_create_image(
 
 /**
  * @brief Assigns memory to the image.
- * 
+ *
  * TODO: Make this use memory pools
- * 
+ *
  * @param state The render state.
  * @param memory_type The type of memory to allocate.
  * @param image The image to write to.
  */
-void geyser_allocate_image_memory(
-  const RenderState RESTRICTED_PTR state, const uint32_t memory_type, GeyserImage *image
-);
+void geyser_allocate_image_memory(RenderState RESTRICTED_PTR state, MemoryManager *mm, GeyserImage *image);
 
 /**
  * @brief Creates an image and allocates memory for it.
- * 
+ *
  * @param state The render state.
  * @param size The size of the image.
  * @param tiling The desired tiling format of the image.
@@ -230,18 +241,17 @@ void geyser_allocate_image_memory(
  * @param image The image to write to.
  */
 void geyser_create_and_allocate_image(
-  const RenderState RESTRICTED_PTR state,
+  RenderState RESTRICTED_PTR state,
   const Vector2 size,
   const VkImageTiling tiling,
   const VkFormat format,
   const VkImageUsageFlags usage,
-  const uint32_t memory_type,
   GeyserImage *image
 );
 
 /**
  * @brief Creates a Vulkan rendering pipeline.
- * 
+ *
  * @param state The render state.
  * @param descriptor_bindings The array of descriptor bindings.
  * @param descriptor_bindings_size The size of the descriptor binding array.
@@ -270,16 +280,16 @@ void geyser_create_pipeline(
 
 /**
  * @brief A helper function to initialize an empty vertex input description.
- * 
+ *
  * This is used to simplify passing vertex inputs to `geyser_create_pipeline`.
- * 
+ *
  * @return GeyserVertexInputDescription The empty vertex input description struct.
  */
 GeyserVertexInputDescription geyser_create_vertex_input_description();
 
 /**
  * @brief Adds a vertex input binding.
- * 
+ *
  * @param description The vertex input description to write to.
  * @param binding The binding ID.
  * @param stride The size, in bytes, of the binding.
@@ -291,7 +301,7 @@ void geyser_add_vertex_input_binding(
 
 /**
  * @brief Adds a vertex input attribute.
- * 
+ *
  * @param description The vertex input description to write to.
  * @param location The ID of the location to use (location=X in GLSL).
  * @param binding The binding this attribute belongs to.
@@ -304,28 +314,28 @@ void geyser_add_vertex_input_attribute(
 
 /**
  * @brief Begins a color pass.
- * 
+ *
  * @param state The render state.
  */
 void geyser_cmd_begin_draw(RenderState RESTRICTED_PTR state);
 
 /**
  * @brief Ends the current color pass.
- * 
+ *
  * Sends commands for execution to the GPU. Once this command is issued,
  * the rendering is no longer in the hands of the CPU, and is entirely on
  * the GPU side.
- * 
+ *
  * This also rotates the swapchain image and presents the rendered image to
  * the screen.
- * 
+ *
  * @param state The render state.
  */
 void geyser_cmd_end_draw(RenderState RESTRICTED_PTR state);
 
 /**
  * @brief Creates a semaphore.
- * 
+ *
  * @param state The render state.
  * @param semaphore Semaphore to create.
  */
@@ -333,33 +343,33 @@ void geyser_create_semaphore(const RenderState RESTRICTED_PTR state, VkSemaphore
 
 /**
  * @brief Begins a render pass.
- * 
+ *
  * @param state The render state.
  */
 void geyser_cmd_begin_renderpass(const RenderState RESTRICTED_PTR state);
 
 /**
  * @brief Ends the current render pass.
- * 
+ *
  * @param state The render state.
  */
 void geyser_cmd_end_renderpass(const RenderState RESTRICTED_PTR state);
 
 /**
  * @brief Sets the viewport.
- * 
+ *
  * It uses the values of `state->viewport` and `state->scissor` and
  * simply sets the viewport to those.
- * 
+ *
  * @param state The render state.
  */
 void geyser_cmd_set_viewport(const RenderState RESTRICTED_PTR state);
 
 /**
  * @brief Sets the image memory.
- * 
+ *
  * This sends the image memory data from the RAM to the GPU VRAM.
- * 
+ *
  * @param state The render state.
  * @param image The image to set the memory of.
  * @param data The image data to set the memory to.
@@ -368,40 +378,40 @@ void geyser_set_image_memory(RenderState RESTRICTED_PTR state, GeyserImage *imag
 
 /**
  * @brief Begins a staging pass.
- * 
+ *
  * This initialized the command buffer in a "headless"
  * configuration, perfect for sending data to the GPU,
  * or doing other things such as allocating new memory
  * and such.
- * 
+ *
  * Do not draw anything in this pass.
- * 
+ *
  * @param state The render state.
  */
 void geyser_cmd_begin_staging(RenderState RESTRICTED_PTR state);
 
 /**
  * @brief Ends the current staging pass.
- * 
+ *
  * This submits the staging commands to the GPU and prepares
  * the command buffer to be reconfigured for the color pass /
  * rendering pass.
- * 
+ *
  * @param state The render state.
  */
 void geyser_cmd_end_staging(RenderState RESTRICTED_PTR state);
 
 /**
  * @brief Submits the current command buffer commands to the GPU.
- * 
+ *
  * Only use while the command buffer is in the staging mode. No, really,
  * I am not responsible for the messed up stuff that can happen if you
  * do this anywhere else.
- * 
+ *
  * Use this every time after you vkMapMemory and vkUnmapMemory,
  * or copy buffers/images. Otherwise not all of your commands will
  * be executed correctly.
- * 
+ *
  * @param state The render state.
  */
 void geyser_cmd_submit_staging(RenderState RESTRICTED_PTR state);

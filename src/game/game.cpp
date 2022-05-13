@@ -68,7 +68,7 @@ void Game::update_renderables(
       continue;
 
     if (renderables[id].vertices != NULL && renderables[id].uv != NULL)
-      renderable_free(render_state, &renderables[id]);
+      renderable_free(&renderables[id]);
 
     renderable_set_active(&renderables[id], GS_FALSE);
     renderable_make_default(&renderables[id]);

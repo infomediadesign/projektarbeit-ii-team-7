@@ -13,9 +13,9 @@ extern "C" {
 
 /**
  * @brief Performs the input polling and registers window callbacks.
- * 
+ *
  * @warning On Windows, the input polling is performed in the render thread!
- * 
+ *
  * @param args Thread arguments.
  * @return int Always returns 0.
  */

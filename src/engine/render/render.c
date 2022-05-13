@@ -78,6 +78,8 @@ int render_perform(void *args) {
 
   render_state->memory_manager = (RsMemoryManager *)mm;
 
+  geyser_create_backbuffer(render_state);
+
   const VkDescriptorSetLayoutBinding descriptor_bindings[] = {
     { 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, NULL }
   };
@@ -112,7 +114,6 @@ int render_perform(void *args) {
 
   i64 delay = state->fps_max != 0 ? 1000000 / state->fps_max : 0;
   i64 start_time, end_time;
-  u64 avg                 = 0;
   VkDeviceSize offsets[1] = { 0 };
 
   render_state->init_time = platform_time();
@@ -215,17 +216,12 @@ int render_perform(void *args) {
 
     end_time = platform_time_usec();
 
-    avg += (end_time - start_time);
-    avg = avg >> 1;
-
-    printf("\ravg %llu fps %llu    ", (long long unsigned int)avg, (long long unsigned int)(1000000 / avg));
-
     if (state->fps_max > 0 && (end_time - start_time) < delay)
       platform_usleep(delay - (end_time - start_time));
   }
 
   for (u32 i = 0; i < MAX_RENDERABLES; i++)
-    renderable_free(render_state, &renderables[i]);
+    renderable_free(&renderables[i]);
 
   free(renderables);
   geyser_destroy_vk(render_state);

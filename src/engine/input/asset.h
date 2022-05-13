@@ -15,11 +15,11 @@ typedef struct Image {
 
 /**
  * @brief Loads an image from file path.
- * 
+ *
  * Uses asset search paths to search for the asset. Will use the
  * missing texture data (magenta-black checkerboard pattern) if
  * the image cannot be found.
- * 
+ *
  * @param img The image to write to.
  * @param image_path The path to the image to load.
  */
@@ -27,7 +27,7 @@ void asset_load_image(Image *img, const char *image_path);
 
 /**
  * @brief Frees the memory associated with the image.
- * 
+ *
  * @param img The image to unload.
  */
 void asset_unload_image(Image *img);

@@ -8,7 +8,7 @@
 
 /**
  * @brief Parses commandline arguments and writes relevant data to the game state.
- * 
+ *
  * @param state The game state.
  * @param argc The amount of arguments in the array.
  * @param argv The array of argument strings.

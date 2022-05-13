@@ -1,6 +1,7 @@
 #include "memory.h"
 
 #include "../util.h"
+#include "geyser.h"
 
 void memory_create_manager(RenderState *state, MemoryManager *m) {
   m->pools = (MemoryPool *)calloc(1, sizeof(MemoryPool));
@@ -68,7 +69,29 @@ FreeList *memory_pool_find_free_block(const MemoryPool *m, const u64 size) {
   return l;
 }
 
-void memory_find_free_block(RenderState *state, MemoryManager *m, const u64 size, FreeMemoryBlock *block) {
+FreeList *memory_pool_find_free_block_aligned(const MemoryPool *m, const u64 alignment, const u64 size) {
+  FreeList *l = m->free;
+
+  while (l != NULL) {
+    const u64 diff = alignment - l->offset % alignment;
+
+    if (l->size - diff >= size) {
+      /* This has bugs. TODO: fix this */
+      l->offset += diff;
+      l->size -= diff;
+
+      break;
+    }
+
+    l = l->next;
+  }
+
+  return l;
+}
+
+void memory_find_free_block(
+  RenderState *state, MemoryManager *m, const u64 alignment, const u64 size, FreeMemoryBlock *block
+) {
   if (size > util_mebibytes(MEMORY_POOL_SIZE)) {
     printf(
       "[Geyser Error] Cannot assign more than %lu MiB of GPU memory! (%lu bytes requested)\n", MEMORY_POOL_SIZE, size
@@ -76,11 +99,19 @@ void memory_find_free_block(RenderState *state, MemoryManager *m, const u64 size
     abort();
   }
 
+  if (m == NULL || m->pools == NULL) {
+    printf("[Geyser Error] Memory manager is not initialized!\n");
+    abort();
+  }
+
   FreeList *l      = NULL;
   MemoryPool *pool = m->pools;
 
   while (pool != NULL) {
-    l = memory_pool_find_free_block(pool, size);
+    if (alignment == 0)
+      l = memory_pool_find_free_block(pool, size);
+    else
+      l = memory_pool_find_free_block_aligned(pool, alignment, size);
 
     if (l != NULL)
       break;
@@ -90,11 +121,29 @@ void memory_find_free_block(RenderState *state, MemoryManager *m, const u64 size
 
   if (l == NULL) {
     memory_extend_pool(state, m->pools);
-    memory_find_free_block(state, m, size, block);
+    memory_find_free_block(state, m, alignment, size, block);
 
     return;
   }
 
   block->pool = pool;
   block->free = l;
+}
+
+void memory_free_block(MemoryPool *pool, const u64 offset, const u64 size) {
+  FreeList *l = pool->free;
+
+  FreeList *new_freelist = (FreeList *)calloc(1, sizeof(FreeList));
+  new_freelist->next     = l;
+  new_freelist->offset   = offset;
+  new_freelist->size     = size;
+
+  if (offset + size == l->offset) {
+    new_freelist->size += l->size;
+    new_freelist->next = l->next;
+
+    free(l);
+  }
+
+  pool->free = new_freelist;
 }
