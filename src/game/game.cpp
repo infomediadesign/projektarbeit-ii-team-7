@@ -219,7 +219,7 @@ void Game::spawn_projectile() {
 void Game::spawn_asteroid() {
   const f64 current_time = platform_time_f64();
 
-  if (this->last_asteroid_at + 0.1 <= current_time) {
+  if (this->last_asteroid_at + 3.0 <= current_time) {
     std::shared_ptr<Entity> asteroid = this->ent_create();
 
     Vector3 pos = { -1.2f, -1.2f, 0.0f };
@@ -240,7 +240,7 @@ void Game::spawn_asteroid() {
     );
     asteroid->rotate_continuous(vector_make3(0.0f, 0.0f, 1.0f), -0.1 + rand() % 100 / 500.0f);
     asteroid->set_scale({ 3.0f, 3.0f });
-    // asteroid->set_lifetime(30.0);
+    asteroid->set_lifetime(30.0);
     asteroid->set_active(true);
 
     this->last_asteroid_at = current_time;
@@ -294,7 +294,7 @@ void Game::check_collision(std::shared_ptr<Entity> ent) {
         this->ent_remove(target);
 
         break;
-      } else if (false && ent->get_entity_class() == EntClass::PLAYER && target->get_entity_class() == EntClass::ASTEROID) {
+      } else if (ent->get_entity_class() == EntClass::PLAYER && target->get_entity_class() == EntClass::ASTEROID) {
         ent->set_active(false);
 
         std::shared_ptr<Entity> gameover = this->ent_create();
