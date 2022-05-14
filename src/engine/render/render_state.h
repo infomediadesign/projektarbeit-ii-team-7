@@ -22,6 +22,7 @@ typedef struct BackbufferView {
   VkImage image;
   void *pool;
   u64 offset;
+  u64 size;
   VkImageView view;
 } BackbufferView;
 

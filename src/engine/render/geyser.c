@@ -617,12 +617,13 @@ void geyser_create_image_view(
   VkMemoryRequirements memory_requirements;
   vkGetImageMemoryRequirements(state->device, gs_image_view->base.image, &memory_requirements);
 
-  FreeMemoryBlock mblock;
+  FreeImageMemoryBlock mblock;
 
-  memory_find_free_block(state, mm, memory_requirements.alignment, memory_requirements.size, &mblock);
+  memory_find_free_image_block(state, mm, memory_requirements.alignment, memory_requirements.size, &mblock);
 
   gs_image_view->base.pool   = mblock.pool;
   gs_image_view->base.offset = mblock.free->offset;
+  gs_image_view->base.size   = memory_requirements.size;
 
   mblock.free->offset += memory_requirements.size;
   mblock.free->size -= memory_requirements.size;
@@ -707,12 +708,13 @@ void geyser_allocate_image_memory(RenderState *restrict state, MemoryManager *mm
   VkMemoryRequirements memory_requirements;
   vkGetImageMemoryRequirements(state->device, image->image, &memory_requirements);
 
-  FreeMemoryBlock mblock;
+  FreeImageMemoryBlock mblock;
 
-  memory_find_free_block(state, mm, memory_requirements.alignment, memory_requirements.size, &mblock);
+  memory_find_free_image_block(state, mm, memory_requirements.alignment, memory_requirements.size, &mblock);
 
   image->pool   = mblock.pool;
   image->offset = mblock.free->offset;
+  image->size   = memory_requirements.size;
 
   mblock.free->offset += memory_requirements.size;
   mblock.free->size -= memory_requirements.size;

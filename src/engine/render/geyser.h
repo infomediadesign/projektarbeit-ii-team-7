@@ -27,8 +27,9 @@ typedef enum GeyserBool { GS_FALSE = 0, GS_TRUE = 1 } GeyserBool;
 
 typedef struct GeyserImage {
   VkImage image;
-  MemoryPool *pool;
+  ImageMemoryPool *pool;
   u64 offset;
+  u64 size;
 } GeyserImage;
 
 typedef struct GeyserImageView {
