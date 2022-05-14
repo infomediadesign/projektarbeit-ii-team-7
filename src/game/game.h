@@ -46,16 +46,15 @@ public:
   /* Gameplay logic stuff */
   void spawn_projectile();
   void spawn_asteroid();
-  void spawn_split_asteroid(const std::shared_ptr<Entity> ent);
+  void spawn_split_asteroid(std::shared_ptr<Entity> ent);
   void check_collision(std::shared_ptr<Entity> ent);
   bool can_delete_renderable(const u32 renderable_id);
   void clear_entities();
-  bool is_valid(const std::shared_ptr<Entity> ent) const;
+  bool is_valid(std::shared_ptr<Entity> ent) const;
 
   std::shared_ptr<Entity> ent_create(std::shared_ptr<Entity> parent = nullptr);
-  const u32 ent_assign_renderable(
-    Renderable *renderables, const u32 renderables_count, const std::shared_ptr<Entity> ent
-  ) const;
+  const u32
+    ent_assign_renderable(Renderable *renderables, const u32 renderables_count, std::shared_ptr<Entity> ent) const;
   void ent_remove(std::shared_ptr<Entity> ent);
 };
 

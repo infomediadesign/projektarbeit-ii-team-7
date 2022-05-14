@@ -95,7 +95,7 @@ public:
   const Vector2 get_scale() const;
   const Vector3 get_aabb_min() const;
   const Vector3 get_aabb_max() const;
-  const bool collides_with(const std::shared_ptr<Entity> ent) const;
+  const bool collides_with(std::shared_ptr<Entity> ent) const;
   const u32 get_entity_class() const;
   const bool is_valid() const;
   void set_active(const bool state);

@@ -99,7 +99,8 @@ void renderable_make_rect(const RenderState *state, Renderable *r, const f32 wid
 
 void renderable_free(Renderable *r) {
   memory_free_block(r->pool, r->offset, renderable_get_size(r));
-  memory_free_image_block(r->texture.base.base.pool, r->texture.base.base.offset, r->texture.base.base.size);
+  /* TODO: fix memory freeing */
+  // memory_free_image_block(r->texture.base.base.pool, r->texture.base.base.offset, r->texture.base.base.size);
 
   free(r->vertices);
   free(r->uv);

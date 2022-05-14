@@ -104,14 +104,19 @@ FreeList *memory_pool_find_free_block_aligned(const ImageMemoryPool *m, const u6
   FreeList *l = m->free;
 
   while (l != NULL) {
-    const u64 diff = alignment - l->offset % alignment;
+    if (l->offset % alignment == 0) {
+      if (l->size >= size)
+        break;
+    } else {
+      const u64 diff = alignment - l->offset % alignment;
 
-    if (l->size - diff >= size) {
-      /* This has bugs. TODO: fix this */
-      l->offset += diff;
-      l->size -= diff;
+      if (l->size - diff >= size) {
+        /* This has bugs. TODO: fix this */
+        l->offset += diff;
+        l->size -= diff;
 
-      break;
+        break;
+      }
     }
 
     l = l->next;

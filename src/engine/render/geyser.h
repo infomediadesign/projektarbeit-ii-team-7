@@ -222,8 +222,6 @@ void geyser_create_image(
 /**
  * @brief Assigns memory to the image.
  *
- * TODO: Make this use memory pools
- *
  * @param state The render state.
  * @param memory_type The type of memory to allocate.
  * @param image The image to write to.
