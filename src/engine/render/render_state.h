@@ -37,6 +37,7 @@ typedef struct RsPipeline {
 
 typedef struct RsMemoryManager {
   void *pools;
+  void *image_pools;
 } RsMemoryManager;
 
 /**

@@ -1,4 +1,5 @@
 #include "entity.h"
+#include "../vector.h"
 
 #include <iostream>
 
@@ -41,10 +42,10 @@ const u32 Entity::get_entity_class() const { return this->ent_class; }
 const bool Entity::is_valid() const { return this->active && !this->should_remove && this->ready; }
 
 const bool Entity::collides_with(std::shared_ptr<Entity> ent) const {
-  const Vector3 target_min = vector_add3(vector_scale3(ent->get_aabb_min(), ent->get_scale().x), ent->get_pos());
-  const Vector3 target_max = vector_add3(vector_scale3(ent->get_aabb_max(), ent->get_scale().x), ent->get_pos());
-  const Vector3 aabb_min   = vector_add3(vector_scale3(this->aabb_min, this->scale.x), this->position);
-  const Vector3 aabb_max   = vector_add3(vector_scale3(this->aabb_max, this->scale.x), this->position);
+  const Vector3 target_min = ent->get_aabb_min() * ent->get_scale().x + ent->get_pos();
+  const Vector3 target_max = ent->get_aabb_max() * ent->get_scale().x + ent->get_pos();
+  const Vector3 aabb_min   = this->aabb_min * this->scale.x + this->position;
+  const Vector3 aabb_max   = this->aabb_max * this->scale.x + this->position;
 
   if (aabb_min.x > target_max.x || aabb_max.x < target_min.x)
     return false;
@@ -75,7 +76,7 @@ void Entity::update(const f64 current_time) {
     this->rotate(this->axis, this->angle);
   }
 
-  vector_add3i(&this->position, vector_scale3(this->velocity_rotated, delta));
+  vector_add3i(&this->position, this->velocity_rotated * delta);
 
   this->updated_at = current_time;
 }
@@ -117,11 +118,11 @@ void Entity::rotate_continuous(const Vector3 axis, const f32 angular_velocity) {
 }
 
 void Entity::calc_rotated_velocity() {
-  this->velocity_rotated = vector_make3(
+  this->velocity_rotated = {
     vector_dot3(this->velocity, vector_from_matrix_comp3(this->rotation_matrix.x)),
     vector_dot3(this->velocity, vector_from_matrix_comp3(this->rotation_matrix.y)),
     vector_dot3(this->velocity, vector_from_matrix_comp3(this->rotation_matrix.z))
-  );
+  };
 }
 
 void Entity::set_renderable_id(const u32 renderable_id) { this->renderable_id = renderable_id; }

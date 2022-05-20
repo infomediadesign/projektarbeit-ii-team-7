@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED 20)
 
 set(game_source_files
+  vector.h
+  vector.cpp
   entities/entity.h
   entities/entity.cpp
   game.h

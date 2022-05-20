@@ -1,10 +1,13 @@
 #include "game.h"
 
 #include "binds.h"
+#include "vector.cpp"
 
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
+
+static const Vector3 center_vec3 = { 0.0f, -0.4375f, 0.0f };
 
 static inline const char *pick_asteroid() {
   switch (rand() % 4) {
@@ -21,7 +24,7 @@ void Game::init(GameState *state) {
   this->player = this->ent_create();
   this->player->set_entity_class(EntClass::PLAYER);
   this->player->set_texture_path("assets/ship.png");
-  this->player->set_pos({ 0.0f, -0.4f, 0.0f });
+  this->player->set_pos(center_vec3);
   this->player->set_active(true);
 }
 
@@ -153,15 +156,15 @@ void Game::process_input(GameState *state, const f64 update_time) {
         if (this->player->get_velocity().x < 0.0f)
           this->player->set_velocity_x(0.0f);
         break;
-      case Cmd::LEFT: this->player->rotate_continuous(vector_make3(0.0f, 0.0f, 1.0f), 5.0f); break;
+      case Cmd::LEFT: this->player->rotate_continuous({ 0.0f, 0.0f, 1.0f }, 5.0f); break;
       case -Cmd::LEFT:
         if (this->player->get_angular_velocity() > 0.0f)
-          this->player->rotate_continuous(vector_make3(0.0f, 0.0f, 1.0f), 0.0f);
+          this->player->rotate_continuous({ 0.0f, 0.0f, 1.0f }, 0.0f);
         break;
-      case Cmd::RIGHT: this->player->rotate_continuous(vector_make3(0.0f, 0.0f, 1.0f), -5.0f); break;
+      case Cmd::RIGHT: this->player->rotate_continuous({ 0.0f, 0.0f, 1.0f }, -5.0f); break;
       case -Cmd::RIGHT:
         if (this->player->get_angular_velocity() < 0.0f)
-          this->player->rotate_continuous(vector_make3(0.0f, 0.0f, 1.0f), 0.0f);
+          this->player->rotate_continuous({ 0.0f, 0.0f, 1.0f }, 0.0f);
         break;
       case Cmd::FIRE: this->spawn_projectile(); break;
       default: break;
@@ -225,7 +228,7 @@ void Game::spawn_asteroid() {
     Vector3 pos = { -1.2f, -1.2f, 0.0f };
 
     if (rand() % 2 == 0) {
-      pos.y = rand() % 2 == 0 ? -1.2f : 0.4f;
+      pos.y = rand() % 2 == 0 ? -1.2f : 0.4375f;
       pos.x += rand() % 200 / 100.0f;
     } else {
       pos.y += rand() % 115 / 100.0f;
@@ -235,10 +238,8 @@ void Game::spawn_asteroid() {
     asteroid->set_entity_class(EntClass::ASTEROID);
     asteroid->set_texture_path(pick_asteroid());
     asteroid->set_pos(pos);
-    asteroid->set_velocity(
-      vector_scale3(vector_normal3(vector_sub3(vector_make3(0.0f, -0.4f, 0.0f), pos)), 0.1f + rand() % 4 / 20.0f)
-    );
-    asteroid->rotate_continuous(vector_make3(0.0f, 0.0f, 1.0f), -0.1 + rand() % 100 / 500.0f);
+    asteroid->set_velocity(vector_normal3(center_vec3 - pos) * (0.1f + rand() % 4 / 20.0f));
+    asteroid->rotate_continuous({ 0.0f, 0.0f, 1.0f }, -0.1 + rand() % 100 / 500.0f);
     asteroid->set_scale({ 3.0f, 3.0f });
     asteroid->set_lifetime(30.0);
     asteroid->set_active(true);
@@ -259,8 +260,8 @@ void Game::spawn_split_asteroid(std::shared_ptr<Entity> ent) {
   first->set_entity_class(EntClass::ASTEROID);
   first->set_texture_path(pick_asteroid());
   first->set_pos(ent->get_pos());
-  first->set_velocity(vector_scale3(ent->get_velocity(), 1.2f));
-  first->rotate_continuous(vector_make3(0.0f, 0.0f, 1.0f), 0.45f);
+  first->set_velocity(ent->get_velocity() * 1.2f);
+  first->rotate_continuous({ 0.0f, 0.0f, 1.0f }, 0.45f);
   first->set_scale({ target_scale, target_scale });
   first->set_lifetime(30.0);
   first->set_active(true);
@@ -268,8 +269,8 @@ void Game::spawn_split_asteroid(std::shared_ptr<Entity> ent) {
   second->set_entity_class(EntClass::ASTEROID);
   second->set_texture_path(pick_asteroid());
   second->set_pos(ent->get_pos());
-  second->set_velocity(vector_scale3(ent->get_velocity(), 1.2f));
-  second->rotate_continuous(vector_make3(0.0f, 0.0f, 1.0f), -0.45f);
+  second->set_velocity(ent->get_velocity() * 1.2f);
+  second->rotate_continuous({ 0.0f, 0.0f, 1.0f }, -0.45f);
   second->set_scale({ target_scale, target_scale });
   second->set_lifetime(30.0);
   second->set_active(true);
@@ -302,7 +303,7 @@ void Game::check_collision(std::shared_ptr<Entity> ent) {
         gameover->set_texture_path("assets/gameover.png");
         gameover->set_entity_class(EntClass::GAMEOVER);
         gameover->set_scale({ 20.0f, 12.0f });
-        gameover->set_pos({ 0.0f, -0.4f, 0.5f });
+        gameover->set_pos({ 0.0f, -0.4375f, 0.5f });
         gameover->rotate({ 0.0f, 0.0f, 1.0f }, util_radians(90));
         gameover->set_active(true);
 
