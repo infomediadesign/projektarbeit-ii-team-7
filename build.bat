@@ -5,5 +5,5 @@ mkdir dist
 mkdir dist\assets
 mkdir dist\levels
 copy /y build\engine\Debug\miniflow.exe dist
-xcopy /Y assets dist\assets
-xcopy /Y levels dist\levels
+xcopy /Y /S /E assets dist\assets
+xcopy /Y /S /E levels dist\levels
