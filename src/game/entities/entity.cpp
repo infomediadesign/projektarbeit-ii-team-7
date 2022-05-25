@@ -1,4 +1,5 @@
 #include "entity.h"
+
 #include "../vector.h"
 
 #include <iostream>
@@ -118,11 +119,9 @@ void Entity::rotate_continuous(const Vector3 axis, const f32 angular_velocity) {
 }
 
 void Entity::calc_rotated_velocity() {
-  this->velocity_rotated = {
-    vector_dot3(this->velocity, vector_from_matrix_comp3(this->rotation_matrix.x)),
-    vector_dot3(this->velocity, vector_from_matrix_comp3(this->rotation_matrix.y)),
-    vector_dot3(this->velocity, vector_from_matrix_comp3(this->rotation_matrix.z))
-  };
+  this->velocity_rotated = { vector_dot3(this->velocity, vector_from_matrix_comp3(this->rotation_matrix.x)),
+                             vector_dot3(this->velocity, vector_from_matrix_comp3(this->rotation_matrix.y)),
+                             vector_dot3(this->velocity, vector_from_matrix_comp3(this->rotation_matrix.z)) };
 }
 
 void Entity::set_renderable_id(const u32 renderable_id) { this->renderable_id = renderable_id; }

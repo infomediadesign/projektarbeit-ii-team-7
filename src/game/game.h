@@ -19,15 +19,11 @@ private:
   std::vector<u32> dangling_renderables;
   std::shared_ptr<Entity> player;
   InputState *input_state;
-  f64 last_projectile_at;
-  f64 last_asteroid_at;
 
 public:
   Game() {
-    this->input_state        = nullptr;
-    this->player             = nullptr;
-    this->last_projectile_at = 0.0;
-    this->last_asteroid_at   = 0.0;
+    this->input_state = nullptr;
+    this->player      = nullptr;
   }
 
   /* Events called from the engine */
@@ -44,9 +40,6 @@ public:
   void process_input(GameState *state, const f64 update_time);
 
   /* Gameplay logic stuff */
-  void spawn_projectile();
-  void spawn_asteroid();
-  void spawn_split_asteroid(std::shared_ptr<Entity> ent);
   void check_collision(std::shared_ptr<Entity> ent);
   bool can_delete_renderable(const u32 renderable_id);
   void clear_entities();

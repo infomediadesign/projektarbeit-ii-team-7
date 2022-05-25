@@ -50,6 +50,7 @@ set(GLFW_DIR ../../vendor/glfw)
 set(GLAD_DIR ../../vendor/glad)
 set(VULKAN_HEADERS_DIR ../../vendor/vulkan-headers)
 set(STB_DIR ../../vendor/stb)
+set(JSON_DIR ../../vendor/simdjson)
 
 include_directories("..")
 include_directories("${GLAD_DIR}/include")

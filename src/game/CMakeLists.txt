@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED 20)
 
 set(game_source_files
+  ${JSON_DIR}/simdjson.h
+  ${JSON_DIR}/simdjson.cpp
   vector.h
   vector.cpp
   entities/entity.h
@@ -21,6 +23,7 @@ include_directories("${GLFW_DIR}/include")
 include_directories("${GLAD_DIR}/include")
 include_directories("${VULKAN_HEADERS_DIR}/include")
 include_directories("${STB_DIR}")
+include_directories("${JSON_DIR}")
 
 add_library(game ${game_source_files})
 target_link_libraries(game PRIVATE logic input state render glfw)

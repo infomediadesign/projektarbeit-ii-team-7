@@ -1,7 +1,7 @@
 #ifndef __ENGINE_INPUT_KEYS_H
 #define __ENGINE_INPUT_KEYS_H
 
-/* Todo: rewrite all of this into bit aligned structs */
+/* TODO: rewrite all of this into bit aligned structs */
 
 #define MF_KEY_RELEASE 0 << 30
 #define MF_KEY_PRESS   1 << 30

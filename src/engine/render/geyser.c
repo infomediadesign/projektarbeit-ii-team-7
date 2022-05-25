@@ -432,7 +432,7 @@ void geyser_init_vk(RenderState *restrict state) {
   const VkAttachmentDescription attachment_description[1] = {
     { .flags          = 0,
       .format         = state->preferred_color_format,
-      .samples        = VK_SAMPLE_COUNT_1_BIT, /* todo: query VkPhysicalDeviceLimits */
+      .samples        = VK_SAMPLE_COUNT_1_BIT, /* TODO: query VkPhysicalDeviceLimits */
       .loadOp         = VK_ATTACHMENT_LOAD_OP_LOAD,
       .storeOp        = VK_ATTACHMENT_STORE_OP_STORE,
       .stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_LOAD,

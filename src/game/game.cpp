@@ -9,21 +9,12 @@
 
 static const Vector3 center_vec3 = { 0.0f, -0.4375f, 0.0f };
 
-static inline const char *pick_asteroid() {
-  switch (rand() % 4) {
-  case 1: return "assets/asteroid1.png";
-  case 2: return "assets/asteroid2.png";
-  case 3: return "assets/asteroid3.png";
-  default: return "assets/asteroid.png";
-  }
-}
-
 void Game::init(GameState *state) {
   srand(platform_time_sec());
 
   this->player = this->ent_create();
   this->player->set_entity_class(EntClass::PLAYER);
-  this->player->set_texture_path("assets/ship.png");
+  this->player->set_texture_path("assets/debug/player_16x16.png");
   this->player->set_pos(center_vec3);
   this->player->set_active(true);
 }
@@ -56,9 +47,6 @@ void Game::update_lazy(GameState *state, mutex_t *lock) {
   std::erase_if(this->entities, [](std::shared_ptr<Entity> ent) {
     return ent.get() == nullptr || ent->should_be_removed();
   });
-
-  if (this->player->is_active())
-    this->spawn_asteroid();
 }
 
 void Game::update_paused(GameState *state, mutex_t *lock) {}
@@ -80,7 +68,7 @@ void Game::update_renderables(
   this->dangling_renderables.clear();
 
   for (std::shared_ptr<Entity> ent : this->entities) {
-    /* remove the following 2 lines free segfault, "smart" pointers aint so "smart" eh */
+    /* remove the following 2 lines for a free segfault, "smart" pointers aint so "smart" eh */
     if (ent.get() == nullptr)
       continue;
 
@@ -110,7 +98,7 @@ void Game::update_renderables(
         throw std::runtime_error("Renderable is not assigned to the correct entity.");
 
       renderable_set_pos(r, vector3_to_vector4(ent->get_pos()));
-      renderable_set_rotation(r, ent->get_axis(), -ent->get_angle() + util_radians(90));
+      renderable_set_rotation(r, ent->get_axis(), -ent->get_angle());
       renderable_set_velocity(r, ent->get_velocity_rotated());
       renderable_set_updated(r, ent->get_updated_at());
     } else if (r->active == GS_TRUE) {
@@ -138,35 +126,13 @@ void Game::create_bindings(GameState *state, mutex_t *lock, InputState *input_st
   input_bind(input_state, MF_KEY_LEFT | MF_KEY_RELEASE, -Cmd::LEFT);
   input_bind(input_state, MF_KEY_DOWN | MF_KEY_RELEASE, -Cmd::BACK);
   input_bind(input_state, MF_KEY_RIGHT | MF_KEY_RELEASE, -Cmd::RIGHT);
-  input_bind(input_state, MF_KEY_SPACE | MF_KEY_PRESS, Cmd::FIRE);
-  input_bind(input_state, MF_KEY_ENTER | MF_KEY_PRESS, Cmd::FIRE);
 }
 
 void Game::process_input(GameState *state, const f64 update_time) {
   for (u32 i = 0; i < this->input_state->command_count; i++) {
     if (this->player != nullptr) {
       switch (this->input_state->commands[i]) {
-      case Cmd::FORWARD: this->player->set_velocity_x(0.75f); break;
-      case -Cmd::FORWARD:
-        if (this->player->get_velocity().x > 0.0f)
-          this->player->set_velocity_x(0.0f);
-        break;
-      case Cmd::BACK: this->player->set_velocity_x(-0.75f); break;
-      case -Cmd::BACK:
-        if (this->player->get_velocity().x < 0.0f)
-          this->player->set_velocity_x(0.0f);
-        break;
-      case Cmd::LEFT: this->player->rotate_continuous({ 0.0f, 0.0f, 1.0f }, 5.0f); break;
-      case -Cmd::LEFT:
-        if (this->player->get_angular_velocity() > 0.0f)
-          this->player->rotate_continuous({ 0.0f, 0.0f, 1.0f }, 0.0f);
-        break;
-      case Cmd::RIGHT: this->player->rotate_continuous({ 0.0f, 0.0f, 1.0f }, -5.0f); break;
-      case -Cmd::RIGHT:
-        if (this->player->get_angular_velocity() < 0.0f)
-          this->player->rotate_continuous({ 0.0f, 0.0f, 1.0f }, 0.0f);
-        break;
-      case Cmd::FIRE: this->spawn_projectile(); break;
+      // TODO: input processing
       default: break;
       }
     }
@@ -201,81 +167,6 @@ void Game::ent_remove(std::shared_ptr<Entity> ent) {
   ent->set_active(false);
 }
 
-void Game::spawn_projectile() {
-  const f64 current_time = platform_time_f64();
-
-  if (this->last_projectile_at + 0.5 <= current_time) {
-    std::shared_ptr<Entity> projectile = this->ent_create();
-
-    projectile->set_entity_class(EntClass::PROJECTILE);
-    projectile->set_texture_path("assets/beam.png");
-    projectile->set_pos(this->player->get_pos());
-    projectile->set_velocity_x(3.0f);
-    projectile->rotate(this->player->get_axis(), this->player->get_angle());
-    projectile->set_lifetime(2.0);
-    projectile->set_active(true);
-
-    this->last_projectile_at = current_time;
-  }
-}
-
-void Game::spawn_asteroid() {
-  const f64 current_time = platform_time_f64();
-
-  if (this->last_asteroid_at + 3.0 <= current_time) {
-    std::shared_ptr<Entity> asteroid = this->ent_create();
-
-    Vector3 pos = { -1.2f, -1.2f, 0.0f };
-
-    if (rand() % 2 == 0) {
-      pos.y = rand() % 2 == 0 ? -1.2f : 0.4375f;
-      pos.x += rand() % 200 / 100.0f;
-    } else {
-      pos.y += rand() % 115 / 100.0f;
-      pos.x = rand() % 2 == 0 ? -1.2f : 1.2f;
-    }
-
-    asteroid->set_entity_class(EntClass::ASTEROID);
-    asteroid->set_texture_path(pick_asteroid());
-    asteroid->set_pos(pos);
-    asteroid->set_velocity(vector_normal3(center_vec3 - pos) * (0.1f + rand() % 4 / 20.0f));
-    asteroid->rotate_continuous({ 0.0f, 0.0f, 1.0f }, -0.1 + rand() % 100 / 500.0f);
-    asteroid->set_scale({ 3.0f, 3.0f });
-    asteroid->set_lifetime(30.0);
-    asteroid->set_active(true);
-
-    this->last_asteroid_at = current_time;
-  }
-}
-
-void Game::spawn_split_asteroid(std::shared_ptr<Entity> ent) {
-  if (ent->get_scale().x <= 1.0f)
-    return;
-
-  const f32 target_scale = ent->get_scale().x - 1.0f;
-
-  std::shared_ptr<Entity> first  = this->ent_create();
-  std::shared_ptr<Entity> second = this->ent_create();
-
-  first->set_entity_class(EntClass::ASTEROID);
-  first->set_texture_path(pick_asteroid());
-  first->set_pos(ent->get_pos());
-  first->set_velocity(ent->get_velocity() * 1.2f);
-  first->rotate_continuous({ 0.0f, 0.0f, 1.0f }, 0.45f);
-  first->set_scale({ target_scale, target_scale });
-  first->set_lifetime(30.0);
-  first->set_active(true);
-
-  second->set_entity_class(EntClass::ASTEROID);
-  second->set_texture_path(pick_asteroid());
-  second->set_pos(ent->get_pos());
-  second->set_velocity(ent->get_velocity() * 1.2f);
-  second->rotate_continuous({ 0.0f, 0.0f, 1.0f }, -0.45f);
-  second->set_scale({ target_scale, target_scale });
-  second->set_lifetime(30.0);
-  second->set_active(true);
-}
-
 void Game::check_collision(std::shared_ptr<Entity> ent) {
   if (!this->is_valid(ent))
     return;
@@ -288,29 +179,7 @@ void Game::check_collision(std::shared_ptr<Entity> ent) {
       continue;
 
     if (ent->collides_with(target)) {
-      if (ent->get_entity_class() == EntClass::PROJECTILE && target->get_entity_class() == EntClass::ASTEROID) {
-        this->spawn_split_asteroid(target);
-
-        this->ent_remove(ent);
-        this->ent_remove(target);
-
-        break;
-      } else if (ent->get_entity_class() == EntClass::PLAYER && target->get_entity_class() == EntClass::ASTEROID) {
-        ent->set_active(false);
-
-        std::shared_ptr<Entity> gameover = this->ent_create();
-
-        gameover->set_texture_path("assets/gameover.png");
-        gameover->set_entity_class(EntClass::GAMEOVER);
-        gameover->set_scale({ 20.0f, 12.0f });
-        gameover->set_pos({ 0.0f, -0.4375f, 0.5f });
-        gameover->rotate({ 0.0f, 0.0f, 1.0f }, util_radians(90));
-        gameover->set_active(true);
-
-        this->clear_entities();
-
-        break;
-      }
+      // TODO: collision logic
     }
   }
 }
@@ -320,7 +189,7 @@ void Game::clear_entities() {
     if (!this->is_valid(target))
       continue;
 
-    if (target->get_entity_class() != EntClass::PLAYER && target->get_entity_class() != EntClass::GAMEOVER)
+    if (target->get_entity_class() != EntClass::PLAYER)
       this->ent_remove(target);
   }
 }

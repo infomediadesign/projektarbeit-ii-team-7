@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-enum EntClass { UNKNOWN, PLAYER, PROJECTILE, ASTEROID, GAMEOVER };
+enum EntClass { UNKNOWN, PLAYER };
 
 class Entity {
 private:
