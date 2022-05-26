@@ -155,6 +155,14 @@ void renderable_load_texture(RenderState *state, Renderable *r, const char *imag
   geyser_update_texture_descriptor_set(state, &r->texture);
 }
 
+void renderable_set_texture(RenderState *state, Renderable *r, const Image tex_img) {
+  geyser_create_texture(state, vector_make2((f32)tex_img.width, (f32)tex_img.height), &r->texture);
+
+  geyser_set_image_memory(state, &r->texture.base.base, &tex_img);
+  geyser_allocate_texture_descriptor_set(state, &r->texture, (GeyserPipeline *)&state->pipeline);
+  geyser_update_texture_descriptor_set(state, &r->texture);
+}
+
 void renderable_init_rect(RenderState *state, Renderable *r, const f32 width, const f32 height) {
   renderable_make_rect(state, r, width, height);
   renderable_assign_memory(state, (MemoryManager *)state->memory_manager, r);

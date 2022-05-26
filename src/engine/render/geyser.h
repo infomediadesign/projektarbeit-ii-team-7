@@ -373,7 +373,7 @@ void geyser_cmd_set_viewport(const RenderState RESTRICTED_PTR state);
  * @param image The image to set the memory of.
  * @param data The image data to set the memory to.
  */
-void geyser_set_image_memory(RenderState RESTRICTED_PTR state, GeyserImage *image, Image *data);
+void geyser_set_image_memory(RenderState RESTRICTED_PTR state, GeyserImage *image, const Image *data);
 
 /**
  * @brief Begins a staging pass.

@@ -186,6 +186,15 @@ void renderable_set_velocity(Renderable *r, const Vector3 vel);
 void renderable_load_texture(RenderState *state, Renderable *r, const char *image_path);
 
 /**
+ * @brief Sets renderable texture from a pre-loaded image.
+ *
+ * @param state The render state.
+ * @param r The renderable.
+ * @param tex_img The texture image data to set the texture to.
+ */
+void renderable_set_texture(RenderState *state, Renderable *r, const Image tex_img);
+
+/**
  * @brief Helper to initialize a renderable as a rectangle.
  *
  * @param state The render state.

@@ -1,4 +1,4 @@
-cmake -DCMAKE_BUILD_TYPE=Release -B build -S src
+cmake -DCMAKE_BUILD_TYPE=Release -B build -S .
 cmake --build build --config Release
 rmdir /Q /S dist
 mkdir dist

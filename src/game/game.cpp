@@ -12,6 +12,9 @@ static const Vector3 center_vec3 = { 0.0f, -0.4375f, 0.0f };
 void Game::init(GameState *state) {
   srand(platform_time_sec());
 
+  this->lua = luaL_newstate();
+  luaL_openlibs(this->lua);
+
   this->player = this->ent_create();
   this->player->set_entity_class(EntClass::PLAYER);
   this->player->set_texture_path("assets/debug/player_16x16.png");
@@ -134,24 +137,24 @@ void Game::process_input(GameState *state, const f64 update_time) {
       switch (this->input_state->commands[i]) {
       case Cmd::FORWARD: this->player->set_velocity_y(-0.5f); break;
       case -Cmd::FORWARD:
-          if (this->player->get_velocity().y < 0.0f)
-              this->player->set_velocity_y(0.0f);
-          break;
+        if (this->player->get_velocity().y < 0.0f)
+          this->player->set_velocity_y(0.0f);
+        break;
       case Cmd::BACK: this->player->set_velocity_y(0.5f); break;
       case -Cmd::BACK:
-          if (this->player->get_velocity().y > 0.0f)
-              this->player->set_velocity_y(0.0f);
-          break;
+        if (this->player->get_velocity().y > 0.0f)
+          this->player->set_velocity_y(0.0f);
+        break;
       case Cmd::LEFT: this->player->set_velocity_x(-0.5f); break;
       case -Cmd::LEFT:
-          if (this->player->get_velocity().x < 0.0f)
-              this->player->set_velocity_x(0.0f);
-          break;
+        if (this->player->get_velocity().x < 0.0f)
+          this->player->set_velocity_x(0.0f);
+        break;
       case Cmd::RIGHT: this->player->set_velocity_x(0.5f); break;
       case -Cmd::RIGHT:
-          if (this->player->get_velocity().x > 0.0f)
-              this->player->set_velocity_x(0.0f);
-          break;    
+        if (this->player->get_velocity().x > 0.0f)
+          this->player->set_velocity_x(0.0f);
+        break;
 
       default: break;
       }

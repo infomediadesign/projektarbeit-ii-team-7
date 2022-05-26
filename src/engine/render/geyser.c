@@ -1198,7 +1198,7 @@ void geyser_update_texture_descriptor_set(RenderState *restrict state, GeyserTex
   vkUpdateDescriptorSets(state->device, 1, &descriptor_write, 0, NULL);
 }
 
-void geyser_set_image_memory(RenderState *restrict state, GeyserImage *image, Image *image_data) {
+void geyser_set_image_memory(RenderState *restrict state, GeyserImage *image, const Image *image_data) {
   if (state->rendering) {
     printf("[Geyser Error] Cannot set image memory during a render pass!\n");
     abort();

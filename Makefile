@@ -3,17 +3,17 @@
 all: configure build
 
 configure:
-	cmake -DCMAKE_BUILD_TYPE=Debug -B build -S src
+	cmake -DCMAKE_BUILD_TYPE=Debug -B build -S .
 
 build:
 	cmake --build build --config Debug
 
 release:
-	cmake -DCMAKE_BUILD_TYPE=Release -B build -S src
+	cmake -DCMAKE_BUILD_TYPE=Release -B build -S .
 	cmake --build build --config Release
 
 dist:
-	cmake -DCMAKE_BUILD_TYPE=Release -B build -S src
+	cmake -DCMAKE_BUILD_TYPE=Release -B build -S .
 	cmake --build build --config Release
 	rm -rf dist
 	mkdir dist

@@ -1,0 +1,14 @@
+{ "columns":1,
+ "image":"..\/debug\/player_16x16.png",
+ "imageheight":16,
+ "imagewidth":16,
+ "margin":0,
+ "name":"info_player_start",
+ "spacing":0,
+ "tilecount":1,
+ "tiledversion":"1.7.2",
+ "tileheight":16,
+ "tilewidth":16,
+ "type":"tileset",
+ "version":"1.6"
+}

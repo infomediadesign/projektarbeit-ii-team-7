@@ -9,3 +9,9 @@
 [submodule "vendor/stb"]
 	path = vendor/stb
 	url = https://github.com/nothings/stb
+[submodule "vendor/luajit-cmake"]
+	path = vendor/luajit-cmake
+	url = https://github.com/zhaozg/luajit-cmake
+[submodule "vendor/luajit"]
+	path = vendor/luajit
+	url = https://github.com/LuaJIT/LuaJIT

@@ -4,12 +4,14 @@
 #define MAX_ENTITIES 4096
 
 #include "entities/entity.h"
+#include "level.h"
 
 #include <engine/input/input.h>
 #include <engine/platform.h>
 #include <engine/render/renderable.h>
 #include <engine/state/state.h>
 #include <engine/types/numeric.h>
+#include <lua.hpp>
 #include <memory>
 #include <vector>
 
@@ -19,6 +21,7 @@ private:
   std::vector<u32> dangling_renderables;
   std::shared_ptr<Entity> player;
   InputState *input_state;
+  lua_State *lua;
 
 public:
   Game() {

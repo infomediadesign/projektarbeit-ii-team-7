@@ -51,21 +51,22 @@ set(GLAD_DIR ../../vendor/glad)
 set(VULKAN_HEADERS_DIR ../../vendor/vulkan-headers)
 set(STB_DIR ../../vendor/stb)
 set(JSON_DIR ../../vendor/simdjson)
+set(LUA_DIR ../../vendor/luajit/src)
 
 include_directories("..")
 include_directories("${GLAD_DIR}/include")
 include_directories("${VULKAN_HEADERS_DIR}/include")
 include_directories("${STB_DIR}/")
 
-add_subdirectory(../../vendor/glfw ../../build/glfw)
-add_subdirectory(render ../../build/render)
-add_subdirectory(state ../../build/state)
-add_subdirectory(input ../../build/input)
-add_subdirectory(logic ../../build/logic)
-add_subdirectory(../game ../../build/game)
+add_subdirectory(../../vendor/glfw ../../../build/glfw)
+add_subdirectory(render ../../../build/render)
+add_subdirectory(state ../../../build/state)
+add_subdirectory(input ../../../build/input)
+add_subdirectory(logic ../../../build/logic)
+add_subdirectory(../game ../../../build/game)
 
 set_target_properties(game PROPERTIES
-  IMPORTED_LOCATION ../../build/game/libgame.a
+  IMPORTED_LOCATION ../../../build/game/libgame.a
   IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
 )
 

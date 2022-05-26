@@ -10,6 +10,8 @@ set(game_source_files
   ${JSON_DIR}/simdjson.cpp
   vector.h
   vector.cpp
+  level.h
+  level.cpp
   entities/entity.h
   entities/entity.cpp
   game.h
@@ -24,6 +26,7 @@ include_directories("${GLAD_DIR}/include")
 include_directories("${VULKAN_HEADERS_DIR}/include")
 include_directories("${STB_DIR}")
 include_directories("${JSON_DIR}")
+include_directories("${LUA_DIR}")
 
 add_library(game ${game_source_files})
-target_link_libraries(game PRIVATE logic input state render glfw)
+target_link_libraries(game PRIVATE logic input state render glfw libluajit)

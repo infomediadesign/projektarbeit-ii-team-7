@@ -14,6 +14,16 @@ typedef struct Image {
 } Image;
 
 /**
+ * @brief Finds the real path of a file within the context of assets.
+ *
+ * The resulting path is relative to the current working directory.
+ *
+ * @param asset_path Relative asset path.
+ * @param out Buffer to write the real asset path to.
+ */
+void asset_find(const char *asset_path, char *out);
+
+/**
  * @brief Loads an image from file path.
  *
  * Uses asset search paths to search for the asset. Will use the
