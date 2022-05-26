@@ -132,7 +132,27 @@ void Game::process_input(GameState *state, const f64 update_time) {
   for (u32 i = 0; i < this->input_state->command_count; i++) {
     if (this->player != nullptr) {
       switch (this->input_state->commands[i]) {
-      // TODO: input processing
+      case Cmd::FORWARD: this->player->set_velocity_y(-0.5f); break;
+      case -Cmd::FORWARD:
+          if (this->player->get_velocity().y < 0.0f)
+              this->player->set_velocity_y(0.0f);
+          break;
+      case Cmd::BACK: this->player->set_velocity_y(0.5f); break;
+      case -Cmd::BACK:
+          if (this->player->get_velocity().y > 0.0f)
+              this->player->set_velocity_y(0.0f);
+          break;
+      case Cmd::LEFT: this->player->set_velocity_x(-0.5f); break;
+      case -Cmd::LEFT:
+          if (this->player->get_velocity().x < 0.0f)
+              this->player->set_velocity_x(0.0f);
+          break;
+      case Cmd::RIGHT: this->player->set_velocity_x(0.5f); break;
+      case -Cmd::RIGHT:
+          if (this->player->get_velocity().x > 0.0f)
+              this->player->set_velocity_x(0.0f);
+          break;    
+
       default: break;
       }
     }
