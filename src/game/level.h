@@ -8,11 +8,11 @@
 #include <engine/render/renderable.h>
 #include <engine/state/state.h>
 #include <engine/types/numeric.h>
+#include <lua.hpp>
 #include <memory>
 #include <simdjson.h>
 #include <string>
 #include <vector>
-#include <lua.hpp>
 
 class Level {
 private:
@@ -21,10 +21,8 @@ private:
   simdjson::ondemand::document json_data;
 
 public:
-  Level(lua_State *lua) {
-    this->lua = lua;
-  }
-  
+  Level(lua_State *lua) { this->lua = lua; }
+
   std::vector<std::shared_ptr<Entity>> *get_entities();
 
   void load_json(std::vector<std::shared_ptr<Entity>> *entities, const std::string path);

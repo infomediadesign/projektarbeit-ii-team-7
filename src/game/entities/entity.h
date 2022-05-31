@@ -13,8 +13,13 @@
 #include <string>
 #include <vector>
 
-#define ENT_GETTER(t, f) t get_##f() const { return this->##f; }
-#define ENT_SETTER(t, f) void set_##f(const t f) { this->##f = ##f; this->updated_at = platform_time_f64(); }
+#define ENT_GETTER(t, f) \
+  t get_##f() const { return this->f; }
+#define ENT_SETTER(t, f)                    \
+  void set_##f(const t f) {                 \
+    this->f          = f;                   \
+    this->updated_at = platform_time_f64(); \
+  }
 
 enum EntClass { UNKNOWN, PLAYER };
 
