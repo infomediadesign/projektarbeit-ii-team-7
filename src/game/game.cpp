@@ -16,7 +16,7 @@ void Game::init(GameState *state) {
   luaL_openlibs(this->lua);
 
   this->player = this->ent_create();
-  this->player->set_entity_class(EntClass::PLAYER);
+  this->player->set_ent_class(EntClass::PLAYER);
   this->player->set_texture_path("assets/debug/player_16x16.png");
   this->player->set_pos(center_vec3);
   this->player->set_active(true);
@@ -80,8 +80,8 @@ void Game::update_renderables(
     if (r == nullptr)
       continue;
 
-    if (ent->is_active() && !ent->should_be_removed()) {
-      if (!ent->is_ready()) {
+    if (ent->get_active() && !ent->should_be_removed()) {
+      if (!ent->get_ready()) {
         const u32 renderable_id = this->ent_assign_renderable(renderables, renderables_count, ent);
 
         ent->set_renderable_id(renderable_id);
@@ -212,7 +212,7 @@ void Game::clear_entities() {
     if (!this->is_valid(target))
       continue;
 
-    if (target->get_entity_class() != EntClass::PLAYER)
+    if (target->get_ent_class() != EntClass::PLAYER)
       this->ent_remove(target);
   }
 }

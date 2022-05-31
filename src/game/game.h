@@ -20,6 +20,7 @@ private:
   std::vector<std::shared_ptr<Entity>> entities;
   std::vector<u32> dangling_renderables;
   std::shared_ptr<Entity> player;
+  std::shared_ptr<Level> level;
   InputState *input_state;
   lua_State *lua;
 

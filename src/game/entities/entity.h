@@ -13,13 +13,16 @@
 #include <string>
 #include <vector>
 
+#define ENT_GETTER(t, f) t get_##f() const { return this->##f; }
+#define ENT_SETTER(t, f) void set_##f(const t f) { this->##f = ##f; this->updated_at = platform_time_f64(); }
+
 enum EntClass { UNKNOWN, PLAYER };
 
 class Entity {
 private:
   Matrix4 rotation_matrix;
   Quaternion quaternion;
-  Vector3 position;
+  Vector3 pos;
   Vector3 velocity;
   Vector3 velocity_rotated;
   Vector3 aabb_min;
@@ -33,7 +36,7 @@ private:
   f64 updated_at;
   f64 created_at;
   f64 lifetime;
-  u32 ent_class;
+  EntClass ent_class;
   u32 renderable_id;
   u32 entity_index;
   f32 angle;
@@ -41,6 +44,7 @@ private:
   bool ready;
   bool active;
   bool should_remove;
+  bool should_update;
 
   void calc_rotated_velocity();
 
@@ -54,10 +58,11 @@ public:
     this->ready            = false;
     this->active           = false;
     this->should_remove    = false;
+    this->should_update    = true;
     this->ent_class        = EntClass::UNKNOWN;
     this->renderable_id    = 0U;
     this->scale            = { 1.0f, 1.0f };
-    this->position         = { 0.0f, 0.0f, 0.0f };
+    this->pos              = { 0.0f, 0.0f, 0.0f };
     this->velocity         = { 0.0f, 0.0f, 0.0f };
     this->velocity_rotated = { 0.0f, 0.0f, 0.0f };
     this->aabb_min         = { -0.05f, -0.05f, 0.0f };
@@ -78,27 +83,37 @@ public:
     this->created_at       = platform_time_f64();
   }
 
-  const i64 get_id() const;
-  const bool is_active() const;
-  const bool is_ready() const;
-  const u32 get_renderable_id() const;
-  const Vector3 get_pos() const;
-  const std::string get_texture_path() const;
-  const f32 get_angle() const;
-  const Vector3 get_axis() const;
-  const Vector3 get_velocity() const;
-  const Vector3 get_velocity_rotated() const;
-  const f32 get_angular_velocity() const;
-  const f64 get_updated_at() const;
-  const u32 get_entity_index() const;
+  ENT_GETTER(i64, id)
+  ENT_GETTER(bool, active)
+  ENT_GETTER(bool, ready)
+  ENT_GETTER(u32, renderable_id)
+  ENT_GETTER(Vector3, pos)
+  ENT_GETTER(std::string, texture_path)
+  ENT_GETTER(f32, angle)
+  ENT_GETTER(Vector3, axis)
+  ENT_GETTER(Vector3, velocity)
+  ENT_GETTER(Vector3, velocity_rotated)
+  ENT_GETTER(f32, angular_velocity)
+  ENT_GETTER(f64, updated_at)
+  ENT_GETTER(u32, entity_index)
+  ENT_GETTER(Vector2, scale)
+  ENT_GETTER(Vector3, aabb_min)
+  ENT_GETTER(Vector3, aabb_max)
+  ENT_GETTER(EntClass, ent_class)
+
+  ENT_SETTER(bool, active)
+  ENT_SETTER(std::string, texture_path)
+  ENT_SETTER(u32, renderable_id)
+  ENT_SETTER(bool, ready)
+  ENT_SETTER(f64, lifetime)
+  ENT_SETTER(Vector3, pos)
+  ENT_SETTER(bool, should_remove)
+  ENT_SETTER(Vector2, scale)
+  ENT_SETTER(EntClass, ent_class)
+
   const bool should_be_removed() const;
-  const Vector2 get_scale() const;
-  const Vector3 get_aabb_min() const;
-  const Vector3 get_aabb_max() const;
   const bool collides_with(std::shared_ptr<Entity> ent) const;
-  const u32 get_entity_class() const;
   const bool is_valid() const;
-  void set_active(const bool state);
   void update(const f64 current_time);
   void rotate(const Vector3 axis, const f32 angle);
   void rotate_continuous(const Vector3 axis, const f32 angular_velocity);
@@ -106,14 +121,6 @@ public:
   void set_velocity_x(const f32 velocity);
   void set_velocity_y(const f32 velocity);
   void set_parent(std::shared_ptr<Entity> ent);
-  void set_texture_path(const std::string path);
-  void set_renderable_id(const u32 renderable_id);
-  void set_ready(const bool ready);
-  void set_lifetime(const f64 lifetime);
-  void set_pos(const Vector3 position);
-  void set_should_remove(const bool should_remove);
-  void set_scale(const Vector2 scale);
-  void set_entity_class(const EntClass ent_class);
 };
 
 #endif

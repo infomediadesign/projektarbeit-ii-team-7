@@ -2,7 +2,7 @@
 
 #include <engine/input/asset.h>
 
-void Level::load_json(const std::string path) {
+void Level::load_json(std::vector<std::shared_ptr<Entity>> *entities, const std::string path) {
   char real_path[256];
 
   asset_find(path.c_str(), real_path);

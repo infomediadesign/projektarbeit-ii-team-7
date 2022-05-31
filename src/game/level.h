@@ -12,17 +12,23 @@
 #include <simdjson.h>
 #include <string>
 #include <vector>
+#include <lua.hpp>
 
 class Level {
 private:
-  std::vector<std::shared_ptr<Entity>> entities;
+  lua_State *lua;
   simdjson::ondemand::parser json_parser;
   simdjson::ondemand::document json_data;
 
 public:
-  Level() {}
+  Level(lua_State *lua) {
+    this->lua = lua;
+  }
+  
+  std::vector<std::shared_ptr<Entity>> *get_entities();
 
-  void load_json(const std::string path);
+  void load_json(std::vector<std::shared_ptr<Entity>> *entities, const std::string path);
+  void update();
 };
 
 #endif
