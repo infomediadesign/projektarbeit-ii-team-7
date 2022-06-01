@@ -4,9 +4,9 @@
 
 #include <iostream>
 
-const bool Entity::is_valid() const { return this->active && !this->should_remove && this->ready; }
+bool Entity::is_valid() const { return this->active && !this->should_remove && this->ready; }
 
-const bool Entity::collides_with(std::shared_ptr<Entity> ent) const {
+bool Entity::collides_with(std::shared_ptr<Entity> ent) const {
   const Vector3 target_min = ent->get_aabb_min() * ent->get_scale().x + ent->get_pos();
   const Vector3 target_max = ent->get_aabb_max() * ent->get_scale().x + ent->get_pos();
   const Vector3 aabb_min   = this->aabb_min * this->scale.x + this->pos;
@@ -84,4 +84,4 @@ void Entity::calc_rotated_velocity() {
                              vector_dot3(this->velocity, vector_from_matrix_comp3(this->rotation_matrix.z)) };
 }
 
-const bool Entity::should_be_removed() const { return this->should_remove; }
+bool Entity::should_be_removed() const { return this->should_remove; }

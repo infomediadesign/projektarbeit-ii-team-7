@@ -23,11 +23,13 @@ private:
   std::shared_ptr<Level> level;
   InputState *input_state;
   lua_State *lua;
+  f32 scale;
 
 public:
   Game() {
     this->input_state = nullptr;
     this->player      = nullptr;
+    this->scale       = RENDER_SCALE;
   }
 
   /* Events called from the engine */

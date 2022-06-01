@@ -15,6 +15,16 @@ void Game::init(GameState *state) {
   this->lua = luaL_newstate();
   luaL_openlibs(this->lua);
 
+  for (u8 x = 0; x < 16; x++) {
+    for (u8 y = 0; y < 16; y++) {
+      std::shared_ptr<Entity> ent = this->ent_create();
+      ent->set_ent_class(EntClass::BACKGROUND);
+      ent->set_texture_path("assets/debug/path_32x32.png");
+      ent->set_pos(center_vec3 + vector_make3(-0.8f + 0.1f * x, -0.8f + 0.1f * y, 0.0f));
+      ent->set_active(true);
+    }
+  }
+
   this->player = this->ent_create();
   this->player->set_ent_class(EntClass::PLAYER);
   this->player->set_texture_path("assets/debug/player_16x16.png");
@@ -36,10 +46,6 @@ void Game::update(GameState *state, mutex_t *lock) {
       this->check_collision(ent);
     }
   }
-
-  const Vector3 player_pos = this->player->get_pos();
-
-  this->player->set_pos({ std::clamp(player_pos.x, -0.95f, 0.95f), std::clamp(player_pos.y, -0.95f, 0.10f), 1.0f });
 }
 
 void Game::update_lazy(GameState *state, mutex_t *lock) {
@@ -57,6 +63,11 @@ void Game::update_paused(GameState *state, mutex_t *lock) {}
 void Game::update_renderables(
   GameState *state, mutex_t *lock, RenderState *render_state, Renderable *renderables, const u32 renderables_count
 ) {
+  render_state->render_scale = this->scale;
+
+  render_state->camera_transform.x[0] = render_state->render_scale;
+  render_state->camera_transform.y[1] = 768.0f / 432.0f * render_state->render_scale;
+
   for (const u32 id : this->dangling_renderables) {
     if (!this->can_delete_renderable(id))
       continue;
@@ -108,6 +119,25 @@ void Game::update_renderables(
       renderable_set_active(r, GS_FALSE);
     }
   }
+
+  if (this->is_valid(this->player)) {
+    const f32 delta       = (f32)(platform_time_f64() - this->player->get_updated_at());
+    const f32 lerp_factor = 0.05f;
+
+    render_state->camera_transform.w[0] = util_lerp_f32(
+      lerp_factor,
+      render_state->camera_transform.w[0],
+      -util_lerp_f32(delta, this->player->get_pos().x, this->player->get_pos().x + this->player->get_velocity().x) *
+        render_state->render_scale
+    );
+
+    render_state->camera_transform.w[1] = util_lerp_f32(
+      lerp_factor,
+      render_state->camera_transform.w[1],
+      -util_lerp_f32(delta, this->player->get_pos().y, this->player->get_pos().y + this->player->get_velocity().y) *
+        (768.0f / 432.0f) * render_state->render_scale
+    );
+  }
 }
 
 void Game::create_bindings(GameState *state, mutex_t *lock, InputState *input_state) {
@@ -129,6 +159,10 @@ void Game::create_bindings(GameState *state, mutex_t *lock, InputState *input_st
   input_bind(input_state, MF_KEY_LEFT | MF_KEY_RELEASE, -Cmd::LEFT);
   input_bind(input_state, MF_KEY_DOWN | MF_KEY_RELEASE, -Cmd::BACK);
   input_bind(input_state, MF_KEY_RIGHT | MF_KEY_RELEASE, -Cmd::RIGHT);
+
+  input_bind(input_state, MF_KEY_F1 | MF_KEY_PRESS, Cmd::ZOOM);
+  input_bind(input_state, MF_KEY_F2 | MF_KEY_PRESS, -Cmd::ZOOM);
+  input_bind(input_state, MF_KEY_F3 | MF_KEY_PRESS, Cmd::ZOOM_RESET);
 }
 
 void Game::process_input(GameState *state, const f64 update_time) {
@@ -155,6 +189,9 @@ void Game::process_input(GameState *state, const f64 update_time) {
         if (this->player->get_velocity().x > 0.0f)
           this->player->set_velocity_x(0.0f);
         break;
+      case Cmd::ZOOM: this->scale = std::clamp(this->scale + 0.05f, 0.5f, 2.0f); break;
+      case -Cmd::ZOOM: this->scale = std::clamp(this->scale - 0.05f, 0.5f, 2.0f); break;
+      case Cmd::ZOOM_RESET: this->scale = RENDER_SCALE; break;
 
       default: break;
       }

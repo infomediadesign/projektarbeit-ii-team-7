@@ -14,9 +14,11 @@ RenderState *render_state_init() {
   state->debug                   = 0;
   state->rendering               = 0;
   state->camera_transform        = null_mat4;
+  state->render_scale            = RENDER_SCALE;
 
-  state->camera_transform.y[1] = 768.0f / 432.0f;
-  state->camera_transform.w[1] = 432.0f / 768.0f + 0.21f;
+  state->camera_transform.x[0] = state->render_scale;
+  state->camera_transform.y[1] = 768.0f / 432.0f * state->render_scale;
+  state->camera_transform.w[1] = RENDER_CENTER_OFFSET;
 
   return state;
 }

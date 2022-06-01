@@ -11,3 +11,5 @@ void Level::load_json(std::vector<std::shared_ptr<Entity>> *entities, const std:
 
   this->json_data = this->json_parser.iterate(json);
 }
+
+void Level::update() {}

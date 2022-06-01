@@ -21,7 +21,7 @@
     this->updated_at = platform_time_f64(); \
   }
 
-enum EntClass { UNKNOWN, PLAYER };
+enum EntClass { UNKNOWN, PLAYER, BACKGROUND, CLIP };
 
 class Entity {
 private:
@@ -116,9 +116,9 @@ public:
   ENT_SETTER(Vector2, scale)
   ENT_SETTER(EntClass, ent_class)
 
-  const bool should_be_removed() const;
-  const bool collides_with(std::shared_ptr<Entity> ent) const;
-  const bool is_valid() const;
+  bool should_be_removed() const;
+  bool collides_with(std::shared_ptr<Entity> ent) const;
+  bool is_valid() const;
   void update(const f64 current_time);
   void rotate(const Vector3 axis, const f32 angle);
   void rotate_continuous(const Vector3 axis, const f32 angular_velocity);

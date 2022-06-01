@@ -169,6 +169,7 @@ int render_perform(void *args) {
         push_constants.vertex_color = renderables[i].color;
         push_constants.scale        = renderables[i].scale;
         push_constants.uv_offset    = renderables[i].uv_offset;
+        push_constants.camera       = render_state->camera_transform;
 
         if (i != first && renderables[i].vertices_count == renderables[i - 1].vertices_count) {
           if (memcmp(renderables[i].vertices, renderables[i - 1].vertices, sizeof(Vector4) * renderables[i].vertices_count) != 0) {

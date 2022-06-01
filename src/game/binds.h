@@ -1,6 +1,6 @@
 #ifndef __GAME_BINDS_H
 #define __GAME_BINDS_H
 
-enum Cmd { FORWARD = 1, BACK, LEFT, RIGHT, FIRE };
+enum Cmd { FORWARD = 1, BACK, LEFT, RIGHT, INVENTORY, USE, SAVE, MENU, ZOOM, ZOOM_RESET };
 
 #endif

@@ -29,7 +29,6 @@ gcc11Stdenv.mkDerivation {
     xorg.libXinerama.dev
     xorg.libXcursor.dev
     xorg.libXi.dev
-    xorg.libXi.dev
     xlibs.libXext.dev
   ];
 

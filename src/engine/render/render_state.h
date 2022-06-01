@@ -16,6 +16,9 @@ extern "C" {
 #include <glad/vulkan.h>
 #include <GLFW/glfw3.h>
 
+#define RENDER_CENTER_OFFSET 432.0f / 768.0f + 0.21f
+#define RENDER_SCALE 1.2f
+
 // clang-format on
 
 typedef struct BackbufferView {
@@ -82,6 +85,7 @@ typedef struct RenderState {
   VkRect2D scissor;
   f32 window_width;
   f32 window_height;
+  f32 render_scale;
   u32 current_swapchain_image;
   u32 queue_family_index;
   u32 queue_family_indices_count;
