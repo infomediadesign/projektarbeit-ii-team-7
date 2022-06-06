@@ -17,7 +17,7 @@ extern "C" {
 #include <GLFW/glfw3.h>
 
 #define RENDER_CENTER_OFFSET 432.0f / 768.0f + 0.21f
-#define RENDER_SCALE 1.2f
+#define RENDER_SCALE 1.0f
 
 // clang-format on
 
@@ -57,6 +57,7 @@ typedef struct RenderState {
   Time init_time;
   u64 current_frame;
   GLFWwindow *window;
+  GLFWmonitor *monitor;
   u32 *queue_family_indices;
   VkImage *swapchain_images;
   RsMemoryManager *memory_manager;

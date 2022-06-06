@@ -145,8 +145,9 @@ void geyser_fill_image_view_creation_structs(
 void geyser_create_image_view(
   RenderState *state,
   const Vector2 size,
-  VkImageViewType type,
+  const VkImageViewType type,
   const VkImageUsageFlags usage,
+  const VkSampleCountFlags samples,
   MemoryManager *mm,
   GeyserImageView *gs_image_view
 );
@@ -160,7 +161,7 @@ void geyser_create_image_view(
  * @param gs_image_view The image view to write to.
  */
 void geyser_create_image_view_from_image(
-  RenderState *state, VkImage *img, VkImageViewType type, GeyserImageView *gs_image_view
+  RenderState *state, VkImage *img, const VkImageViewType type, GeyserImageView *gs_image_view
 );
 
 /**

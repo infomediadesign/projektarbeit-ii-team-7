@@ -210,6 +210,8 @@ void geyser_init_vk(RenderState *restrict state) {
 
   vkGetPhysicalDeviceFeatures(state->physical_device, &state->physical_device_features);
 
+  state->physical_device_features.sampleRateShading = VK_TRUE;
+
   gladLoadVulkanUserPtr(state->physical_device, glad_vulkan_load_func_vk, state->instance);
 
   u32 queue_properties_count = 0;
@@ -255,7 +257,7 @@ void geyser_init_vk(RenderState *restrict state) {
                                                   .ppEnabledLayerNames     = validation_layer_names,
                                                   .enabledExtensionCount   = 1,
                                                   .ppEnabledExtensionNames = device_ext_names,
-                                                  .pEnabledFeatures        = NULL };
+                                                  .pEnabledFeatures        = &state->physical_device_features };
 
   res = vkCreateDevice(state->physical_device, &device_create_info, NULL, &state->device);
 
@@ -584,8 +586,9 @@ void geyser_fill_image_view_creation_structs(
 void geyser_create_image_view(
   RenderState *state,
   const Vector2 size,
-  VkImageViewType type,
+  const VkImageViewType type,
   const VkImageUsageFlags usage,
+  const VkSampleCountFlags samples,
   MemoryManager *mm,
   GeyserImageView *gs_image_view
 ) {
@@ -599,7 +602,7 @@ void geyser_create_image_view(
                                                   .extent = { .width = (u32)size.x, .height = (u32)size.y, .depth = 1 },
                                                   .mipLevels   = 1,
                                                   .arrayLayers = 1,
-                                                  .samples     = VK_SAMPLE_COUNT_1_BIT,
+                                                  .samples     = samples,
                                                   .tiling      = VK_IMAGE_TILING_OPTIMAL,
                                                   .usage       = VK_IMAGE_USAGE_TRANSFER_DST_BIT |
                                                            VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
@@ -647,7 +650,7 @@ void geyser_create_image_view(
 }
 
 void geyser_create_image_view_from_image(
-  RenderState *state, VkImage *img, VkImageViewType type, GeyserImageView *gs_image_view
+  RenderState *state, VkImage *img, const VkImageViewType type, GeyserImageView *gs_image_view
 ) {
   VkImageSubresourceRange resource_range;
   VkComponentMapping mapping;
@@ -828,8 +831,8 @@ void geyser_create_pipeline(
   const VkPipelineMultisampleStateCreateInfo multisample_state_info = {
     GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO),
     .rasterizationSamples  = VK_SAMPLE_COUNT_1_BIT,
-    .sampleShadingEnable   = VK_FALSE,
-    .minSampleShading      = 0.0f,
+    .sampleShadingEnable   = VK_TRUE,
+    .minSampleShading      = 1.0f,
     .pSampleMask           = NULL,
     .alphaToCoverageEnable = VK_FALSE,
     .alphaToOneEnable      = VK_FALSE
@@ -1136,7 +1139,7 @@ void geyser_cmd_set_viewport(const RenderState *restrict state) {
 
 void geyser_create_texture(RenderState *restrict state, const Vector2 size, GeyserTexture *texture) {
   geyser_create_image_view(
-    state, size, VK_IMAGE_VIEW_TYPE_2D, 0, (MemoryManager *)state->memory_manager, &texture->base
+    state, size, VK_IMAGE_VIEW_TYPE_2D, 0, VK_SAMPLE_COUNT_1_BIT, (MemoryManager *)state->memory_manager, &texture->base
   );
 
   const VkSamplerCreateInfo sampler_info = {
@@ -1328,6 +1331,7 @@ void geyser_create_backbuffer(RenderState *restrict state) {
     (Vector2) { state->window_width, state->window_height },
     VK_IMAGE_VIEW_TYPE_2D,
     VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
+    VK_SAMPLE_COUNT_1_BIT,
     (MemoryManager *)state->memory_manager,
     (GeyserImageView *)&state->backbuffer
   );

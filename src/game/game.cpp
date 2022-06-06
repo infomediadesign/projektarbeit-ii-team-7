@@ -19,7 +19,9 @@ void Game::init(GameState *state) {
     for (u8 y = 0; y < 16; y++) {
       std::shared_ptr<Entity> ent = this->ent_create();
       ent->set_ent_class(EntClass::BACKGROUND);
-      ent->set_texture_path("assets/debug/path_32x32.png");
+      ent->set_texture_path(
+        (x != 0 && x != 15 && y != 0 && y != 15) ? "assets/debug/path_32x32.png" : "assets/debug/wall_32x32.png"
+      );
       ent->set_pos(center_vec3 + vector_make3(-0.8f + 0.1f * x, -0.8f + 0.1f * y, 0.0f));
       ent->set_active(true);
     }
@@ -28,7 +30,7 @@ void Game::init(GameState *state) {
   this->player = this->ent_create();
   this->player->set_ent_class(EntClass::PLAYER);
   this->player->set_texture_path("assets/debug/player_16x16.png");
-  this->player->set_pos(center_vec3);
+  this->player->set_pos(center_vec3 + vector_make3(0.0f, 0.0f, 1.0f));
   this->player->set_active(true);
 }
 

@@ -21,14 +21,10 @@ static inline const char *platform_name(i32 platform) {
 }
 
 int render_perform(void *args) {
-  ThreadData *const td            = (ThreadData *)args;
-  mutex_t *lock                   = (mutex_t *)td->lock;
-  GameState *const state          = (GameState *)td->state;
-  RenderState *const render_state = render_state_init();
-  Renderable *const renderables   = (Renderable *)calloc(MAX_RENDERABLES, sizeof(Renderable));
-
-  if (game_is_debug(state))
-    render_state->debug = 1;
+  ThreadData *const td          = (ThreadData *)args;
+  mutex_t *lock                 = (mutex_t *)td->lock;
+  GameState *const state        = (GameState *)td->state;
+  Renderable *const renderables = (Renderable *)calloc(MAX_RENDERABLES, sizeof(Renderable));
 
   glfwSetErrorCallback(glfw_error_fun);
 
@@ -42,7 +38,6 @@ int render_perform(void *args) {
   if (!glfwInit()) {
     game_add_flag(state, GS_EXIT);
     free(renderables);
-    render_state_destroy(render_state);
 
     return 1;
   }
@@ -55,12 +50,16 @@ int render_perform(void *args) {
     glfwTerminate();
     game_add_flag(state, GS_EXIT);
     free(renderables);
-    render_state_destroy(render_state);
 
     return 1;
   }
 
   printf("[GLFW] Selected platform: %s\n", platform_name(glfwGetPlatform()));
+
+  RenderState *const render_state = render_state_init();
+
+  if (game_is_debug(state))
+    render_state->debug = 1;
 
   for (u32 i = 0; i < MAX_RENDERABLES; i++)
     renderable_make_default(&renderables[i]);
