@@ -1,5 +1,5 @@
-#ifndef __GAME_ENTITY_H
-#define __GAME_ENTITY_H
+#ifndef __GAME_ENTITIES_ENTITY_H
+#define __GAME_ENTITIES_ENTITY_H
 
 #include <cstdlib>
 #include <engine/crc64.h>
@@ -50,6 +50,7 @@ private:
   bool active;
   bool should_remove;
   bool should_update;
+  bool should_sort;
 
   void calc_rotated_velocity();
 
@@ -63,6 +64,7 @@ public:
     this->ready            = false;
     this->active           = false;
     this->should_remove    = false;
+    this->should_sort      = false;
     this->should_update    = true;
     this->ent_class        = EntClass::UNKNOWN;
     this->renderable_id    = 0U;
@@ -105,6 +107,7 @@ public:
   ENT_GETTER(Vector3, aabb_min)
   ENT_GETTER(Vector3, aabb_max)
   ENT_GETTER(EntClass, ent_class)
+  ENT_GETTER(bool, should_sort)
 
   ENT_SETTER(bool, active)
   ENT_SETTER(std::string, texture_path)
@@ -115,6 +118,7 @@ public:
   ENT_SETTER(bool, should_remove)
   ENT_SETTER(Vector2, scale)
   ENT_SETTER(EntClass, ent_class)
+  ENT_SETTER(bool, should_sort)
 
   bool should_be_removed() const;
   bool collides_with(std::shared_ptr<Entity> ent) const;

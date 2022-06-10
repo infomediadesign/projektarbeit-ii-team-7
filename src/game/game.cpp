@@ -7,6 +7,15 @@
 #include <cstdlib>
 #include <iostream>
 
+#define RUN_METHOD(m, args...)                                              \
+  switch (this->stage) {                                                    \
+  case GameStage::GS_MENU: this->menu_controller->m(args); break;           \
+  case GameStage::GS_OVERWORLD: this->overworld_controller->m(args); break; \
+  case GameStage::GS_DUNGEON: this->dungeon_controller->m(args); break;     \
+  case GameStage::GS_BATTLE: this->battle_controller->m(args); break;       \
+  default: break;                                                           \
+  }
+
 static const Vector3 center_vec3 = { 0.0f, -0.4375f, 0.0f };
 
 void Game::init(GameState *state) {
@@ -14,6 +23,8 @@ void Game::init(GameState *state) {
 
   this->lua = luaL_newstate();
   luaL_openlibs(this->lua);
+
+  RUN_METHOD(init)
 
   for (u8 x = 0; x < 16; x++) {
     for (u8 y = 0; y < 16; y++) {
@@ -27,11 +38,10 @@ void Game::init(GameState *state) {
     }
   }
 
-  this->player = this->ent_create();
-  this->player->set_ent_class(EntClass::PLAYER);
-  this->player->set_texture_path("assets/debug/player_16x16.png");
-  this->player->set_pos(center_vec3 + vector_make3(0.0f, 0.0f, 1.0f));
-  this->player->set_active(true);
+  this->player = std::make_shared<Player>(this->ent_create());
+  this->player->get_base()->set_texture_path("assets/debug/player_16x16.png");
+  this->player->get_base()->set_pos(center_vec3 + vector_make3(0.0f, 0.0f, 1.0f));
+  this->player->get_base()->set_active(true);
 }
 
 void Game::update(GameState *state, mutex_t *lock) {
@@ -122,21 +132,34 @@ void Game::update_renderables(
     }
   }
 
-  if (this->is_valid(this->player)) {
-    const f32 delta       = (f32)(platform_time_f64() - this->player->get_updated_at());
+  if (this->is_valid(this->player->get_base())) {
+    const f32 delta = (f32)(platform_time_f64() - this->player->get_base()->get_updated_at());
+
+#ifndef _WIN32
     const f32 lerp_factor = 0.05f;
+#else
+    const f32 lerp_factor = 0.1f;
+#endif
 
     render_state->camera_transform.w[0] = util_lerp_f32(
       lerp_factor,
       render_state->camera_transform.w[0],
-      -util_lerp_f32(delta, this->player->get_pos().x, this->player->get_pos().x + this->player->get_velocity().x) *
+      -util_lerp_f32(
+        delta,
+        this->player->get_base()->get_pos().x,
+        this->player->get_base()->get_pos().x + this->player->get_base()->get_velocity().x
+      ) *
         render_state->render_scale
     );
 
     render_state->camera_transform.w[1] = util_lerp_f32(
       lerp_factor,
       render_state->camera_transform.w[1],
-      -util_lerp_f32(delta, this->player->get_pos().y, this->player->get_pos().y + this->player->get_velocity().y) *
+      -util_lerp_f32(
+        delta,
+        this->player->get_base()->get_pos().y,
+        this->player->get_base()->get_pos().y + this->player->get_base()->get_velocity().y
+      ) *
         (768.0f / 432.0f) * render_state->render_scale
     );
   }
@@ -171,25 +194,25 @@ void Game::process_input(GameState *state, const f64 update_time) {
   for (u32 i = 0; i < this->input_state->command_count; i++) {
     if (this->player != nullptr) {
       switch (this->input_state->commands[i]) {
-      case Cmd::FORWARD: this->player->set_velocity_y(-0.5f); break;
+      case Cmd::FORWARD: this->player->get_base()->set_velocity_y(-0.5f); break;
       case -Cmd::FORWARD:
-        if (this->player->get_velocity().y < 0.0f)
-          this->player->set_velocity_y(0.0f);
+        if (this->player->get_base()->get_velocity().y < 0.0f)
+          this->player->get_base()->set_velocity_y(0.0f);
         break;
-      case Cmd::BACK: this->player->set_velocity_y(0.5f); break;
+      case Cmd::BACK: this->player->get_base()->set_velocity_y(0.5f); break;
       case -Cmd::BACK:
-        if (this->player->get_velocity().y > 0.0f)
-          this->player->set_velocity_y(0.0f);
+        if (this->player->get_base()->get_velocity().y > 0.0f)
+          this->player->get_base()->set_velocity_y(0.0f);
         break;
-      case Cmd::LEFT: this->player->set_velocity_x(-0.5f); break;
+      case Cmd::LEFT: this->player->get_base()->set_velocity_x(-0.5f); break;
       case -Cmd::LEFT:
-        if (this->player->get_velocity().x < 0.0f)
-          this->player->set_velocity_x(0.0f);
+        if (this->player->get_base()->get_velocity().x < 0.0f)
+          this->player->get_base()->set_velocity_x(0.0f);
         break;
-      case Cmd::RIGHT: this->player->set_velocity_x(0.5f); break;
+      case Cmd::RIGHT: this->player->get_base()->set_velocity_x(0.5f); break;
       case -Cmd::RIGHT:
-        if (this->player->get_velocity().x > 0.0f)
-          this->player->set_velocity_x(0.0f);
+        if (this->player->get_base()->get_velocity().x > 0.0f)
+          this->player->get_base()->set_velocity_x(0.0f);
         break;
       case Cmd::ZOOM: this->scale = std::clamp(this->scale + 0.05f, 0.5f, 2.0f); break;
       case -Cmd::ZOOM: this->scale = std::clamp(this->scale - 0.05f, 0.5f, 2.0f); break;

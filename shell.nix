@@ -29,10 +29,10 @@ gcc11Stdenv.mkDerivation {
     xorg.libXinerama.dev
     xorg.libXcursor.dev
     xorg.libXi.dev
-    xlibs.libXext.dev
+    xorg.libXext.dev
   ];
 
   shellHook = ''
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(nix eval --raw nixos.libGL)/lib:$(nix eval --raw nixos.vulkan-loader)/lib:$(nix eval --raw nixos.libxkbcommon)/lib:$(nix eval --raw nixos.wayland)/lib:$(nix eval --raw nixos.xorg.libX11)/lib
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${lib.strings.makeLibraryPath [ libGL vulkan-loader libxkbcommon wayland xorg.libX11 ]}
   '';
 }

@@ -3,7 +3,12 @@
 
 #define MAX_ENTITIES 4096
 
+#include "controllers/battle_controller.h"
+#include "controllers/dungeon_controller.h"
+#include "controllers/menu_controller.h"
+#include "controllers/overworld_controller.h"
 #include "entities/entity.h"
+#include "entities/player.h"
 #include "level.h"
 
 #include <engine/input/input.h>
@@ -15,21 +20,33 @@
 #include <memory>
 #include <vector>
 
+enum GameStage { GS_MENU, GS_OVERWORLD, GS_DUNGEON, GS_BATTLE, GS_UNKNOWN };
+
 class Game {
 private:
   std::vector<std::shared_ptr<Entity>> entities;
   std::vector<u32> dangling_renderables;
-  std::shared_ptr<Entity> player;
+  std::shared_ptr<Player> player;
   std::shared_ptr<Level> level;
   InputState *input_state;
   lua_State *lua;
+  OverworldController *overworld_controller;
+  DungeonController *dungeon_controller;
+  BattleController *battle_controller;
+  MenuController *menu_controller;
+  GameStage stage;
   f32 scale;
 
 public:
   Game() {
-    this->input_state = nullptr;
-    this->player      = nullptr;
-    this->scale       = RENDER_SCALE;
+    this->input_state          = nullptr;
+    this->player               = nullptr;
+    this->overworld_controller = nullptr;
+    this->dungeon_controller   = nullptr;
+    this->battle_controller    = nullptr;
+    this->menu_controller      = nullptr;
+    this->scale                = RENDER_SCALE;
+    this->stage                = GameStage::GS_OVERWORLD;
   }
 
   /* Events called from the engine */

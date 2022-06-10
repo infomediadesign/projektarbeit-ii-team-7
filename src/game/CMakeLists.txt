@@ -14,6 +14,17 @@ set(game_source_files
   level.cpp
   entities/entity.h
   entities/entity.cpp
+  entities/player.h
+  entities/player.cpp
+  controllers/controller.h
+  controllers/battle_controller.h
+  controllers/battle_controller.cpp
+  controllers/dungeon_controller.h
+  controllers/dungeon_controller.cpp
+  controllers/menu_controller.h
+  controllers/menu_controller.cpp
+  controllers/overworld_controller.h
+  controllers/overworld_controller.cpp
   game.h
   game.cpp
   interface.h
