@@ -7,13 +7,13 @@
 #include <cstdlib>
 #include <iostream>
 
-#define RUN_METHOD(m, args...)                                              \
-  switch (this->stage) {                                                    \
-  case GameStage::GS_MENU: this->menu_controller->m(args); break;           \
-  case GameStage::GS_OVERWORLD: this->overworld_controller->m(args); break; \
-  case GameStage::GS_DUNGEON: this->dungeon_controller->m(args); break;     \
-  case GameStage::GS_BATTLE: this->battle_controller->m(args); break;       \
-  default: break;                                                           \
+#define RUN_METHOD(m, ...)                                                         \
+  switch (this->stage) {                                                           \
+  case GameStage::GS_MENU: this->menu_controller->m(__VA_ARGS__); break;           \
+  case GameStage::GS_OVERWORLD: this->overworld_controller->m(__VA_ARGS__); break; \
+  case GameStage::GS_DUNGEON: this->dungeon_controller->m(__VA_ARGS__); break;     \
+  case GameStage::GS_BATTLE: this->battle_controller->m(__VA_ARGS__); break;       \
+  default: break;                                                                  \
   }
 
 #define STAGE_INIT(n, cn)                                             \
