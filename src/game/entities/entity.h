@@ -51,6 +51,7 @@ private:
   bool should_remove;
   bool should_update;
   bool should_sort;
+  bool should_collide;
 
   void calc_rotated_velocity();
 
@@ -65,6 +66,7 @@ public:
     this->active           = false;
     this->should_remove    = false;
     this->should_sort      = false;
+    this->should_collide   = false;
     this->should_update    = true;
     this->ent_class        = EntClass::UNKNOWN;
     this->renderable_id    = 0U;
@@ -108,6 +110,7 @@ public:
   ENT_GETTER(Vector3, aabb_max)
   ENT_GETTER(EntClass, ent_class)
   ENT_GETTER(bool, should_sort)
+  ENT_GETTER(bool, should_collide)
 
   ENT_SETTER(bool, active)
   ENT_SETTER(std::string, texture_path)
@@ -119,6 +122,7 @@ public:
   ENT_SETTER(Vector2, scale)
   ENT_SETTER(EntClass, ent_class)
   ENT_SETTER(bool, should_sort)
+  ENT_SETTER(bool, should_collide)
 
   bool should_be_removed() const;
   bool collides_with(std::shared_ptr<Entity> ent) const;

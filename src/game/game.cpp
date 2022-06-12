@@ -16,6 +16,13 @@
   default: break;                                                           \
   }
 
+#define STAGE_INIT(n, cn)                                             \
+  this->n##_controller                          = new cn();           \
+  this->n##_controller->get_base()->ent_manager = &this->ent_manager; \
+  this->n##_controller->get_base()->lua         = this->lua;          \
+  this->n##_controller->get_base()->input_state = this->input_state;  \
+  this->n##_controller->init(state)
+
 static const Vector3 center_vec3 = { 0.0f, -0.4375f, 0.0f };
 
 void Game::init(GameState *state) {
@@ -37,12 +44,9 @@ void Game::update(GameState *state, mutex_t *lock) {
     input_flush(this->input_state);
   }
 
-  for (std::shared_ptr<Entity> ent : this->ent_manager.entities) {
-    if (this->ent_manager.is_valid(ent)) {
+  for (std::shared_ptr<Entity> ent : this->ent_manager.entities)
+    if (this->ent_manager.is_valid(ent))
       ent->update(update_time);
-      this->check_collision(ent);
-    }
-  }
 
   RUN_METHOD(update, state, lock)
 }
@@ -174,57 +178,16 @@ void Game::process_input(GameState *state, const f64 update_time) {
   RUN_METHOD(process_input, state, update_time)
 }
 
-void Game::check_collision(std::shared_ptr<Entity> ent) {
-  if (!this->ent_manager.is_valid(ent))
-    return;
-
-  for (std::shared_ptr<Entity> target : this->ent_manager.entities) {
-    if (!this->ent_manager.is_valid(target))
-      continue;
-
-    if (target->get_id() == ent->get_id())
-      continue;
-
-    if (ent->collides_with(target)) {
-      // TODO: collision logic
-    }
-  }
-}
-
 void Game::set_stage(GameState *state, const GameStage stage) {
   RUN_METHOD(destroy, state)
 
   this->stage = stage;
 
   switch (this->stage) {
-  case GameStage::GS_MENU:
-    this->menu_controller                          = new MenuController();
-    this->menu_controller->get_base()->ent_manager = &this->ent_manager;
-    this->menu_controller->get_base()->lua         = this->lua;
-    this->menu_controller->get_base()->input_state = this->input_state;
-    this->menu_controller->init(state);
-    break;
-  case GameStage::GS_OVERWORLD:
-    this->overworld_controller                          = new OverworldController();
-    this->overworld_controller->get_base()->ent_manager = &this->ent_manager;
-    this->overworld_controller->get_base()->lua         = this->lua;
-    this->overworld_controller->get_base()->input_state = this->input_state;
-    this->overworld_controller->init(state);
-    break;
-  case GameStage::GS_DUNGEON:
-    this->dungeon_controller                          = new DungeonController();
-    this->dungeon_controller->get_base()->ent_manager = &this->ent_manager;
-    this->dungeon_controller->get_base()->lua         = this->lua;
-    this->dungeon_controller->get_base()->input_state = this->input_state;
-    this->dungeon_controller->init(state);
-    break;
-  case GameStage::GS_BATTLE:
-    this->battle_controller                          = new BattleController();
-    this->battle_controller->get_base()->ent_manager = &this->ent_manager;
-    this->battle_controller->get_base()->lua         = this->lua;
-    this->battle_controller->get_base()->input_state = this->input_state;
-    this->battle_controller->init(state);
-    break;
+  case GameStage::GS_MENU: STAGE_INIT(menu, MenuController); break;
+  case GameStage::GS_OVERWORLD: STAGE_INIT(overworld, OverworldController); break;
+  case GameStage::GS_DUNGEON: STAGE_INIT(dungeon, DungeonController); break;
+  case GameStage::GS_BATTLE: STAGE_INIT(battle, BattleController); break;
   default: break;
   }
 }

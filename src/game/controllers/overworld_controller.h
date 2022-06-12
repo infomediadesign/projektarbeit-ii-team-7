@@ -7,6 +7,8 @@ class OverworldController {
 private:
   Controller base;
 
+  void check_collision(std::shared_ptr<Entity> ent);
+
 public:
   CONTROLLER_METHOD_DEFINITIONS
 };

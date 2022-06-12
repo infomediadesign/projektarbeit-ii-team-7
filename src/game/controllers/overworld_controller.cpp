@@ -19,7 +19,11 @@ void OverworldController::init(GameState *state) {
   }
 }
 
-void OverworldController::update(GameState *state, mutex_t *lock) {}
+void OverworldController::update(GameState *state, mutex_t *lock) {
+  for (std::shared_ptr<Entity> ent : this->base.ent_manager->entities)
+    if (this->base.ent_manager->is_valid(ent) && ent->get_should_collide())
+      this->check_collision(ent);
+}
 
 void OverworldController::update_lazy(GameState *state, mutex_t *lock) {}
 
@@ -86,6 +90,23 @@ void OverworldController::process_input(GameState *state, const f64 update_time)
 
       default: break;
       }
+    }
+  }
+}
+
+void OverworldController::check_collision(std::shared_ptr<Entity> ent) {
+  if (!this->base.ent_manager->is_valid(ent))
+    return;
+
+  for (std::shared_ptr<Entity> target : this->base.ent_manager->entities) {
+    if (!this->base.ent_manager->is_valid(target))
+      continue;
+
+    if (target->get_id() == ent->get_id())
+      continue;
+
+    if (ent->collides_with(target)) {
+      // TODO: collision logic
     }
   }
 }

@@ -57,7 +57,6 @@ public:
   );
   void create_bindings(GameState *state, mutex_t *lock, InputState *input_state);
   void process_input(GameState *state, const f64 update_time);
-  void check_collision(std::shared_ptr<Entity> ent);
   void set_stage(GameState *state, const GameStage stage);
 };
 
