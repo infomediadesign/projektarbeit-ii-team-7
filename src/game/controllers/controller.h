@@ -22,12 +22,14 @@
     GameState *state, mutex_t *lock, RenderState *render_state, Renderable *renderables, const u32 renderables_count \
   );                                                                                                                 \
   void destroy(GameState *state);                                                                                    \
-  Controller *get_base() { return &this->base; }
+  Controller *get_base() { return &this->base; }                                                                     \
+  void process_input(GameState *state, const f64 update_time);
 
 class Controller {
 public:
   lua_State *lua;
   EntityManager *ent_manager;
+  InputState *input_state;
 };
 
 #endif

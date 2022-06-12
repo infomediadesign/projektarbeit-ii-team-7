@@ -13,3 +13,5 @@ void DungeonController::update_renderables(
 ) {}
 
 void DungeonController::destroy(GameState *state) {}
+
+void DungeonController::process_input(GameState *state, const f64 update_time) {}

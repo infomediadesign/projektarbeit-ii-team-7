@@ -13,3 +13,5 @@ void MenuController::update_renderables(
 ) {}
 
 void MenuController::destroy(GameState *state) {}
+
+void MenuController::process_input(GameState *state, const f64 update_time) {}

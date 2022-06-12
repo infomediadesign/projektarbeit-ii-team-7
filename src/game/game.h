@@ -56,24 +56,9 @@ public:
     GameState *state, mutex_t *lock, RenderState *render_state, Renderable *renderables, const u32 renderables_count
   );
   void create_bindings(GameState *state, mutex_t *lock, InputState *input_state);
-
-  /* Input stuff */
   void process_input(GameState *state, const f64 update_time);
-
-  /* Gameplay logic stuff */
   void check_collision(std::shared_ptr<Entity> ent);
-  bool can_delete_renderable(const u32 renderable_id);
-  void clear_entities();
-  bool is_valid(std::shared_ptr<Entity> ent) const;
-
-  std::shared_ptr<Entity> ent_create(std::shared_ptr<Entity> parent = nullptr);
-  const u32
-    ent_assign_renderable(Renderable *renderables, const u32 renderables_count, std::shared_ptr<Entity> ent) const;
-  void ent_remove(std::shared_ptr<Entity> ent);
-
   void set_stage(GameState *state, const GameStage stage);
-  std::shared_ptr<Player> get_player();
-  std::shared_ptr<Entity> get_player_ent();
 };
 
 #endif

@@ -13,3 +13,5 @@ void BattleController::update_renderables(
 ) {}
 
 void BattleController::destroy(GameState *state) {}
+
+void BattleController::process_input(GameState *state, const f64 update_time) {}
