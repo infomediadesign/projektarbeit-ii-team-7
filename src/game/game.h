@@ -8,6 +8,7 @@
 #include "controllers/menu_controller.h"
 #include "controllers/overworld_controller.h"
 #include "entities/entity.h"
+#include "entities/entity_manager.h"
 #include "entities/player.h"
 #include "level.h"
 
@@ -24,9 +25,7 @@ enum GameStage { GS_MENU, GS_OVERWORLD, GS_DUNGEON, GS_BATTLE, GS_UNKNOWN };
 
 class Game {
 private:
-  std::vector<std::shared_ptr<Entity>> entities;
-  std::vector<u32> dangling_renderables;
-  std::shared_ptr<Player> player;
+  EntityManager ent_manager;
   std::shared_ptr<Level> level;
   InputState *input_state;
   lua_State *lua;
@@ -40,13 +39,12 @@ private:
 public:
   Game() {
     this->input_state          = nullptr;
-    this->player               = nullptr;
     this->overworld_controller = nullptr;
     this->dungeon_controller   = nullptr;
     this->battle_controller    = nullptr;
     this->menu_controller      = nullptr;
     this->scale                = RENDER_SCALE;
-    this->stage                = GameStage::GS_OVERWORLD;
+    this->stage                = GameStage::GS_UNKNOWN;
   }
 
   /* Events called from the engine */
@@ -72,6 +70,10 @@ public:
   const u32
     ent_assign_renderable(Renderable *renderables, const u32 renderables_count, std::shared_ptr<Entity> ent) const;
   void ent_remove(std::shared_ptr<Entity> ent);
+
+  void set_stage(GameState *state, const GameStage stage);
+  std::shared_ptr<Player> get_player();
+  std::shared_ptr<Entity> get_player_ent();
 };
 
 #endif

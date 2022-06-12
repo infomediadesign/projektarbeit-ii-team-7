@@ -16,6 +16,8 @@ set(game_source_files
   entities/entity.cpp
   entities/player.h
   entities/player.cpp
+  entities/entity_manager.h
+  entities/entity_manager.cpp
   controllers/controller.h
   controllers/battle_controller.h
   controllers/battle_controller.cpp
