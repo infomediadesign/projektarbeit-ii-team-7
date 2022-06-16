@@ -83,6 +83,29 @@ void renderable_send_memory(RenderState *state, Renderable *r);
 void renderable_make_rect(const RenderState *state, Renderable *r, const f32 width, const f32 height);
 
 /**
+ * @brief A helper to create rectangle vertices in a renderable with ability to specity UVs.
+ *
+ * This creates two tris, arranged to form a rectangle of `width`x`height`.
+ * The coordinate of the leftmost corner is offset by half of `width`, such
+ * that the origin point (0, 0, 0) is directly in the center of the rectangle,
+ * for the purposes of correctness of the rotation pivot.
+ *
+ * This also creates a UV (texcoord) map based on `uv_height` and `uv_width` variables. The UVs
+ * are relative to upper-left corner of the texture. Use `uv_offset` of the renderable to translate
+ * the resulting UV rectangle.
+ *
+ * @param state The render state.
+ * @param r The renderable to write to.
+ * @param width The width of the desired rectangle, in meters.
+ * @param height The height of the desired rectangle, in meters.
+ * @param uv_width The width of the UV rectangle, between 0 and 1, representing percentage of the texture width.
+ * @param uv_height The width of the UV rectangle, between 0 and 1, representing percentage of the texture height.
+ */
+void renderable_make_rect_ex(
+  const RenderState *state, Renderable *r, const f32 width, const f32 height, const f32 uv_width, const f32 uv_height
+);
+
+/**
  * @brief Marks the memory of the renderable as free, and deallocates buffers.
  *
  * @warning Only do this in a staging pass.

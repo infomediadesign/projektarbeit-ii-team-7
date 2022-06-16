@@ -8,6 +8,9 @@ layout (location = 0) out vec4 f_color;
 layout (binding = 0) uniform sampler2D color_texture;
 
 void main() {
-  //f_color = mix(texture(color_texture, uv), v_color, 0.5);
-  f_color = texture(color_texture, uv);
+  if (v_color.x != 1 || v_color.y != 1 || v_color.z != 1) {
+    f_color = mix(texture(color_texture, uv), v_color, 0.5);
+  } else {
+    f_color = texture(color_texture, uv);
+  }
 }

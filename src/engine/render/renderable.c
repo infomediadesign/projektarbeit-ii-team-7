@@ -97,6 +97,38 @@ void renderable_make_rect(const RenderState *state, Renderable *r, const f32 wid
   r->vertices_count = 6U;
 }
 
+void renderable_make_rect_ex(
+  const RenderState *state, Renderable *r, const f32 width, const f32 height, const f32 uv_width, const f32 uv_height
+) {
+  // clang-format off
+  Vector4 vertices[6] = {
+    {-width * 0.5f, -height * 0.5f, 0.0f, 1.0f},
+    {-width * 0.5f,  height * 0.5f, 0.0f, 1.0f},
+    { width * 0.5f, -height * 0.5f, 0.0f, 1.0f},
+    { width * 0.5f, -height * 0.5f, 0.0f, 1.0f},
+    {-width * 0.5f,  height * 0.5f, 0.0f, 1.0f},
+    { width * 0.5f,  height * 0.5f, 0.0f, 1.0f}
+  };
+
+  Vector2 uvmap[6] = {
+    {0.0f,     0.0f},
+    {0.0f,     uv_height},
+    {uv_width, 0.0f},
+    {uv_width, 0.0f},
+    {0.0f,     uv_height},
+    {uv_width, uv_height}
+  };
+  // clang-format on
+
+  r->vertices = (Vector4 *)malloc(sizeof(Vector4) * 6);
+  r->uv       = (Vector2 *)malloc(sizeof(Vector2) * 6);
+
+  memcpy(r->vertices, vertices, sizeof(Vector4) * 6);
+  memcpy(r->uv, uvmap, sizeof(Vector2) * 6);
+
+  r->vertices_count = 6U;
+}
+
 void renderable_free(Renderable *r) {
   memory_free_block(r->pool, r->offset, renderable_get_size(r));
   /* TODO: fix memory freeing */
