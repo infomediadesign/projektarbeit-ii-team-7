@@ -218,6 +218,14 @@ void renderable_load_texture(RenderState *state, Renderable *r, const char *imag
 void renderable_set_texture(RenderState *state, Renderable *r, const Image tex_img);
 
 /**
+ * @brief Sets the offset of the texture coordinates (UVs).
+ * 
+ * @param r The renderable.
+ * @param offset The offset (in Vector2 of floats between 0 and 1, representing percentage) of the UV coordinates.
+ */
+void renderable_set_uv_offset(Renderable *r, const Vector2 offset);
+
+/**
  * @brief Helper to initialize a renderable as a rectangle.
  *
  * @param state The render state.

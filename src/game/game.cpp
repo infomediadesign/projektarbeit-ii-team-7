@@ -142,6 +142,7 @@ void Game::create_bindings(GameState *state, mutex_t *lock, InputState *input_st
   default: break;
   }
 
+  /* Movement */
   input_bind(input_state, MF_KEY_W | MF_KEY_PRESS, Cmd::FORWARD);
   input_bind(input_state, MF_KEY_A | MF_KEY_PRESS, Cmd::LEFT);
   input_bind(input_state, MF_KEY_S | MF_KEY_PRESS, Cmd::BACK);
@@ -159,6 +160,27 @@ void Game::create_bindings(GameState *state, mutex_t *lock, InputState *input_st
   input_bind(input_state, MF_KEY_DOWN | MF_KEY_RELEASE, -Cmd::BACK);
   input_bind(input_state, MF_KEY_RIGHT | MF_KEY_RELEASE, -Cmd::RIGHT);
 
+  /* Interactions */
+  input_bind(input_state, MF_KEY_E | MF_KEY_PRESS, Cmd::USE);
+  input_bind(input_state, MF_KEY_E | MF_KEY_RELEASE, -Cmd::USE);
+  input_bind(input_state, MF_KEY_ENTER | MF_KEY_PRESS, Cmd::USE);
+  input_bind(input_state, MF_KEY_ENTER | MF_KEY_RELEASE, -Cmd::USE);
+  input_bind(input_state, MF_KEY_F6 | MF_KEY_PRESS, Cmd::SAVE);
+  input_bind(input_state, MF_KEY_F9 | MF_KEY_PRESS, Cmd::LOAD);
+
+  /* Menus */
+  input_bind(input_state, MF_KEY_TAB | MF_KEY_PRESS, Cmd::INVENTORY);
+  input_bind(input_state, MF_KEY_TAB | MF_KEY_RELEASE, -Cmd::INVENTORY);
+  input_bind(input_state, MF_KEY_I | MF_KEY_PRESS, Cmd::INVENTORY);
+  input_bind(input_state, MF_KEY_I | MF_KEY_RELEASE, -Cmd::INVENTORY);
+  input_bind(input_state, MF_KEY_RIGHT_CONTROL | MF_KEY_PRESS, Cmd::INVENTORY);
+  input_bind(input_state, MF_KEY_RIGHT_CONTROL | MF_KEY_RELEASE, -Cmd::INVENTORY);
+  input_bind(input_state, MF_KEY_ESCAPE | MF_KEY_PRESS, Cmd::MENU);
+  input_bind(input_state, MF_KEY_ESCAPE | MF_KEY_RELEASE, -Cmd::MENU);
+  input_bind(input_state, MF_KEY_BACKSPACE | MF_KEY_PRESS, Cmd::MENU);
+  input_bind(input_state, MF_KEY_BACKSPACE | MF_KEY_RELEASE, -Cmd::MENU);
+
+  /* Zoom */
   input_bind(input_state, MF_KEY_F1 | MF_KEY_PRESS, Cmd::ZOOM);
   input_bind(input_state, MF_KEY_F2 | MF_KEY_PRESS, -Cmd::ZOOM);
   input_bind(input_state, MF_KEY_F3 | MF_KEY_PRESS, Cmd::ZOOM_RESET);

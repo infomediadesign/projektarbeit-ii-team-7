@@ -209,6 +209,8 @@ void renderable_set_updated(Renderable *r, const f64 updated_at) { r->updated_at
 
 void renderable_set_assigned(Renderable *r, i64 ent_id) { r->assigned_to = ent_id; }
 
+void renderable_set_uv_offset(Renderable *r, const Vector2 offset) { r->uv_offset = offset; }
+
 u64 renderable_get_size(const Renderable *r) {
   return sizeof(Vector4) * r->vertices_count + sizeof(Vector2) * r->vertices_count;
 }
