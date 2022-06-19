@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <engine/crc64.h>
+#include <engine/render/renderable.h>
 #include <engine/types/matrix.h>
 #include <engine/types/numeric.h>
 #include <engine/types/quaternion.h>
@@ -16,12 +17,12 @@
 #define ENT_GETTER(t, f) \
   t get_##f() const { return this->f; }
 #define ENT_SETTER(t, f)                    \
-  void set_##f(const t f) {                 \
+  void set_##f(t f) {                       \
     this->f          = f;                   \
     this->updated_at = platform_time_f64(); \
   }
 
-enum EntClass { UNKNOWN, PLAYER, BACKGROUND, CLIP };
+enum EntClass { UNKNOWN, PLAYER, BACKGROUND, CLIP, ENEMY };
 
 class Entity {
 private:
@@ -37,12 +38,12 @@ private:
   std::shared_ptr<Entity> parent;
   std::vector<std::shared_ptr<Entity>> attachments;
   std::string texture_path;
+  Renderable *renderable;
   i64 id;
   f64 updated_at;
   f64 created_at;
   f64 lifetime;
   EntClass ent_class;
-  u32 renderable_id;
   u32 entity_index;
   f32 angle;
   f32 angular_velocity;
@@ -69,7 +70,7 @@ public:
     this->should_collide   = false;
     this->should_update    = true;
     this->ent_class        = EntClass::UNKNOWN;
-    this->renderable_id    = 0U;
+    this->renderable       = nullptr;
     this->scale            = { 1.0f, 1.0f };
     this->pos              = { 0.0f, 0.0f, 0.0f };
     this->velocity         = { 0.0f, 0.0f, 0.0f };
@@ -95,7 +96,7 @@ public:
   ENT_GETTER(i64, id)
   ENT_GETTER(bool, active)
   ENT_GETTER(bool, ready)
-  ENT_GETTER(u32, renderable_id)
+  ENT_GETTER(Renderable *, renderable)
   ENT_GETTER(Vector3, pos)
   ENT_GETTER(std::string, texture_path)
   ENT_GETTER(f32, angle)
@@ -114,7 +115,7 @@ public:
 
   ENT_SETTER(bool, active)
   ENT_SETTER(std::string, texture_path)
-  ENT_SETTER(u32, renderable_id)
+  ENT_SETTER(Renderable *, renderable)
   ENT_SETTER(bool, ready)
   ENT_SETTER(f64, lifetime)
   ENT_SETTER(Vector3, pos)

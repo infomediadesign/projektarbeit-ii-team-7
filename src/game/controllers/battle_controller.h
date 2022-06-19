@@ -6,6 +6,9 @@
 class BattleController {
 private:
   Controller base;
+  std::shared_ptr<Entity> background;
+  std::shared_ptr<Entity> opponent;
+  std::vector<std::shared_ptr<Entity>> buttons;
 
 public:
   CONTROLLER_METHOD_DEFINITIONS

@@ -21,10 +21,13 @@ static inline const char *platform_name(i32 platform) {
 }
 
 int render_perform(void *args) {
-  ThreadData *const td          = (ThreadData *)args;
-  mutex_t *lock                 = (mutex_t *)td->lock;
-  GameState *const state        = (GameState *)td->state;
-  Renderable *const renderables = (Renderable *)calloc(MAX_RENDERABLES, sizeof(Renderable));
+  ThreadData *const td     = (ThreadData *)args;
+  mutex_t *lock            = (mutex_t *)td->lock;
+  GameState *const state   = (GameState *)td->state;
+  Renderable **renderables = (Renderable **)calloc(MAX_RENDERABLES, sizeof(Renderable *));
+
+  for (u32 i = 0; i < MAX_RENDERABLES; i++)
+    renderables[i] = (Renderable *)calloc(1, sizeof(Renderable));
 
   glfwSetErrorCallback(glfw_error_fun);
 
@@ -62,7 +65,7 @@ int render_perform(void *args) {
     render_state->debug = 1;
 
   for (u32 i = 0; i < MAX_RENDERABLES; i++)
-    renderable_make_default(&renderables[i]);
+    renderable_make_default(renderables[i]);
 
   render_state_create_window(render_state);
   geyser_init_vk(render_state);
@@ -151,35 +154,40 @@ int render_perform(void *args) {
     u32 first = 0;
 
     for (u32 i = 0; i < MAX_RENDERABLES; i++) {
-      if (renderables[i].active == GS_TRUE && renderables[i].vertices != NULL) {
+      if (renderables[i]->active == GS_TRUE && renderables[i]->vertices != NULL) {
         first = i;
         break;
       }
     }
 
     for (u32 i = first; i < MAX_RENDERABLES; i++) {
-      if (renderables[i].active == GS_TRUE && renderables[i].vertices_count > 0) {
-        offsets[0] = renderables[i].offset;
+      /* Since renderables are sorted in a way such that non-active come last, we can just stop once we spot one of
+       * these */
+      if (renderables[i]->active == GS_FALSE)
+        break;
 
-        renderable_interpolate(&renderables[i]);
+      if (renderables[i]->vertices_count > 0) {
+        offsets[0] = renderables[i]->offset;
 
-        push_constants.quaternion   = quaternion_to_vec(renderables[i].rotation);
-        push_constants.position     = renderables[i].position;
-        push_constants.vertex_color = renderables[i].color;
-        push_constants.scale        = renderables[i].scale;
-        push_constants.uv_offset    = renderables[i].uv_offset;
+        renderable_interpolate(renderables[i]);
+
+        push_constants.quaternion   = quaternion_to_vec(renderables[i]->rotation);
+        push_constants.position     = renderables[i]->position;
+        push_constants.vertex_color = renderables[i]->color;
+        push_constants.scale        = renderables[i]->scale;
+        push_constants.uv_offset    = renderables[i]->uv_offset;
         push_constants.camera       = render_state->camera_transform;
 
-        if (i != first && renderables[i].vertices_count == renderables[i - 1].vertices_count) {
-          if (memcmp(renderables[i].vertices, renderables[i - 1].vertices, sizeof(Vector4) * renderables[i].vertices_count) != 0) {
-            vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1, &renderables[i].pool->buffer, offsets);
-            offsets[0] = renderables[i].offset + sizeof(Vector4) * renderables[i].vertices_count;
-            vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1, &renderables[i].pool->buffer, offsets);
+        if (i != first && renderables[i]->vertices_count == renderables[i - 1]->vertices_count) {
+          if (memcmp(renderables[i]->vertices, renderables[i - 1]->vertices, sizeof(Vector4) * renderables[i]->vertices_count) != 0) {
+            vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1, &renderables[i]->pool->buffer, offsets);
+            offsets[0] = renderables[i]->offset + sizeof(Vector4) * renderables[i]->vertices_count;
+            vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1, &renderables[i]->pool->buffer, offsets);
           }
         } else {
-          vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1, &renderables[i].pool->buffer, offsets);
-          offsets[0] = renderables[i].offset + sizeof(Vector4) * renderables[i].vertices_count;
-          vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1, &renderables[i].pool->buffer, offsets);
+          vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1, &renderables[i]->pool->buffer, offsets);
+          offsets[0] = renderables[i]->offset + sizeof(Vector4) * renderables[i]->vertices_count;
+          vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1, &renderables[i]->pool->buffer, offsets);
         }
 
         vkCmdBindDescriptorSets(
@@ -188,7 +196,7 @@ int render_perform(void *args) {
           render_state->pipeline.pipeline_layout,
           0,
           1,
-          &renderables[i].texture.descriptor_set,
+          &renderables[i]->texture.descriptor_set,
           0,
           NULL
         );
@@ -202,7 +210,7 @@ int render_perform(void *args) {
           &push_constants
         );
 
-        vkCmdDraw(render_state->command_buffer, renderables[i].vertices_count, 1, 0, 0);
+        vkCmdDraw(render_state->command_buffer, renderables[i]->vertices_count, 1, 0, 0);
       }
     }
 
@@ -221,7 +229,7 @@ int render_perform(void *args) {
   }
 
   for (u32 i = 0; i < MAX_RENDERABLES; i++)
-    renderable_free(&renderables[i]);
+    renderable_free(renderables[i]);
 
   free(renderables);
   geyser_destroy_vk(render_state);

@@ -6,6 +6,8 @@
 static const Vector3 center_vec3 = { 0.0f, -0.4375f, 0.0f };
 
 void OverworldController::init(GameState *state) {
+  this->base.ent_manager->get_player_ent()->set_pos(center_vec3);
+
   for (u8 x = 0; x < 16; x++) {
     for (u8 y = 0; y < 16; y++) {
       std::shared_ptr<Entity> ent = this->base.ent_manager->ent_create();
@@ -30,7 +32,7 @@ void OverworldController::update_lazy(GameState *state, mutex_t *lock) {}
 void OverworldController::update_paused(GameState *state, mutex_t *lock) {}
 
 void OverworldController::update_renderables(
-  GameState *state, mutex_t *lock, RenderState *render_state, Renderable *renderables, const u32 renderables_count
+  GameState *state, mutex_t *lock, RenderState *render_state, Renderable **renderables, const u32 renderables_count
 ) {
   if (this->base.ent_manager->player == nullptr)
     return;
@@ -61,7 +63,7 @@ void OverworldController::update_renderables(
   }
 }
 
-void OverworldController::destroy(GameState *state) {}
+void OverworldController::destroy(GameState *state) { this->base.ent_manager->clear_entities(); }
 
 void OverworldController::process_input(GameState *state, const f64 update_time) {
   for (u32 i = 0; i < this->base.input_state->command_count; i++) {

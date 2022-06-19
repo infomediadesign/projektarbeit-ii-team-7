@@ -31,9 +31,10 @@ void Game::init(GameState *state) {
   this->lua = luaL_newstate();
   luaL_openlibs(this->lua);
 
-  this->set_stage(state, GameStage::GS_OVERWORLD);
   this->ent_manager.create_player();
   this->ent_manager.get_player_ent()->set_pos(center_vec3 + vector_make3(0.0f, 0.0f, 1.0f));
+  this->ent_manager.get_player_ent()->set_should_sort(true);
+  this->set_stage(state, GameStage::GS_BATTLE);
 }
 
 void Game::update(GameState *state, mutex_t *lock) {
@@ -54,7 +55,7 @@ void Game::update(GameState *state, mutex_t *lock) {
 void Game::update_lazy(GameState *state, mutex_t *lock) {
   for (std::shared_ptr<Entity> ent : this->ent_manager.entities)
     if (ent->should_be_removed())
-      this->ent_manager.dangling_renderables.push_back(ent->get_renderable_id());
+      this->ent_manager.dangling_renderables.push_back(ent->get_renderable());
 
   std::erase_if(this->ent_manager.entities, [](std::shared_ptr<Entity> ent) {
     return ent.get() == nullptr || ent->should_be_removed();
@@ -65,8 +66,26 @@ void Game::update_lazy(GameState *state, mutex_t *lock) {
 
 void Game::update_paused(GameState *state, mutex_t *lock) { RUN_METHOD(update_paused, state, lock) }
 
+int Game::compare_renderables(const void *v1, const void *v2) {
+  const Renderable *r1 = *(Renderable **)v1;
+  const Renderable *r2 = *(Renderable **)v2;
+
+  if (r1->active == GS_TRUE && r2->active == GS_FALSE)
+    return -1;
+
+  if (r1->should_zsort == GS_TRUE) {
+    if (r2->should_zsort == GS_FALSE)
+      return 1;
+
+    if (r1->position.y > r2->position.y)
+      return -1;
+  }
+
+  return 0;
+}
+
 void Game::update_renderables(
-  GameState *state, mutex_t *lock, RenderState *render_state, Renderable *renderables, const u32 renderables_count
+  GameState *state, mutex_t *lock, RenderState *render_state, Renderable **renderables, const u32 renderables_count
 ) {
   render_state->render_scale = this->scale;
 
@@ -74,18 +93,21 @@ void Game::update_renderables(
   render_state->camera_transform.y[1] = 768.0f / 432.0f * render_state->render_scale;
 
   /* Clean up renderables that are no longer in use */
-  for (const u32 id : this->ent_manager.dangling_renderables) {
-    if (!this->ent_manager.can_delete_renderable(id))
+  for (Renderable *renderable : this->ent_manager.dangling_renderables) {
+    if (!this->ent_manager.can_delete_renderable(renderable))
       continue;
 
-    if (renderables[id].vertices != NULL && renderables[id].uv != NULL)
-      renderable_free(&renderables[id]);
+    if (renderable->vertices != NULL && renderable->uv != NULL)
+      renderable_free(renderable);
 
-    renderable_set_active(&renderables[id], GS_FALSE);
-    renderable_make_default(&renderables[id]);
+    renderable_set_active(renderable, GS_FALSE);
+    renderable_make_default(renderable);
   }
 
   this->ent_manager.dangling_renderables.clear();
+
+  /* Z sort */
+  qsort(renderables, renderables_count, sizeof(Renderable *), Game::compare_renderables);
 
   /* Assign renderables to entities that don't already have them assigned,
      and updates position and attributes of those which are assigned */
@@ -94,22 +116,22 @@ void Game::update_renderables(
     if (ent.get() == nullptr)
       continue;
 
-    Renderable *r = &renderables[ent->get_renderable_id()];
-
-    if (r == nullptr)
-      continue;
+    Renderable *r = ent->get_renderable();
 
     if (ent->get_active() && !ent->should_be_removed()) {
       if (!ent->get_ready()) {
-        const u32 renderable_id = this->ent_manager.ent_assign_renderable(renderables, renderables_count, ent);
+        Renderable *const renderable = this->ent_manager.ent_assign_renderable(renderables, renderables_count, ent);
 
-        ent->set_renderable_id(renderable_id);
+        ent->set_renderable(renderable);
         ent->set_ready(true);
 
-        r = &renderables[renderable_id];
+        r = renderable;
       }
 
-      if (!r->active && this->ent_manager.is_valid(ent)) {
+      if (r == nullptr)
+        continue;
+
+      if (r->active != GS_TRUE && this->ent_manager.is_valid(ent)) {
         renderable_init_rect(render_state, r, 0.1f, 0.1f);
         renderable_set_scale(r, ent->get_scale());
         renderable_load_texture(render_state, r, ent->get_texture_path().c_str());
@@ -122,6 +144,7 @@ void Game::update_renderables(
       renderable_set_pos(r, vector3_to_vector4(ent->get_pos()));
       renderable_set_rotation(r, ent->get_axis(), -ent->get_angle());
       renderable_set_velocity(r, ent->get_velocity_rotated());
+      renderable_set_should_zsort(r, ent->get_should_sort() ? GS_TRUE : GS_FALSE);
       renderable_set_updated(r, ent->get_updated_at());
     } else if (r->active == GS_TRUE) {
       renderable_set_active(r, GS_FALSE);
@@ -184,6 +207,12 @@ void Game::create_bindings(GameState *state, mutex_t *lock, InputState *input_st
   input_bind(input_state, MF_KEY_F1 | MF_KEY_PRESS, Cmd::ZOOM);
   input_bind(input_state, MF_KEY_F2 | MF_KEY_PRESS, -Cmd::ZOOM);
   input_bind(input_state, MF_KEY_F3 | MF_KEY_PRESS, Cmd::ZOOM_RESET);
+
+  /* Debug */
+  if (game_is_debug(state)) {
+    input_bind(input_state, MF_KEY_F7 | MF_KEY_PRESS, Cmd::DEBUG_OVERWORLD);
+    input_bind(input_state, MF_KEY_F8 | MF_KEY_PRESS, Cmd::DEBUG_BATTLE);
+  }
 }
 
 void Game::process_input(GameState *state, const f64 update_time) {
@@ -192,6 +221,8 @@ void Game::process_input(GameState *state, const f64 update_time) {
     case Cmd::ZOOM: this->scale = std::clamp(this->scale + 0.05f, 0.5f, 2.0f); break;
     case -Cmd::ZOOM: this->scale = std::clamp(this->scale - 0.05f, 0.5f, 2.0f); break;
     case Cmd::ZOOM_RESET: this->scale = RENDER_SCALE; break;
+    case Cmd::DEBUG_OVERWORLD: this->set_stage(state, GameStage::GS_OVERWORLD); break;
+    case Cmd::DEBUG_BATTLE: this->set_stage(state, GameStage::GS_BATTLE); break;
 
     default: break;
     }

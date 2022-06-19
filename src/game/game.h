@@ -53,11 +53,12 @@ public:
   void update_lazy(GameState *state, mutex_t *lock);
   void update_paused(GameState *state, mutex_t *lock);
   void update_renderables(
-    GameState *state, mutex_t *lock, RenderState *render_state, Renderable *renderables, const u32 renderables_count
+    GameState *state, mutex_t *lock, RenderState *render_state, Renderable **renderables, const u32 renderables_count
   );
   void create_bindings(GameState *state, mutex_t *lock, InputState *input_state);
   void process_input(GameState *state, const f64 update_time);
   void set_stage(GameState *state, const GameStage stage);
+  static int compare_renderables(const void *r1, const void *r2);
 };
 
 #endif

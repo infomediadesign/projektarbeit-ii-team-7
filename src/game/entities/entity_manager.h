@@ -13,7 +13,7 @@
 class EntityManager {
 public:
   std::vector<std::shared_ptr<Entity>> entities;
-  std::vector<u32> dangling_renderables;
+  std::vector<Renderable *> dangling_renderables;
   std::shared_ptr<Player> player;
 
   EntityManager() { this->player = nullptr; }
@@ -22,9 +22,10 @@ public:
   void ent_remove(std::shared_ptr<Entity> ent);
   void create_player();
   bool is_valid(std::shared_ptr<Entity> ent) const;
-  bool can_delete_renderable(const u32 renderable_id);
+  bool can_delete_renderable(const Renderable *const renderable);
   void clear_entities();
-  u32 ent_assign_renderable(Renderable *renderables, const u32 renderables_count, std::shared_ptr<Entity> ent) const;
+  Renderable *
+    ent_assign_renderable(Renderable **renderables, const u32 renderables_count, std::shared_ptr<Entity> ent) const;
   std::shared_ptr<Player> get_player();
   std::shared_ptr<Entity> get_player_ent();
 };

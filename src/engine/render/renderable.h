@@ -31,6 +31,7 @@ typedef struct Renderable {
   u64 offset;
   u32 vertices_count;
   GeyserBool active;
+  GeyserBool should_zsort;
 } Renderable;
 
 /**
@@ -219,7 +220,7 @@ void renderable_set_texture(RenderState *state, Renderable *r, const Image tex_i
 
 /**
  * @brief Sets the offset of the texture coordinates (UVs).
- * 
+ *
  * @param r The renderable.
  * @param offset The offset (in Vector2 of floats between 0 and 1, representing percentage) of the UV coordinates.
  */
@@ -244,6 +245,16 @@ void renderable_init_rect(RenderState *state, Renderable *r, const f32 width, co
  * @param updated_at The time of the last logic update.
  */
 void renderable_set_updated(Renderable *r, const f64 updated_at);
+
+/**
+ * @brief Sets whether or not the renderable should be Z-sorted.
+ *
+ * Z-sorted renderables should always be drawn after non-sorted ones.
+ *
+ * @param r The renderable.
+ * @param should_zsort Whether or not the renderable should be Z-sorted.
+ */
+void renderable_set_should_zsort(Renderable *r, const GeyserBool should_zsort);
 
 /**
  * @brief Gets the size, in bytes, of the renderable vertex and UV buffers.

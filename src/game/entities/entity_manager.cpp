@@ -10,7 +10,7 @@ std::shared_ptr<Entity> EntityManager::ent_create(std::shared_ptr<Entity> parent
 }
 
 void EntityManager::ent_remove(std::shared_ptr<Entity> ent) {
-  this->dangling_renderables.push_back(ent->get_renderable_id());
+  this->dangling_renderables.push_back(ent->get_renderable());
 
   ent->set_should_remove(true);
   ent->set_active(false);
@@ -24,9 +24,12 @@ void EntityManager::create_player() {
 
 bool EntityManager::is_valid(std::shared_ptr<Entity> ent) const { return ent.get() != nullptr && ent->is_valid(); }
 
-bool EntityManager::can_delete_renderable(const u32 renderable_id) {
+bool EntityManager::can_delete_renderable(const Renderable *const renderable) {
+  if (renderable == nullptr)
+    return false;
+
   for (std::shared_ptr<Entity> ent : this->entities)
-    if (this->is_valid(ent) && ent->get_renderable_id() == renderable_id)
+    if (this->is_valid(ent) && ent->get_renderable() == renderable)
       return false;
 
   return true;
@@ -42,13 +45,13 @@ void EntityManager::clear_entities() {
   }
 }
 
-u32 EntityManager::ent_assign_renderable(
-  Renderable *renderables, const u32 renderables_count, std::shared_ptr<Entity> ent
+Renderable *EntityManager::ent_assign_renderable(
+  Renderable **renderables, const u32 renderables_count, std::shared_ptr<Entity> ent
 ) const {
   for (u32 i = 0; i < renderables_count; i++) {
-    if (renderables[i].assigned_to == -1) {
-      renderable_set_assigned(&renderables[i], ent->get_id());
-      return i;
+    if (renderables[i]->assigned_to == -1) {
+      renderable_set_assigned(renderables[i], ent->get_id());
+      return renderables[i];
     }
   }
 
