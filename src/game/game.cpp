@@ -53,6 +53,8 @@ void Game::update(GameState *state, mutex_t *lock) {
 }
 
 void Game::update_lazy(GameState *state, mutex_t *lock) {
+  this->locked = true;
+
   for (std::shared_ptr<Entity> ent : this->ent_manager.entities)
     if (ent->should_be_removed())
       this->ent_manager.dangling_renderables.push_back(ent->get_renderable());
@@ -62,6 +64,8 @@ void Game::update_lazy(GameState *state, mutex_t *lock) {
   });
 
   RUN_METHOD(update_lazy, state, lock)
+
+  this->locked = false;
 }
 
 void Game::update_paused(GameState *state, mutex_t *lock) { RUN_METHOD(update_paused, state, lock) }
@@ -108,6 +112,9 @@ void Game::update_renderables(
 
   /* Z sort */
   qsort(renderables, renderables_count, sizeof(Renderable *), Game::compare_renderables);
+
+  if (this->locked)
+    return;
 
   /* Assign renderables to entities that don't already have them assigned,
      and updates position and attributes of those which are assigned */
@@ -232,6 +239,8 @@ void Game::process_input(GameState *state, const f64 update_time) {
 }
 
 void Game::set_stage(GameState *state, const GameStage stage) {
+  this->locked = true;
+
   RUN_METHOD(destroy, state)
 
   this->stage = stage;
@@ -243,4 +252,6 @@ void Game::set_stage(GameState *state, const GameStage stage) {
   case GameStage::GS_BATTLE: STAGE_INIT(battle, BattleController); break;
   default: break;
   }
+
+  this->locked = false;
 }

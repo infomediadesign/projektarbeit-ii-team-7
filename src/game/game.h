@@ -35,6 +35,7 @@ private:
   MenuController *menu_controller;
   GameStage stage;
   f32 scale;
+  bool locked;
 
 public:
   Game() {
@@ -45,6 +46,7 @@ public:
     this->menu_controller      = nullptr;
     this->scale                = RENDER_SCALE;
     this->stage                = GameStage::GS_UNKNOWN;
+    this->locked               = false;
   }
 
   /* Events called from the engine */
