@@ -1,5 +1,5 @@
 cmake -DCMAKE_BUILD_TYPE=Release -B build -S .
-cmake --build build --config Release
+cmake --build build --config Release -j 16
 rmdir /Q /S dist
 mkdir dist
 mkdir dist\assets

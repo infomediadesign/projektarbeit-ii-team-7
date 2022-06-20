@@ -6,15 +6,15 @@ configure:
 	cmake -DCMAKE_BUILD_TYPE=Debug -B build -S .
 
 build:
-	cmake --build build --config Debug
+	cmake --build build --config Debug -j $(nproc)
 
 release:
 	cmake -DCMAKE_BUILD_TYPE=Release -B build -S .
-	cmake --build build --config Release
+	cmake --build build --config Release -j $(nproc)
 
 dist:
 	cmake -DCMAKE_BUILD_TYPE=Release -B build -S .
-	cmake --build build --config Release
+	cmake --build build --config Release -j $(nproc)
 	rm -rf dist
 	mkdir dist
 	cp build/engine/miniflow dist/miniflow
