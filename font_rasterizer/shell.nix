@@ -9,6 +9,7 @@ gcc11Stdenv.mkDerivation {
   buildInputs = [
     gdb
     rustc
+    rustfmt
     cargo
   ];
 }

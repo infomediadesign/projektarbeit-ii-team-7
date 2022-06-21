@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 fontdue = "0.7.2"
+png = "0.17.5"
