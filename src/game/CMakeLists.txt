@@ -12,6 +12,8 @@ set(game_source_files
   vector.cpp
   level.h
   level.cpp
+  animation.h
+  animation.cpp
   entities/entity.h
   entities/entity.cpp
   entities/player.h

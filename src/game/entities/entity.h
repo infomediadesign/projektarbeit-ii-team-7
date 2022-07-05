@@ -1,6 +1,8 @@
 #ifndef __GAME_ENTITIES_ENTITY_H
 #define __GAME_ENTITIES_ENTITY_H
 
+#include "../animation.h"
+
 #include <cstdlib>
 #include <engine/crc64.h>
 #include <engine/render/renderable.h>
@@ -39,11 +41,13 @@ private:
   std::vector<std::shared_ptr<Entity>> attachments;
   std::string texture_path;
   Renderable *renderable;
+  Animation *anims;
   f64 created_at;
   f64 updated_at;
   f64 lifetime;
   i64 id;
   EntClass ent_class;
+  u32 current_anim;
   u32 entity_index;
   f32 angular_velocity;
   f32 angle;
@@ -51,6 +55,7 @@ private:
   bool should_remove;
   bool should_update;
   bool should_sort;
+  bool animated;
   bool active;
   bool ready;
 
@@ -61,14 +66,17 @@ public:
     const size_t addr     = (size_t)this;
     this->id              = crc64(&addr, sizeof(size_t));
     this->entity_index    = entity_index;
+    this->current_anim    = 0;
     this->ready           = false;
     this->active          = false;
+    this->animated        = false;
     this->should_remove   = false;
     this->should_sort     = false;
     this->should_collide  = false;
     this->should_update   = true;
     this->ent_class       = EntClass::UNKNOWN;
     this->renderable      = nullptr;
+    this->anims           = nullptr;
     this->scale           = { 1.0f, 1.0f };
     this->uv_offset       = { 0.0f, 0.0f };
     this->pos             = { 0.0f, 0.0f, 0.0f };
@@ -91,7 +99,8 @@ public:
     this->created_at       = platform_time_f64();
   }
 
-  ENT_GETTER(std::string, texture_path)
+  ENT_GETTER(std::string, texture_path);
+  ENT_GETTER(Animation *, anims);
   ENT_GETTER(Vector3, aabb_max)
   ENT_GETTER(Vector3, aabb_min)
   ENT_GETTER(Vector3, velocity)
@@ -108,6 +117,7 @@ public:
   ENT_GETTER(f32, angle)
   ENT_GETTER(bool, should_collide)
   ENT_GETTER(bool, should_sort)
+  ENT_GETTER(bool, animated)
   ENT_GETTER(bool, active)
   ENT_GETTER(bool, ready)
 
@@ -121,6 +131,7 @@ public:
   ENT_SETTER(bool, should_collide)
   ENT_SETTER(bool, should_remove)
   ENT_SETTER(bool, should_sort)
+  ENT_SETTER(bool, animated)
   ENT_SETTER(bool, active)
   ENT_SETTER(bool, ready)
 

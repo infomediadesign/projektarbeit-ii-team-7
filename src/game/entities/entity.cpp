@@ -41,6 +41,11 @@ void Entity::update(const f64 current_time) {
 
   vector_add3i(&this->pos, this->velocity * delta);
 
+  if (this->animated && this->anims != nullptr) {
+    this->anims[this->current_anim].advance(current_time);
+    this->uv_offset = this->anims[this->current_anim].get_current_frame();
+  }
+
   this->updated_at = current_time;
 }
 

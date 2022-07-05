@@ -152,6 +152,7 @@ void Game::update_renderables(
       renderable_set_rotation(r, ent->get_axis(), -ent->get_angle());
       renderable_set_velocity(r, ent->get_velocity());
       renderable_set_should_zsort(r, ent->get_should_sort() ? GS_TRUE : GS_FALSE);
+      renderable_set_uv_offset(r, ent->get_uv_offset());
       renderable_set_updated(r, ent->get_updated_at());
     } else if (r->active == GS_TRUE) {
       renderable_set_active(r, GS_FALSE);
