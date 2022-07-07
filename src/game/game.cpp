@@ -139,7 +139,9 @@ void Game::update_renderables(
         continue;
 
       if (r->active != GS_TRUE && this->ent_manager.is_valid(ent)) {
-        renderable_init_rect(render_state, r, 0.1f, 0.1f);
+        const Vector2 uv_size = ent->get_uv_size();
+
+        renderable_init_rect_ex(render_state, r, 0.1f, 0.1f, uv_size.x, uv_size.y);
         renderable_set_scale(r, ent->get_scale());
         renderable_load_texture(render_state, r, ent->get_texture_path().c_str());
         renderable_set_active(r, GS_TRUE);

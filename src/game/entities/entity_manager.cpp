@@ -17,8 +17,7 @@ void EntityManager::ent_remove(std::shared_ptr<Entity> ent) {
 }
 
 void EntityManager::create_player() {
-  this->player = std::make_shared<Player>(this->ent_create());
-  this->player->get_base()->set_texture_path("assets/animated/main_character.png");
+  this->player = Player::make(this->ent_create());
   this->player->get_base()->set_active(true);
 }
 

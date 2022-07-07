@@ -179,8 +179,10 @@ int render_perform(void *args) {
         push_constants.camera       = render_state->camera_transform;
 
         if (i != first && renderables[i]->vertices_count == renderables[i - 1]->vertices_count) {
-          if (memcmp(renderables[i]->vertices, renderables[i - 1]->vertices, sizeof(Vector4) * renderables[i]->vertices_count) != 0) {
+          if (memcmp(renderables[i]->vertices, renderables[i - 1]->vertices, sizeof(Vector4) * renderables[i]->vertices_count) != 0)
             vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1, &renderables[i]->pool->buffer, offsets);
+
+          if (memcmp(renderables[i]->uv, renderables[i - 1]->uv, sizeof(Vector2) * renderables[i]->vertices_count) != 0) {
             offsets[0] = renderables[i]->offset + sizeof(Vector4) * renderables[i]->vertices_count;
             vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1, &renderables[i]->pool->buffer, offsets);
           }

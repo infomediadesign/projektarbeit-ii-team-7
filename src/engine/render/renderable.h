@@ -237,6 +237,20 @@ void renderable_set_uv_offset(Renderable *r, const Vector2 offset);
 void renderable_init_rect(RenderState *state, Renderable *r, const f32 width, const f32 height);
 
 /**
+ * @brief Helper to initialize a renderable as a rectangle.
+ *
+ * @param state The render state.
+ * @param r The renderable.
+ * @param width The width of the rectangle, in meters.
+ * @param height The height of the rectangle, in meters.
+ * @param uv_width The width of the UV rectangle, between 0 and 1, representing percentage of the texture width.
+ * @param uv_height The width of the UV rectangle, between 0 and 1, representing percentage of the texture height.
+ */
+void renderable_init_rect_ex(
+  RenderState *state, Renderable *r, const f32 width, const f32 height, const f32 uv_width, const f32 uv_height
+);
+
+/**
  * @brief Sets the last time of the logic update.
  *
  * This is necessary for the correct interpolation of movement of the renderable.

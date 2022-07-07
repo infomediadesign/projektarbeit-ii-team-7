@@ -35,6 +35,7 @@ private:
   Vector3 velocity;
   Vector3 axis;
   Vector3 pos;
+  Vector2 uv_size;
   Vector2 uv_offset;
   Vector2 scale;
   std::shared_ptr<Entity> parent;
@@ -77,6 +78,7 @@ public:
     this->ent_class       = EntClass::UNKNOWN;
     this->renderable      = nullptr;
     this->anims           = nullptr;
+    this->uv_size         = { 1.0f, 1.0f };
     this->scale           = { 1.0f, 1.0f };
     this->uv_offset       = { 0.0f, 0.0f };
     this->pos             = { 0.0f, 0.0f, 0.0f };
@@ -107,12 +109,14 @@ public:
   ENT_GETTER(Vector3, axis)
   ENT_GETTER(Vector3, pos)
   ENT_GETTER(Vector2, uv_offset)
+  ENT_GETTER(Vector2, uv_size)
   ENT_GETTER(Vector2, scale)
   ENT_GETTER(Renderable *, renderable)
   ENT_GETTER(f64, updated_at)
   ENT_GETTER(i64, id)
   ENT_GETTER(EntClass, ent_class)
   ENT_GETTER(f32, angular_velocity)
+  ENT_GETTER(u32, current_anim)
   ENT_GETTER(u32, entity_index)
   ENT_GETTER(f32, angle)
   ENT_GETTER(bool, should_collide)
@@ -121,12 +125,15 @@ public:
   ENT_GETTER(bool, active)
   ENT_GETTER(bool, ready)
 
+  ENT_SETTER(Animation *, anims);
   ENT_SETTER(Vector3, pos)
   ENT_SETTER(Vector2, uv_offset)
+  ENT_SETTER(Vector2, uv_size)
   ENT_SETTER(Vector2, scale)
   ENT_SETTER(std::string, texture_path)
   ENT_SETTER(Renderable *, renderable)
   ENT_SETTER(f64, lifetime)
+  ENT_SETTER(u32, current_anim)
   ENT_SETTER(EntClass, ent_class)
   ENT_SETTER(bool, should_collide)
   ENT_SETTER(bool, should_remove)
