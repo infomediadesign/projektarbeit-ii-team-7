@@ -16,54 +16,60 @@
 #include <vector>
 
 struct Background {
-  i64 x;
-  i64 y;
-  std::vector<u32> background_data;
+	std::vector<u32> background_data;
+	f32 x;
+	f32 y;
 };
 
-struct Objects {
-  i64 x;
-  i64 y;
-  u32 width;
-  u32 height;
-  u32 tileset_id;
-  std::string script;
+struct Object {
+	std::string script;
+	f32 x;
+	f32 y;
+	u32 width;
+	u32 height;
+	u32 tileset_id;
 };
 
-struct Collisions {
-  i64 x;
-  i64 y;
-  std::vector<u64> collisions_data;
+struct Collision {
+	std::vector<u32> collisions_data;
+	f32 x;
+	f32 y;
 };
 
 class Level {
 private:
-  lua_State *lua;
-  EntityManager *ent_manager;
-  simdjson::ondemand::parser json_parser;
-  simdjson::ondemand::document json_data, id_json_data;
+	lua_State* lua;
+	EntityManager* ent_manager;
+	simdjson::ondemand::parser json_parser;
+	simdjson::ondemand::document json_data, id_json_data;
 
-  std::vector<Background> background_content;
-  std::vector<Objects> objects_content;
-  std::vector<Collisions> collisions_content;
-  std::vector<std::string> tileset_id_jsons;
-  std::vector<std::string> tileset_id_list;
+	std::vector<Background> background;
+	std::vector<Object> objects;
+	std::vector<Collision> collisions;
+	std::vector<std::string> tileset_id_json;
+	std::vector<std::string> tileset_id_list;
 
 public:
-  Level(lua_State *lua) { this->lua = lua; }
+	Level(lua_State* lua) { this->lua = lua; }
 
-  std::vector<std::shared_ptr<Entity>> *get_entities();
+	std::vector<std::shared_ptr<Entity>>* get_entities();
 
-  std::vector<Background> get_background() { return background_content; };
+	std::vector<struct Background> get_background() {
+		return background;
+	};
+	std::vector<struct Object> get_objects() {
+		return objects;
+	};
+	std::vector<struct Collision> get_collisions() {
+		return collisions;
+	};
+	std::vector<std::string> get_tileset_id_list() {
+		return tileset_id_list;
+	};
 
-  std::vector<Objects> get_objects() { return objects_content; };
-
-  std::vector<Collisions> get_collisions() { return collisions_content; };
-
-  std::vector<std::string> get_tileset_id_list() { return tileset_id_list; };
-
-  void load_json(std::vector<std::shared_ptr<Entity>> *entities, const std::string path);
-  void update();
+	void load_json(std::vector<std::shared_ptr<Entity>>* entities, const std::string path);
+	void init();
+	void update();
 };
 
 #endif
