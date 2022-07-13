@@ -23,7 +23,6 @@ struct BackgroundJSON {
 		background_data(_background_data), x{ _x }, y{ _y } {}
 };
 
-std::vector<BackgroundJSON> background;
 
 struct ObjectJSON {
 	std::string script;
@@ -37,7 +36,6 @@ struct ObjectJSON {
 		script{ _script }, x{ _x }, y{ _y }, width{ _width }, height{ _height }, tileset_id{ _tile_set_id }  {}
 };
 
-std::vector<ObjectJSON> objects;
 
 struct CollisionJSON {
 	std::vector<i64> collision_data;
@@ -50,13 +48,17 @@ struct CollisionJSON {
 		collision_data(_background_data), x{ _x }, y{ _y } {}
 };
 
-std::vector<CollisionJSON> collisions;
 
-std::vector<std::string> tileset_id_json;
-std::vector<std::string> tileset_id_list;
 
 class Level {
 private:
+	std::vector<BackgroundJSON> background;
+	std::vector<ObjectJSON> objects;
+	std::vector<CollisionJSON> collisions;
+
+	std::vector<std::string> tileset_id_json;
+	std::vector<std::string> tileset_id_list;
+
 	lua_State* lua;
 	EntityManager* ent_manager;
 	simdjson::ondemand::parser json_parser;
@@ -81,7 +83,7 @@ public:
 	};
 
 	void load_json(std::vector<std::shared_ptr<Entity>>* entities, const std::string path);
-	void init();
+	void level_init();
 	void update();
 };
 

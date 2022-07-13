@@ -94,7 +94,7 @@ void Level::load_json(std::vector<std::shared_ptr<Entity>>* entities, const std:
 	}
 }
 
-void Level::init() {
+void Level::level_init() {
 	for (const BackgroundJSON arr : background) {
 		u32 x = arr.x;
 		u32 y = arr.y;
