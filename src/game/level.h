@@ -15,40 +15,38 @@
 #include <string>
 #include <vector>
 
+/*
+Constructors are needed, otherwise it will fail to compile.
+*/
+
 struct BackgroundJSON {
 	std::vector<i64> background_data;
-	double x;
-	double y;
-	BackgroundJSON(std::vector<i64>&& _background_data, double _x, double _y) :
+	f32 x;
+	f32 y;
+	BackgroundJSON(std::vector<i64>&& _background_data, f32 _x, f32 _y) :
 		background_data(_background_data), x{ _x }, y{ _y } {}
 };
 
-
 struct ObjectJSON {
 	std::string script;
-	double x;
-	double y;
+	f32 x;
+	f32 y;
 	int64_t width;
 	int64_t height;
 	int64_t tileset_id;
 
-	ObjectJSON(std::string_view _script, double _x, double _y, int64_t _width, int64_t _height, int64_t _tile_set_id) :
+	ObjectJSON(std::string_view _script, f32 _x, f32 _y, int64_t _width, int64_t _height, int64_t _tile_set_id) :
 		script{ _script }, x{ _x }, y{ _y }, width{ _width }, height{ _height }, tileset_id{ _tile_set_id }  {}
 };
 
-
 struct CollisionJSON {
 	std::vector<i64> collision_data;
+	f32 x;
+	f32 y;
 
-	/* Has to be either double or i64, simdjson doesn't allow other outputs that would be usable here. */
-	double x;
-	double y;
-
-	CollisionJSON(std::vector<i64>&& _background_data, double _x, double _y) :
+	CollisionJSON(std::vector<i64>&& _background_data, f32 _x, f32 _y) :
 		collision_data(_background_data), x{ _x }, y{ _y } {}
 };
-
-
 
 class Level {
 private:
