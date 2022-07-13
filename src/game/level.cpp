@@ -34,7 +34,8 @@ void Level::load_json(std::vector<std::shared_ptr<Entity>>* entities, const std:
 			for (i64 value : arr)
 				values.push_back(value);
 
-			background.emplace_back(std::move(values), obj["x"], obj["y"]);
+			background.emplace_back(std::move(values), static_cast<f64>(obj["x"]) * 0.1 + ((i + 1) % 16) * 0.1, 
+				static_cast<f64>(obj["y"]) * 0.1 + ((i + 1) / 16) * 0.1);
 		}
 
 		simdjson::ondemand::array objects_array = this->json_data.at_pointer(layer_id + "/1/objects").get_array();
@@ -51,7 +52,8 @@ void Level::load_json(std::vector<std::shared_ptr<Entity>>* entities, const std:
 
 				simdjson::ondemand::object inner_obj(property_array.at_pointer("/" + std::to_string(i)).get_object());
 
-				objects.emplace_back(inner_obj["value"], obj["x"], obj["y"], obj["width"], obj["height"], obj["id"]);
+				objects.emplace_back(inner_obj["value"], static_cast<f64>(obj["x"]) * 0.1 + ((i + 1) % 16) * 0.1,
+					static_cast<f64>(obj["y"]) * 0.1 + ((i + 1) / 16) * 0.1, obj["width"], obj["height"], obj["id"]);
 			}
 		}
 
@@ -68,21 +70,17 @@ void Level::load_json(std::vector<std::shared_ptr<Entity>>* entities, const std:
 			for (i64 value : arr) {
 				values.push_back(value);
 			}
-			collisions.emplace_back(std::move(values), obj["x"], obj["y"]);
+			collisions.emplace_back(std::move(values), static_cast<f64>(obj["x"]) * 0.1 + ((i + 1) % 16) * 0.1,
+				static_cast<f64>(obj["y"]) * 0.1 + ((i + 1) / 16) * 0.1);
 		}
 	}
 
-	/*
-	The variables tilesetJSON_id and tileset_id in the following two for-loops are needed 
-	to get the string from the JSON, direct implementation will lead to a crash.
-	*/
 	simdjson::ondemand::array tilesets = this->json_data["tilesets"];
 
 	for (u32 i = 0; i < tilesets.count_elements(); i++) {
 
 		simdjson::ondemand::object obj(json_data.at_pointer("/tilesets/" + std::to_string(i)).get_object());
-		std::string_view tilesetJSON_id = obj["source"];
-		tileset_id_json.emplace_back(tilesetJSON_id);
+		tileset_id_json.emplace_back(static_cast<std::string_view>(obj["source"]));
 	}
 
 	for (u32 i = 0; i < tileset_id_json.size(); i++) {
@@ -93,8 +91,7 @@ void Level::load_json(std::vector<std::shared_ptr<Entity>>* entities, const std:
 
 		simdjson::ondemand::object id_obj = id_json_data;
 
-		std::string_view tileset_id = id_obj["image"];
-		tileset_id_list.emplace_back(tileset_id);
+		tileset_id_list.emplace_back(static_cast<std::string_view>(id_obj["image"]));
 	}
 }
 
@@ -110,7 +107,7 @@ void Level::level_init() {
 				std::shared_ptr<Entity> ent = this->ent_manager->ent_create();
 				ent->set_ent_class(EntClass::BACKGROUND);
 				ent->set_texture_path(tileset_id_list.at(data - 1));
-				ent->set_pos(vector_make3(x * 0.1 + (i % 16) * 0.1, y * 0.1 + ((i+1)/16) * 0.1, 0.0f));
+				ent->set_pos(vector_make3(x, y, 0.0f));
 				ent->set_active(true);
 			}
 		}
@@ -136,7 +133,7 @@ void Level::level_init() {
 				std::shared_ptr<Entity> ent = this->ent_manager->ent_create();
 				ent->set_ent_class(EntClass::BACKGROUND);
 				ent->set_texture_path(tileset_id_list.at(data - 1));
-				ent->set_pos(vector_make3(x * 0.1 + ((i + 1) % 16) * 0.1, y * 0.1 + ((i+1)/16) * 0.1, 0.0f));
+				ent->set_pos(vector_make3(x , y, 0.0f));
 				ent->set_active(true);
 			}
 		}
