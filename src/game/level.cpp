@@ -89,23 +89,19 @@ void Level::load_json(std::vector<std::shared_ptr<Entity>> *entities, const std:
   simdjson::ondemand::array tilesets = this->json_data["tilesets"];
 
   for (u32 i = 0; i < tilesets.count_elements(); i++) {
-    simdjson::ondemand::object obj(json_data.at_pointer("/tilesets/" + std::to_string(i)).get_object());
+    simdjson::ondemand::object obj(this->json_data.at_pointer("/tilesets/" + std::to_string(i)).get_object());
     tileset_id_json.emplace_back(static_cast<std::string_view>(obj["source"]));
   }
 
   for (u32 i = 0; i < tileset_id_json.size(); i++) {
-    std::string tileset             = tileset_id_json.at(i);
-    simdjson::padded_string id_json = simdjson::padded_string::load(tileset);
+    const simdjson::padded_string id_json     = simdjson::padded_string::load(tileset_id_json.at(i));
+    simdjson::ondemand::document id_json_data = json_parser.iterate(id_json);
 
-    this->id_json_data = json_parser.iterate(id_json);
-
-    simdjson::ondemand::object id_obj = id_json_data;
-
-    tileset_id_list.emplace_back(static_cast<std::string_view>(id_obj["image"]));
+    tileset_id_list.emplace_back(static_cast<std::string_view>(id_json_data["image"]));
   }
 }
 
-void Level::level_init() {
+void Level::init() {
   for (const BackgroundJSON arr : background) {
     for (u32 i = 0; i < arr.background_data.size(); i++) {
       const u32 data = arr.background_data.at(i);
