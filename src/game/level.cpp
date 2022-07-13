@@ -34,14 +34,7 @@ void Level::load_json(std::vector<std::shared_ptr<Entity>>* entities, const std:
 			for (i64 value : arr)
 				values.push_back(value);
 
-			/* 
-			Annoying but has to be done since simdJSON doesn't allow direct convertion to f32.
-			*/
-			double x_ = obj["x"];
-			f32 x = x;
-			double y_ = obj["y"];
-			f32 y = y;
-			background.emplace_back(std::move(values), x, y );
+			background.emplace_back(std::move(values), obj["x"], obj["y"]);
 		}
 
 		simdjson::ondemand::array objects_array = this->json_data.at_pointer(layer_id + "/1/objects").get_array();
@@ -54,16 +47,11 @@ void Level::load_json(std::vector<std::shared_ptr<Entity>>* entities, const std:
 				this->json_data.at_pointer(layer_id + "/1/objects/" + std::to_string(i) + "/properties").get_array();
 			std::string_view script = "0";
 
-			double x_ = obj["x"];
-			f32 x = x;
-			double y_ = obj["y"];
-			f32 y = y;
-
 			for (u32 i = 0; i < property_array.count_elements(); i++) {
 
 				simdjson::ondemand::object inner_obj(property_array.at_pointer("/" + std::to_string(i)).get_object());
 
-				objects.emplace_back(inner_obj["value"], x, y, obj["width"], obj["height"], obj["id"]);
+				objects.emplace_back(inner_obj["value"], obj["x"], obj["y"], obj["width"], obj["height"], obj["id"]);
 			}
 		}
 
@@ -80,12 +68,7 @@ void Level::load_json(std::vector<std::shared_ptr<Entity>>* entities, const std:
 			for (i64 value : arr) {
 				values.push_back(value);
 			}
-
-			double x_ = obj["x"];
-			f32 x = x;
-			double y_ = obj["y"];
-			f32 y = y;
-			collisions.emplace_back(std::move(values), x, y);
+			collisions.emplace_back(std::move(values), obj["x"], obj["y"]);
 		}
 	}
 
