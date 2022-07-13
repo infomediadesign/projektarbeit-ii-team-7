@@ -15,26 +15,45 @@
 #include <string>
 #include <vector>
 
-struct Background {
-	std::vector<u32> background_data;
-	f32 x;
-	f32 y;
+struct BackgroundJSON {
+	std::vector<i64> background_data;
+	double x;
+	double y;
+	BackgroundJSON(std::vector<i64>&& _background_data, double _x, double _y) :
+		background_data(_background_data), x{ _x }, y{ _y } {}
 };
 
-struct Object {
+std::vector<BackgroundJSON> background;
+
+struct ObjectJSON {
 	std::string script;
-	f32 x;
-	f32 y;
-	u32 width;
-	u32 height;
-	u32 tileset_id;
+	double x;
+	double y;
+	int64_t width;
+	int64_t height;
+	int64_t tileset_id;
+
+	ObjectJSON(std::string_view _script, double _x, double _y, int64_t _width, int64_t _height, int64_t _tile_set_id) :
+		script{ _script }, x{ _x }, y{ _y }, width{ _width }, height{ _height }, tileset_id{ _tile_set_id }  {}
 };
 
-struct Collision {
-	std::vector<u32> collisions_data;
-	f32 x;
-	f32 y;
+std::vector<ObjectJSON> objects;
+
+struct CollisionJSON {
+	std::vector<i64> collision_data;
+
+	/* Has to be either double or i64, simdjson doesn't allow other outputs that would be usable here. */
+	double x;
+	double y;
+
+	CollisionJSON(std::vector<i64>&& _background_data, double _x, double _y) :
+		collision_data(_background_data), x{ _x }, y{ _y } {}
 };
+
+std::vector<CollisionJSON> collisions;
+
+std::vector<std::string> tileset_id_json;
+std::vector<std::string> tileset_id_list;
 
 class Level {
 private:
@@ -43,24 +62,18 @@ private:
 	simdjson::ondemand::parser json_parser;
 	simdjson::ondemand::document json_data, id_json_data;
 
-	std::vector<Background> background;
-	std::vector<Object> objects;
-	std::vector<Collision> collisions;
-	std::vector<std::string> tileset_id_json;
-	std::vector<std::string> tileset_id_list;
-
 public:
 	Level(lua_State* lua) { this->lua = lua; }
 
 	std::vector<std::shared_ptr<Entity>>* get_entities();
 
-	std::vector<struct Background> get_background() {
+	std::vector<struct BackgroundJSON> get_background() {
 		return background;
 	};
-	std::vector<struct Object> get_objects() {
+	std::vector<struct ObjectJSON> get_objects() {
 		return objects;
 	};
-	std::vector<struct Collision> get_collisions() {
+	std::vector<struct CollisionJSON> get_collisions() {
 		return collisions;
 	};
 	std::vector<std::string> get_tileset_id_list() {
