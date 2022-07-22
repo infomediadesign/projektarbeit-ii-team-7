@@ -1,9 +1,0 @@
-.vscode
-.vs
-CMakeFiles
-build
-CMakeCache.txt
-CMakeOutput.log
-dist/
-**/*.spv
-**/out
