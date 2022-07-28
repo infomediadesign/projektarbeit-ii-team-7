@@ -57,6 +57,7 @@ private:
   bool should_update;
   bool should_sort;
   bool animated;
+  bool visible;
   bool active;
   bool ready;
 
@@ -75,6 +76,7 @@ public:
     this->should_sort     = false;
     this->should_collide  = false;
     this->should_update   = true;
+    this->visible         = true;
     this->ent_class       = EntClass::UNKNOWN;
     this->renderable      = nullptr;
     this->anims           = nullptr;
@@ -122,6 +124,7 @@ public:
   ENT_GETTER(bool, should_collide)
   ENT_GETTER(bool, should_sort)
   ENT_GETTER(bool, animated)
+  ENT_GETTER(bool, visible)
   ENT_GETTER(bool, active)
   ENT_GETTER(bool, ready)
 
@@ -139,6 +142,7 @@ public:
   ENT_SETTER(bool, should_remove)
   ENT_SETTER(bool, should_sort)
   ENT_SETTER(bool, animated)
+  ENT_SETTER(bool, visible)
   ENT_SETTER(bool, active)
   ENT_SETTER(bool, ready)
 

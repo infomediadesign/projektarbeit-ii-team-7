@@ -1,137 +1,152 @@
 #include "level.h"
 
 #include <engine/input/asset.h>
+#include <iostream>
+#include <memory>
 
-void Level::load_json(std::vector<std::shared_ptr<Entity>> *entities, const std::string path) {
+void Level::load_json(const std::string path) {
   char real_path[256];
 
   asset_find(path.c_str(), real_path);
 
-  simdjson::padded_string json = simdjson::padded_string::load(real_path);
+  simdjson::padded_string json;
+
+  try {
+    json = simdjson::padded_string::load(real_path);
+  } catch (...) {
+    std::cout << "Level " << path << " does not exist!" << std::endl;
+    return;
+  }
 
   this->json_data = this->json_parser.iterate(json);
 
-  simdjson::ondemand::object json_data_obj(this->json_data.get_object());
-  std::string layer_id;
+  try {
+    this->parse_layers(this->json_data["layers"]);
+    this->parse_tilesets(this->json_data["tilesets"]);
+  } catch (...) {
+    std::cout << "Level " << path << " is invalid!" << std::endl;
+    return;
+  }
 
-  for (u32 i = 0; i < (json_data_obj.count_fields() - 14); i++) {
-    if (i == 0)
-      layer_id = "/layers";
-    else
-      layer_id = "/layers" + std::to_string(i);
+  this->loaded = true;
+}
 
-    simdjson::ondemand::array layers           = this->json_data.at_pointer(layer_id).get_array();
-    simdjson::ondemand::array background_array = layers.at_pointer("/0/chunks").get_array();
+void Level::parse_layers(simdjson::ondemand::array layers) {
+  for (simdjson::ondemand::value layer : layers) {
+    if (layer.find_field_unordered("type") == std::string_view("tilelayer"))
+      if (layer.find_field_unordered("name") == std::string_view("collision"))
+        this->parse_collision_layer(layer);
+      else
+        this->parse_background_layer(layer);
+    else if (layer.find_field_unordered("type") == std::string_view("objectgroup"))
+      this->parse_object_layer(layer);
+  }
+}
 
-    for (u32 i = 0; i < background_array.count_elements(); i++) {
-      simdjson::ondemand::object obj(
-        this->json_data.at_pointer(layer_id + "/0/chunks/" + std::to_string(i)).get_object()
-      );
+void Level::parse_background_layer(simdjson::ondemand::value layer) {
+  for (simdjson::ondemand::value chunk : layer.find_field_unordered("chunks").get_array()) {
+    const i64 height = chunk.find_field("height");
+    const i64 width  = chunk.find_field("width");
+    const i64 x      = chunk.find_field("x");
+    const i64 y      = chunk.find_field("y");
+    u32 i            = 0;
 
-      std::vector<i64> values;
-      simdjson::ondemand::array arr((obj["data"].get_array()));
+    for (simdjson::ondemand::value data : chunk.find_field_unordered("data").get_array()) {
+      const i64 tileset_id = data.get_int64();
 
-      for (const i64 value : arr)
-        values.push_back(value);
-
-      background.emplace_back(
-        std::move(values),
-        static_cast<f64>(obj["x"]) * 0.1 + ((i + 1) % 16) * 0.1,
-        static_cast<f64>(obj["y"]) * 0.1 + ((i + 1) / 16) * 0.1
-      );
-    }
-
-    simdjson::ondemand::array objects_array = this->json_data.at_pointer(layer_id + "/1/objects").get_array();
-
-    for (u32 i = 0; i < objects_array.count_elements(); i++) {
-      simdjson::ondemand::object obj(
-        this->json_data.at_pointer(layer_id + "/1/objects/" + std::to_string(i)).get_object()
-      );
-
-      simdjson::ondemand::array property_array =
-        this->json_data.at_pointer(layer_id + "/1/objects/" + std::to_string(i) + "/properties").get_array();
-
-      for (u32 i = 0; i < property_array.count_elements(); i++) {
-        simdjson::ondemand::object inner_obj(property_array.at_pointer("/" + std::to_string(i)).get_object());
-
-        objects.emplace_back(
-          inner_obj["value"],
-          static_cast<f64>(obj["x"]) * 0.1 + ((i + 1) % 16) * 0.1,
-          static_cast<f64>(obj["y"]) * 0.1 + ((i + 1) / 16) * 0.1,
-          obj["width"],
-          obj["height"],
-          obj["id"]
+      if (tileset_id > 0) {
+        this->background.push_back(
+          { .tileset_id = tileset_id, .x = x * 0.1f + (i % width) * 0.1f, .y = y * 0.1f + (i / height) * 0.1f }
         );
       }
-    }
 
-    simdjson::ondemand::array collisions_array = this->json_data.at_pointer(layer_id + "/2/chunks").get_array();
-
-    for (u32 i = 0; i < collisions_array.count_elements(); i++) {
-      simdjson::ondemand::object obj(
-        this->json_data.at_pointer(layer_id + "/2/chunks/" + std::to_string(i)).get_object()
-      );
-
-      std::vector<i64> values;
-      simdjson::ondemand::array arr((obj["data"].get_array()));
-
-      for (const i64 value : arr)
-        values.push_back(value);
-
-      collisions.emplace_back(
-        std::move(values),
-        static_cast<f64>(obj["x"]) * 0.1 + ((i + 1) % 16) * 0.1,
-        static_cast<f64>(obj["y"]) * 0.1 + ((i + 1) / 16) * 0.1
-      );
+      i++;
     }
   }
+}
 
-  simdjson::ondemand::array tilesets = this->json_data["tilesets"];
+void Level::parse_collision_layer(simdjson::ondemand::value layer) {
+  for (simdjson::ondemand::value chunk : layer.find_field_unordered("chunks").get_array()) {
+    const i64 height = chunk.find_field("height");
+    const i64 width  = chunk.find_field("width");
+    const i64 x      = chunk.find_field("x");
+    const i64 y      = chunk.find_field("y");
+    u32 i            = 0;
 
-  for (u32 i = 0; i < tilesets.count_elements(); i++) {
-    simdjson::ondemand::object obj(this->json_data.at_pointer("/tilesets/" + std::to_string(i)).get_object());
-    tileset_id_json.emplace_back(static_cast<std::string_view>(obj["source"]));
+    for (simdjson::ondemand::value data : chunk.find_field_unordered("data").get_array()) {
+      const i64 tileset_id = data.get_int64();
+
+      if (tileset_id > 0)
+        this->collisions.push_back({ .x = x * 0.1f + (i % width) * 0.1f, .y = y * 0.1f + (i / height) * 0.1f });
+
+      i++;
+    }
+  }
+}
+
+void Level::parse_object_layer(simdjson::ondemand::value layer) { /* todo: parse objects */
+}
+
+void Level::parse_tilesets(simdjson::ondemand::array tilesets) {
+  for (simdjson::ondemand::value tileset : tilesets)
+    this->load_tileset(tileset.find_field_unordered("source").get_string());
+}
+
+std::string absolute_path(const std::string str) {
+  if (str.rfind("../", 0) != std::string::npos)
+    return absolute_path(str.substr(3, str.length()));
+
+  return str;
+}
+
+void Level::load_tileset(const std::string_view path) {
+  char real_path[256];
+
+  asset_find(std::string(path).c_str(), real_path);
+
+  simdjson::padded_string json;
+
+  try {
+    json = simdjson::padded_string::load(real_path);
+  } catch (...) {
+    std::cout << "Tileset " << path << " does not exist!" << std::endl;
+    return;
   }
 
-  for (u32 i = 0; i < tileset_id_json.size(); i++) {
-    const simdjson::padded_string id_json     = simdjson::padded_string::load(tileset_id_json.at(i));
-    simdjson::ondemand::document id_json_data = json_parser.iterate(id_json);
-
-    tileset_id_list.emplace_back(static_cast<std::string_view>(id_json_data["image"]));
+  try {
+    simdjson::ondemand::document data = this->json_parser.iterate(json);
+    std::string_view image            = data.find_field("image").get_string();
+    this->tilesets.push_back(absolute_path(std::string(image)));
+  } catch (...) {
+    std::cout << "Tileset " << path << " is invalid!" << std::endl;
+    this->tilesets.push_back("assets/debug/missing.png");
+    return;
   }
 }
 
 void Level::init() {
-  for (const BackgroundJSON arr : background) {
-    for (u32 i = 0; i < arr.background_data.size(); i++) {
-      const u32 data = arr.background_data.at(i);
+  if (!this->loaded)
+    return;
 
-      if (data > 0) {
-        std::shared_ptr<Entity> ent = this->ent_manager->ent_create();
-        ent->set_ent_class(EntClass::BACKGROUND);
-        ent->set_texture_path(tileset_id_list.at(data - 1));
-        ent->set_pos(vector_make3(arr.x, arr.y, 0.0f));
-        ent->set_active(true);
-      }
-    }
+  for (const LevelBackgroundTile tile : this->background) {
+    std::shared_ptr<Entity> ent = this->ent_manager->ent_create();
+    ent->set_ent_class(EntClass::BACKGROUND);
+    ent->set_texture_path(this->tilesets.at(tile.tileset_id - 1));
+    ent->set_pos(vector_make3(tile.x, tile.y, 0.0f));
+    ent->set_active(true);
   }
 
-  for (const ObjectJSON arr : objects) {
+  for (const LevelObject obj : this->objects) {
     /* todo: object spawning */
   }
 
-  for (const CollisionJSON arr : collisions) {
-    for (u32 i = 0; i < arr.collision_data.size(); i++) {
-      const u32 data = arr.collision_data.at(i);
-
-      if (data > 0) {
-        std::shared_ptr<Entity> ent = this->ent_manager->ent_create();
-        ent->set_ent_class(EntClass::BACKGROUND);
-        ent->set_texture_path(tileset_id_list.at(data - 1));
-        ent->set_pos(vector_make3(arr.x, arr.y, 0.0f));
-        ent->set_active(true);
-      }
-    }
+  for (const LevelCollisionTile tile : this->collisions) {
+    std::shared_ptr<Entity> ent = this->ent_manager->ent_create();
+    ent->set_ent_class(EntClass::CLIP);
+    ent->set_texture_path("assets/debug/collide_32x32.png");
+    ent->set_pos(vector_make3(tile.x, tile.y, 0.0f));
+    ent->set_visible(false);
+    ent->set_active(true);
   }
 }
 

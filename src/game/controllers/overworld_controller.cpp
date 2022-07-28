@@ -5,22 +5,12 @@
 
 #define PLAYER_ENT this->base.ent_manager->get_player_ent()
 
-static const Vector3 center_vec3 = { 0.0f, -0.4375f, 0.0f };
-
 void OverworldController::init(GameState *state) {
-  PLAYER_ENT->set_pos(center_vec3);
+  this->level = new Level(this->base.lua, this->base.ent_manager);
+  this->level->load_json("levels/dev.json");
+  this->level->init();
 
-  for (u8 x = 0; x < 16; x++) {
-    for (u8 y = 0; y < 16; y++) {
-      std::shared_ptr<Entity> ent = this->base.ent_manager->ent_create();
-      ent->set_ent_class(EntClass::BACKGROUND);
-      ent->set_texture_path(
-        (x != 0 && x != 15 && y != 0 && y != 15) ? "assets/debug/path_32x32.png" : "assets/debug/wall_32x32.png"
-      );
-      ent->set_pos(center_vec3 + vector_make3(-0.8f + 0.1f * x, -0.8f + 0.1f * y, 0.0f));
-      ent->set_active(true);
-    }
-  }
+  PLAYER_ENT->set_pos({ 0.2f, 0.2f, 0.0f });
 }
 
 void OverworldController::update(GameState *state, mutex_t *lock) {
@@ -67,7 +57,10 @@ void OverworldController::update_renderables(
   }
 }
 
-void OverworldController::destroy(GameState *state) { this->base.ent_manager->clear_entities(); }
+void OverworldController::destroy(GameState *state) {
+  this->base.ent_manager->clear_entities();
+  delete this->level;
+}
 
 void OverworldController::process_input(GameState *state, const f64 update_time) {
   for (u32 i = 0; i < this->base.input_state->command_count; i++) {
