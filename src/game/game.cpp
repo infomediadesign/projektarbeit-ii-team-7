@@ -34,7 +34,7 @@ void Game::init(GameState *state) {
   this->ent_manager.create_player();
   this->ent_manager.get_player_ent()->set_pos(center_vec3 + vector_make3(0.0f, 0.0f, 1.0f));
   this->ent_manager.get_player_ent()->set_should_sort(true);
-  this->set_stage(state, GameStage::GS_BATTLE);
+  this->set_stage(state, GameStage::GS_OVERWORLD);
 }
 
 void Game::update(GameState *state, mutex_t *lock) {
@@ -121,6 +121,9 @@ void Game::update_renderables(
   for (std::shared_ptr<Entity> ent : this->ent_manager.entities) {
     /* remove the following 2 lines for a free segfault, "smart" pointers aint so "smart" eh */
     if (ent.get() == nullptr)
+      continue;
+
+    if (!ent->get_visible())
       continue;
 
     Renderable *r = ent->get_renderable();

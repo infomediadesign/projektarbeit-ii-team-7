@@ -35,7 +35,7 @@ static const u32 missing_texture[256] = {
 };
 // clang-format on
 
-static const char *search_paths[5] = { "", "./", "../", "../../", "../../../" };
+static const char *search_paths[6] = { "", "./", "../", "../../", "../../../", "assets/" };
 
 void flip_channels(u32 *data, const u32 size) {
   for (u32 i = 0; i < size; i++)
@@ -43,7 +43,7 @@ void flip_channels(u32 *data, const u32 size) {
 }
 
 void asset_find(const char *asset_path, char *out) {
-  for (u8 i = 0; i < 5; i++) {
+  for (u8 i = 0; i < 6; i++) {
     char final_path[256];
 
     memset(final_path, 0, 256);
