@@ -185,6 +185,14 @@ void geyser_allocate_texture_descriptor_set(
 );
 
 /**
+ * @brief Frees texture's descriptor set.
+ *
+ * @param state The render state.
+ * @param texture The texture whose descriptor set needs to be freed.
+ */
+void geyser_free_texture_descriptor_set(RenderState RESTRICTED_PTR state, GeyserTexture *texture);
+
+/**
  * @brief Updates texture descriptor set (e.g. when texture image is updated).
  *
  * @param state The render state.

@@ -543,7 +543,8 @@ void geyser_init_vk(RenderState *restrict state) {
                                                       .descriptorCount = GEYSER_MAX_TEXTURES };
 
   const VkDescriptorPoolCreateInfo descriptor_pool_info = {
-    GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO),
+    GEYSER_MINIMAL_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO),
+    .flags         = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
     .maxSets       = GEYSER_MAX_TEXTURES,
     .poolSizeCount = 1,
     .pPoolSizes    = &descriptor_pool_size
@@ -1179,6 +1180,13 @@ void geyser_allocate_texture_descriptor_set(
   geyser_success_or_message(
     vkAllocateDescriptorSets(state->device, &descriptor_info, &texture->descriptor_set),
     "Failed to allocate a texture descriptor set!"
+  );
+}
+
+void geyser_free_texture_descriptor_set(RenderState *restrict state, GeyserTexture *texture) {
+  geyser_success_or_message(
+    vkFreeDescriptorSets(state->device, state->descriptor_pool, 1, &texture->descriptor_set),
+    "Failed to free a texture descriptor set!"
   );
 }
 

@@ -102,7 +102,7 @@ void Game::update_renderables(
       continue;
 
     if (renderable->vertices != NULL && renderable->uv != NULL)
-      renderable_free(renderable);
+      renderable_free(render_state, renderable);
 
     renderable_set_active(renderable, GS_FALSE);
     renderable_make_default(renderable);

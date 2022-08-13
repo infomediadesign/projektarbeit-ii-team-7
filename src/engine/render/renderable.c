@@ -130,10 +130,11 @@ void renderable_make_rect_ex(
   r->vertices_count = 6U;
 }
 
-void renderable_free(Renderable *r) {
+void renderable_free(RenderState *state, Renderable *r) {
   memory_free_block(r->pool, r->offset, renderable_get_size(r));
   /* TODO: fix memory freeing */
   // memory_free_image_block(r->texture.base.base.pool, r->texture.base.base.offset, r->texture.base.base.size);
+  geyser_free_texture_descriptor_set(state, &r->texture);
 
   free(r->vertices);
   free(r->uv);

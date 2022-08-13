@@ -231,7 +231,7 @@ int render_perform(void *args) {
   }
 
   for (u32 i = 0; i < MAX_RENDERABLES; i++)
-    renderable_free(renderables[i]);
+    renderable_free(render_state, renderables[i]);
 
   free(renderables);
   geyser_destroy_vk(render_state);

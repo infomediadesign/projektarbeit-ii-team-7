@@ -111,9 +111,10 @@ void renderable_make_rect_ex(
  *
  * @warning Only do this in a staging pass.
  *
+ * @param state The render state.
  * @param r The renderable to free the memory of.
  */
-void renderable_free(Renderable *r);
+void renderable_free(RenderState *state, Renderable *r);
 
 /**
  * @brief Calculates the transform matrix of the renderable.
