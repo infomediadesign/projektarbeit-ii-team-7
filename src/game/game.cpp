@@ -120,10 +120,7 @@ void Game::update_renderables(
      and updates position and attributes of those which are assigned */
   for (std::shared_ptr<Entity> ent : this->ent_manager.entities) {
     /* remove the following 2 lines for a free segfault, "smart" pointers aint so "smart" eh */
-    if (ent.get() == nullptr)
-      continue;
-
-    if (!ent->get_visible())
+    if (ent.get() == nullptr || !ent->get_visible())
       continue;
 
     Renderable *r = ent->get_renderable();
