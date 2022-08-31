@@ -1,0 +1,253 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "",
+    "expandedProjectPaths": [
+        "ruled-tiles/tower",
+        "tiled"
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+        ":/automap-tiles.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/DVD-B/Documents/:/automap-tiles.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/DVD-B/Documents/GitHub/cursed-gods_prototype/assets/graphics/Map/THIS.json": {
+            "scale": 0.5,
+            "selectedLayer": 4,
+            "viewCenter": {
+                "x": 1639,
+                "y": 1290
+            }
+        },
+        "C:/Users/DVD-B/Documents/GitHub/cursed-gods_prototype/assets/graphics/Map/THIS.json#Tileset1_1": {
+            "scaleInDock": 1
+        },
+        "C:/Users/DVD-B/Documents/GitHub/cursed-gods_prototype/assets/graphics/Map/THIS.json#canyon_bg_upscale": {
+            "scaleInDock": 1,
+            "scaleInEditor": 0.5
+        },
+        "C:/Users/DVD-B/Documents/GitHub/cursed-gods_prototype/assets/graphics/Map/THIS.json#unknown2": {
+            "scaleInDock": 1
+        },
+        "C:/Users/DVD-B/Documents/GitHub/cursed-gods_prototype/assets/graphics/Map/Test-Level.json": {
+            "scale": 2,
+            "selectedLayer": 2,
+            "viewCenter": {
+                "x": -903.25,
+                "y": -632
+            }
+        },
+        "C:/Users/DVD-B/Documents/GitHub/cursed-gods_prototype/assets/graphics/Map/canyon-tileset.json": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "C:/Users/DVD-B/Documents/GitHub/cursed-gods_prototype/assets/graphics/Map/tilesets/katara_animations.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1
+        },
+        "C:/Users/DVD-B/Documents/GitHub/cursed-gods_prototype/assets/graphics/Map/tilesets/tsx/canyon-tileset.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1
+        },
+        "C:/Users/DVD-B/Documents/GitHub/cursed-gods_prototype/assets/graphics/Map/tilesets/tsx/zipline-Sheet.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/DVD-B/Documents/GitHub/cursed-gods_prototype/assets/graphics/tilesets/tsx/canyon-tileset.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/DVD-B/Documents/GitHub/projektarbeit-ii-team-7/assets/tilesets/collide.json": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "C:/Users/DVD-B/Documents/GitHub/projektarbeit-ii-team-7/assets/tilesets/info_player_start.json": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "C:/Users/DVD-B/Documents/GitHub/projektarbeit-ii-team-7/assets/tilesets/path.json": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "C:/Users/DVD-B/Documents/GitHub/projektarbeit-ii-team-7/assets/tilesets/wall.json": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "G:/Meine Ablage/UNIVERSITÄT/Sandbox Studios/tilesets/katara_animations.tsx": {
+            "scaleInDock": 1
+        },
+        "G:/Meine Ablage/UNIVERSITÄT/Sandbox Studios/tilesets/tsx/2Test-Level.json": {
+            "scale": 0.21875,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 4592,
+                "y": 2528
+            }
+        },
+        "G:/Meine Ablage/UNIVERSITÄT/Sandbox Studios/tilesets/tsx/canyon-tileset.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 4
+        },
+        "G:/Meine Ablage/UNIVERSITÄT/Sandbox Studios/tilesets/tsx/level2.tmx": {
+            "scale": 0.33,
+            "selectedLayer": 3,
+            "viewCenter": {
+                "x": -1031.8181818181818,
+                "y": 587.878787878788
+            }
+        },
+        "G:/Meine Ablage/UNIVERSITÄT/Sandbox Studios/tilesets/tsx/zipline-Sheet.tsx": {
+            "scaleInDock": 1
+        },
+        "Tilesets/tiled_tilesets/blue-test-house.tsx": {
+            "scaleInDock": 1
+        },
+        "Tilesets/tiled_tilesets/green-test-house.tsx": {
+            "scaleInDock": 1
+        },
+        "Tilesets/tiled_tilesets/pipe-tiles.tsx": {
+            "scaleInDock": 1
+        },
+        "Tilesets/tiled_tilesets/red-test-house.tsx": {
+            "scaleInDock": 1
+        },
+        "Tilesets/tiled_tilesets/sandstone-slums.tsx": {
+            "scaleInDock": 1
+        },
+        "Tilesets/tiled_tilesets/test-props.tsx": {
+            "scaleInDock": 1
+        },
+        "Tilesets/tiled_tilesets/test-sidewalk.tsx": {
+            "scaleInDock": 1
+        },
+        "Tilesets/tiled_tilesets/test-size-reference.tsx": {
+            "scaleInDock": 1
+        },
+        "Tilesets/tiled_tilesets/test-tower.tsx": {
+            "scaleInDock": 1
+        },
+        "blue-test-house.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "green-test-house.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "pipe-tiles.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 3
+        },
+        "red-test-house.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "ruled-tiles/castle-ruled-tiles.tmx": {
+            "scale": 0.8312499999999999,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 513.0827067669173,
+                "y": 512.4812030075188
+            }
+        },
+        "ruled-tiles/tower/rule1.tmx": {
+            "scale": 0.8312499999999999,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 256.842105263158,
+                "y": 0
+            }
+        },
+        "sandstone-slums.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "test-ground.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "test-house.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "test-props.tsx": {
+            "scaleInDock": 0.75,
+            "scaleInEditor": 2
+        },
+        "test-sidewalk.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "test-size-reference.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "test-tower.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 2
+        },
+        "tiled/ScumLevel.tmx": {
+            "expandedGroupLayers": [
+                3,
+                7
+            ],
+            "scale": 0.5,
+            "selectedLayer": 7,
+            "viewCenter": {
+                "x": 959,
+                "y": 660
+            }
+        },
+        "tiled/SlumLevel.tmx": {
+            "scale": 0.5,
+            "selectedLayer": 8,
+            "viewCenter": {
+                "x": 1365,
+                "y": 1978
+            }
+        },
+        "tiled/test-sidewalk.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "tiled/tiled_tilesets/loot-box.tsx": {
+            "scaleInDock": 1
+        },
+        "tiled/tower.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        }
+    },
+    "last.externalTilesetPath": "G:/Meine Ablage/UNIVERSITÄT/Sandbox Studios/tilesets/objects",
+    "last.imagePath": "C:/Users/DVD-B/Documents/GitHub/cursed-gods_prototype/assets/graphics/Map",
+    "last.worldFilePath": "G:/Meine Ablage/UNIVERSITÄT/Sandbox Studios/tilesets/tsx",
+    "loadedWorlds": [
+        "G:/Meine Ablage/UNIVERSITÄT/Sandbox Studios/tilesets/tsx/was.world"
+    ],
+    "map.fixedSize": false,
+    "map.lastUsedFormat": "tmx",
+    "map.tileHeight": 32,
+    "map.tileWidth": 32,
+    "openFiles": [
+    ],
+    "project": "assemblia.tiled-project",
+    "recentFiles": [
+        "tiled/SlumLevel.tmx",
+        "sandstone-slums.tsx",
+        "test-tower.tsx",
+        "G:/Meine Ablage/UNIVERSITÄT/Sandbox Studios/tilesets/tsx/2Test-Level.json",
+        "G:/Meine Ablage/UNIVERSITÄT/Sandbox Studios/tilesets/tsx/canyon-tileset.tsx",
+        "G:/Meine Ablage/UNIVERSITÄT/Sandbox Studios/tilesets/tsx/level2.tmx",
+        "C:/Users/DVD-B/Documents/GitHub/cursed-gods_prototype/assets/graphics/Map/Test-Level.json",
+        "C:/Users/DVD-B/Documents/GitHub/cursed-gods_prototype/assets/graphics/Map/canyon-tileset.json",
+        "C:/Users/DVD-B/Documents/GitHub/cursed-gods_prototype/assets/graphics/Map/THIS.json",
+        "test-ground.tsx",
+        "test-props.tsx",
+        "tiled/ScumLevel.tmx"
+    ],
+    "tileset.lastUsedFilter": "JSON tileset files (*.tsj *.json)"
+}
