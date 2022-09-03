@@ -2,6 +2,14 @@
 #define __GAME_GAME_H
 
 #define MAX_ENTITIES 4096
+#define GAME_GETTER(t, n) \
+  t get_##n() const { return this->n; }
+#define LUA_EVENT_RUN(L, id)  \
+  lua_getglobal(L, "event");  \
+  lua_getfield(L, -1, "run"); \
+  lua_remove(L, -2);          \
+  lua_pushstring(L, id);
+#define LUA_EVENT_CALL(L, args, res) lua_call(L, args + 1, res);
 
 #include "controllers/battle_controller.h"
 #include "controllers/dungeon_controller.h"
@@ -27,6 +35,7 @@ class Game {
 private:
   EntityManager ent_manager;
   std::shared_ptr<Level> level;
+  GameState *game_state;
   InputState *input_state;
   lua_State *lua;
   OverworldController *overworld_controller;
@@ -40,6 +49,7 @@ private:
 public:
   Game() {
     this->input_state          = nullptr;
+    this->game_state           = nullptr;
     this->overworld_controller = nullptr;
     this->dungeon_controller   = nullptr;
     this->battle_controller    = nullptr;
@@ -48,6 +58,9 @@ public:
     this->stage                = GameStage::GS_UNKNOWN;
     this->locked               = false;
   }
+
+  GAME_GETTER(InputState *, input_state);
+  GAME_GETTER(GameStage, stage);
 
   /* Events called from the engine */
   void init(GameState *state);
@@ -59,8 +72,13 @@ public:
   );
   void create_bindings(GameState *state, mutex_t *lock, InputState *input_state);
   void process_input(GameState *state, const f64 update_time);
-  void set_stage(GameState *state, const GameStage stage);
-  static int compare_renderables(const void *r1, const void *r2);
+  void set_stage(const GameStage stage);
+  void init_lua();
+
+  static i32 compare_renderables(const void *r1, const void *r2);
+  static i32 lua_set_stage(lua_State *state);
+  static i32 lua_bind(lua_State *state);
+  static i32 lua_get_stage(lua_State *state);
 };
 
 #endif

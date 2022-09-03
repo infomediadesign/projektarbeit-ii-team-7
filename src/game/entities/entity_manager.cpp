@@ -14,6 +14,7 @@ void EntityManager::ent_remove(std::shared_ptr<Entity> ent) {
 
   ent->set_should_remove(true);
   ent->set_active(false);
+  ent->set_visible(false);
 }
 
 void EntityManager::create_player() {
@@ -36,7 +37,7 @@ bool EntityManager::can_delete_renderable(const Renderable *const renderable) {
 
 void EntityManager::clear_entities() {
   for (std::shared_ptr<Entity> target : this->entities) {
-    if (!this->is_valid(target))
+    if (target.get() == nullptr)
       continue;
 
     if (target->get_ent_class() != EntClass::PLAYER)

@@ -21,23 +21,47 @@
   this->n##_controller->get_base()->ent_manager = &this->ent_manager; \
   this->n##_controller->get_base()->lua         = this->lua;          \
   this->n##_controller->get_base()->input_state = this->input_state;  \
-  this->n##_controller->init(state)
+  this->n##_controller->init(this->game_state)
 
-static const Vector3 center_vec3 = { 0.0f, -0.4375f, 0.0f };
+#define LUA_GET_GAME(L)                              \
+  lua_pushlightuserdata(L, (void *)&lua_game_index); \
+  lua_gettable(L, LUA_REGISTRYINDEX);                \
+  Game *GAME = (Game *)lua_touserdata(L, -1);
+
+static const Vector3 center_vec3     = { 0.0f, -0.4375f, 0.0f };
+static const luaL_Reg lua_game_lib[] = {
+  { "setstage", Game::lua_set_stage },
+  { "bind", Game::lua_bind },
+  { "getstage", Game::lua_get_stage },
+  { NULL, NULL } /* sentinel */
+};
+static const i8 lua_game_index = 0;
 
 void Game::init(GameState *state) {
+  this->game_state = state;
+
   srand(platform_time_sec());
 
-  this->lua = luaL_newstate();
-  luaL_openlibs(this->lua);
+  this->init_lua();
+
+  LUA_EVENT_RUN(this->lua, "init");
+  LUA_EVENT_CALL(this->lua, 0, 0);
 
   this->ent_manager.create_player();
   this->ent_manager.get_player_ent()->set_pos(center_vec3 + vector_make3(0.0f, 0.0f, 1.0f));
   this->ent_manager.get_player_ent()->set_should_sort(true);
-  this->set_stage(state, GameStage::GS_OVERWORLD);
+  this->set_stage(GameStage::GS_OVERWORLD);
+
+  LUA_EVENT_RUN(this->lua, "post_init");
+  LUA_EVENT_CALL(this->lua, 0, 0);
 }
 
 void Game::update(GameState *state, mutex_t *lock) {
+  this->game_state = state;
+
+  LUA_EVENT_RUN(this->lua, "pre_update");
+  LUA_EVENT_CALL(this->lua, 0, 0);
+
   const f64 update_time = platform_time_f64();
 
   if (this->input_state != nullptr && this->input_state->command_count > 0) {
@@ -49,10 +73,21 @@ void Game::update(GameState *state, mutex_t *lock) {
     if (this->ent_manager.is_valid(ent))
       ent->update(update_time);
 
+  LUA_EVENT_RUN(this->lua, "update");
+  LUA_EVENT_CALL(this->lua, 0, 0);
+
   RUN_METHOD(update, state, lock)
+
+  LUA_EVENT_RUN(this->lua, "post_update");
+  LUA_EVENT_CALL(this->lua, 0, 0);
 }
 
 void Game::update_lazy(GameState *state, mutex_t *lock) {
+  this->game_state = state;
+
+  LUA_EVENT_RUN(this->lua, "pre_update_lazy");
+  LUA_EVENT_CALL(this->lua, 0, 0);
+
   this->locked = true;
 
   for (std::shared_ptr<Entity> ent : this->ent_manager.entities)
@@ -63,14 +98,33 @@ void Game::update_lazy(GameState *state, mutex_t *lock) {
     return ent.get() == nullptr || ent->should_be_removed();
   });
 
+  LUA_EVENT_RUN(this->lua, "update_lazy");
+  LUA_EVENT_CALL(this->lua, 0, 0);
+
   RUN_METHOD(update_lazy, state, lock)
+
+  LUA_EVENT_RUN(this->lua, "post_update_lazy");
+  LUA_EVENT_CALL(this->lua, 0, 0);
 
   this->locked = false;
 }
 
-void Game::update_paused(GameState *state, mutex_t *lock) { RUN_METHOD(update_paused, state, lock) }
+void Game::update_paused(GameState *state, mutex_t *lock) {
+  this->game_state = state;
 
-int Game::compare_renderables(const void *v1, const void *v2) {
+  LUA_EVENT_RUN(this->lua, "pre_update_paused");
+  LUA_EVENT_CALL(this->lua, 0, 0);
+
+  LUA_EVENT_RUN(this->lua, "update_paused");
+  LUA_EVENT_CALL(this->lua, 0, 0);
+
+  RUN_METHOD(update_paused, state, lock)
+
+  LUA_EVENT_RUN(this->lua, "post_update_paused");
+  LUA_EVENT_CALL(this->lua, 0, 0);
+}
+
+i32 Game::compare_renderables(const void *v1, const void *v2) {
   const Renderable *r1 = *(Renderable **)v1;
   const Renderable *r2 = *(Renderable **)v2;
 
@@ -91,6 +145,7 @@ int Game::compare_renderables(const void *v1, const void *v2) {
 void Game::update_renderables(
   GameState *state, mutex_t *lock, RenderState *render_state, Renderable **renderables, const u32 renderables_count
 ) {
+  this->game_state           = state;
   render_state->render_scale = this->scale;
 
   render_state->camera_transform.x[0] = render_state->render_scale;
@@ -165,6 +220,7 @@ void Game::update_renderables(
 }
 
 void Game::create_bindings(GameState *state, mutex_t *lock, InputState *input_state) {
+  this->game_state  = state;
   this->input_state = input_state;
 
   switch (this->stage) {
@@ -174,6 +230,9 @@ void Game::create_bindings(GameState *state, mutex_t *lock, InputState *input_st
   case GameStage::GS_BATTLE: this->battle_controller->get_base()->input_state = this->input_state; break;
   default: break;
   }
+
+  LUA_EVENT_RUN(this->lua, "pre_create_bindings");
+  LUA_EVENT_CALL(this->lua, 0, 0);
 
   /* Movement */
   input_bind(input_state, MF_KEY_W | MF_KEY_PRESS, Cmd::FORWARD);
@@ -223,6 +282,12 @@ void Game::create_bindings(GameState *state, mutex_t *lock, InputState *input_st
     input_bind(input_state, MF_KEY_F7 | MF_KEY_PRESS, Cmd::DEBUG_OVERWORLD);
     input_bind(input_state, MF_KEY_F8 | MF_KEY_PRESS, Cmd::DEBUG_BATTLE);
   }
+
+  LUA_EVENT_RUN(this->lua, "create_bindings");
+  LUA_EVENT_CALL(this->lua, 0, 0);
+
+  LUA_EVENT_RUN(this->lua, "post_create_bindings");
+  LUA_EVENT_CALL(this->lua, 0, 0);
 }
 
 void Game::process_input(GameState *state, const f64 update_time) {
@@ -231,8 +296,8 @@ void Game::process_input(GameState *state, const f64 update_time) {
     case Cmd::ZOOM: this->scale = std::clamp(this->scale + 0.05f, 0.5f, 2.0f); break;
     case -Cmd::ZOOM: this->scale = std::clamp(this->scale - 0.05f, 0.5f, 2.0f); break;
     case Cmd::ZOOM_RESET: this->scale = RENDER_SCALE; break;
-    case Cmd::DEBUG_OVERWORLD: this->set_stage(state, GameStage::GS_OVERWORLD); break;
-    case Cmd::DEBUG_BATTLE: this->set_stage(state, GameStage::GS_BATTLE); break;
+    case Cmd::DEBUG_OVERWORLD: this->set_stage(GameStage::GS_OVERWORLD); break;
+    case Cmd::DEBUG_BATTLE: this->set_stage(GameStage::GS_BATTLE); break;
 
     default: break;
     }
@@ -241,10 +306,21 @@ void Game::process_input(GameState *state, const f64 update_time) {
   RUN_METHOD(process_input, state, update_time)
 }
 
-void Game::set_stage(GameState *state, const GameStage stage) {
+void Game::set_stage(const GameStage stage) {
   this->locked = true;
 
-  RUN_METHOD(destroy, state)
+  LUA_EVENT_RUN(this->lua, "pre_stage_destroy");
+  LUA_EVENT_CALL(this->lua, 0, 0);
+
+  RUN_METHOD(destroy, this->game_state)
+
+  LUA_EVENT_RUN(this->lua, "post_stage_destroy");
+  LUA_EVENT_CALL(this->lua, 0, 0);
+
+  LUA_EVENT_RUN(this->lua, "pre_set_stage");
+  lua_pushnumber(this->lua, this->stage);
+  lua_pushnumber(this->lua, stage);
+  LUA_EVENT_CALL(this->lua, 2, 0);
 
   this->stage = stage;
 
@@ -256,5 +332,75 @@ void Game::set_stage(GameState *state, const GameStage stage) {
   default: break;
   }
 
+  lua_pushnumber(this->lua, this->stage);
+  lua_setglobal(this->lua, "GAME_STAGE");
+
+  LUA_EVENT_RUN(this->lua, "post_set_stage");
+  LUA_EVENT_CALL(this->lua, 0, 0);
+
   this->locked = false;
+}
+
+void Game::init_lua() {
+  this->lua = luaL_newstate();
+  luaL_openlibs(this->lua);
+
+  lua_pushlightuserdata(this->lua, (void *)&lua_game_index);
+  lua_pushlightuserdata(this->lua, (void *)this);
+  lua_settable(this->lua, LUA_REGISTRYINDEX);
+
+  luaL_register(this->lua, "game", lua_game_lib);
+
+  char real_path[256];
+
+  asset_find("lua/init.lua", real_path);
+
+  lua_pushstring(this->lua, real_path);
+  lua_setglobal(this->lua, "INIT_FILE");
+
+  if (luaL_dofile(this->lua, real_path)) {
+    std::cout << "Lua error:" << std::endl;
+
+    if (lua_isstring(this->lua, -1)) {
+      const char *err = luaL_checkstring(this->lua, -1);
+
+      std::cout << err << std::endl;
+    } else {
+      std::cout << "(error not on stack)" << std::endl;
+    }
+  }
+}
+
+i32 Game::lua_set_stage(lua_State *state) {
+  f64 idx = luaL_checknumber(state, 1);
+
+  LUA_GET_GAME(state);
+
+  GAME->set_stage((GameStage)idx);
+
+  if (idx >= 0.0 && idx <= (f64)GameStage::GS_UNKNOWN)
+    lua_pushboolean(state, 1);
+  else
+    lua_pushboolean(state, 0);
+
+  return 1;
+}
+
+i32 Game::lua_bind(lua_State *state) {
+  f64 key = luaL_checknumber(state, 1);
+  f64 cmd = luaL_checknumber(state, 2);
+
+  LUA_GET_GAME(state);
+
+  input_bind(GAME->get_input_state(), key, cmd);
+
+  return 0;
+}
+
+i32 Game::lua_get_stage(lua_State *state) {
+  LUA_GET_GAME(state);
+
+  lua_pushnumber(state, GAME->get_stage());
+
+  return 1;
 }
