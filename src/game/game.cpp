@@ -1,6 +1,7 @@
 #include "game.h"
 
 #include "binds.h"
+#include "lua/common.h"
 #include "vector.h"
 
 #include <algorithm>
@@ -33,6 +34,7 @@ static const luaL_Reg lua_game_lib[] = {
   { "setstage", Game::lua_set_stage },
   { "bind", Game::lua_bind },
   { "getstage", Game::lua_get_stage },
+  { "player", Game::lua_player },
   { NULL, NULL } /* sentinel */
 };
 static const luaL_Reg lua_ent_lib[] = { { "create", Game::lua_ent_create }, { NULL, NULL } };
@@ -211,6 +213,7 @@ void Game::update_renderables(
       renderable_set_velocity(r, ent->get_velocity());
       renderable_set_should_zsort(r, ent->get_should_sort() ? GS_TRUE : GS_FALSE);
       renderable_set_uv_offset(r, ent->get_uv_offset());
+      renderable_set_scale(r, ent->get_scale());
       renderable_set_updated(r, ent->get_updated_at());
     } else if (r->active == GS_TRUE) {
       renderable_set_active(r, GS_FALSE);
@@ -353,6 +356,8 @@ void Game::init_lua() {
   luaL_register(this->lua, "game", lua_game_lib);
   luaL_register(this->lua, "ent", lua_ent_lib);
 
+  lua_register_common(this->lua);
+
   char real_path[256];
 
   asset_find("lua/init.lua", real_path);
@@ -416,6 +421,19 @@ i32 Game::lua_ent_create(lua_State *state) {
   std::shared_ptr<Entity> ent = GAME->ent_manager.ent_create();
 
   lua_push_entity(state, ent.get());
+
+  return 1;
+}
+
+i32 Game::lua_player(lua_State *state) {
+  LUA_GET_GAME(state);
+
+  std::shared_ptr<Entity> ent = GAME->ent_manager.get_player_ent();
+
+  if (ent.get() != nullptr)
+    lua_push_entity(state, ent.get());
+  else
+    lua_pushnil(state);
 
   return 1;
 }

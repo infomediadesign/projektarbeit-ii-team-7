@@ -2,7 +2,7 @@
 
 #define PLY_ANIM_DELAY    0.1
 #define PLY_SPRITE_WIDTH  4.0f
-#define PLY_SPRITE_HEIGHT 7.0f
+#define PLY_SPRITE_HEIGHT 8.0f
 #define PLY_ANIM_ROW(name, n)                                                  \
   Vector2 *name##_frames = new Vector2[4];                                     \
   name##_frames[0]       = { 0.0f, n / PLY_SPRITE_HEIGHT };                    \
@@ -23,7 +23,7 @@ std::shared_ptr<Player> Player::make(std::shared_ptr<Entity> base) {
   PLY_ANIM_ROW(walk_front, 4.0f)
   PLY_ANIM_ROW(walk_back, 5.0f)
   PLY_ANIM_ROW(walk_left, 6.0f)
-  PLY_ANIM_ROW(walk_right, 6.0f)
+  PLY_ANIM_ROW(walk_right, 7.0f)
 
   Animation *anims = new Animation[8];
 

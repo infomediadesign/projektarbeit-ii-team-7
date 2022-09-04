@@ -163,6 +163,131 @@ ENT_LUA_VEC2_SETTER(uv_size)
 ENT_LUA_VEC2_SETTER(scale)
 ENT_LUA_VEC3_SETTER(pos)
 
+i32 lua_entity_rotate_continuous(lua_State *state) {
+  Entity **ent_ptr = (Entity **)luaL_checkudata(state, 1, "EntityMeta");
+
+  if (lua_istable(state, 2) && lua_objlen(state, 2) == 3 && lua_isnumber(state, 3)) {
+    lua_rawgeti(state, 2, 1);
+    const f32 x = (f32)luaL_checknumber(state, -1);
+    lua_rawgeti(state, 2, 2);
+    const f32 y = (f32)luaL_checknumber(state, -1);
+    lua_rawgeti(state, 2, 3);
+    const f32 z   = (f32)luaL_checknumber(state, -1);
+    const f32 vel = (f32)luaL_checknumber(state, 3);
+    (*ent_ptr)->rotate_continuous({ x, y, z }, vel);
+    lua_pushboolean(state, 1);
+  } else
+    lua_pushboolean(state, 0);
+  return 1;
+}
+
+i32 lua_entity_rotate(lua_State *state) {
+  Entity **ent_ptr = (Entity **)luaL_checkudata(state, 1, "EntityMeta");
+
+  if (lua_istable(state, 2) && lua_objlen(state, 2) == 3 && lua_isnumber(state, 3)) {
+    lua_rawgeti(state, 2, 1);
+    const f32 x = (f32)luaL_checknumber(state, -1);
+    lua_rawgeti(state, 2, 2);
+    const f32 y = (f32)luaL_checknumber(state, -1);
+    lua_rawgeti(state, 2, 3);
+    const f32 z     = (f32)luaL_checknumber(state, -1);
+    const f32 angle = (f32)luaL_checknumber(state, 3);
+    (*ent_ptr)->rotate({ x, y, z }, angle);
+    lua_pushboolean(state, 1);
+  } else
+    lua_pushboolean(state, 0);
+  return 1;
+}
+
+i32 lua_entity_collides_with(lua_State *state) {
+  Entity **ent_ptr = (Entity **)luaL_checkudata(state, 1, "EntityMeta");
+
+  if (lua_isuserdata(state, 2)) {
+    Entity **ent2_ptr = (Entity **)luaL_checkudata(state, 2, "EntityMeta");
+    lua_pushboolean(state, (*ent_ptr)->collides_with(std::shared_ptr<Entity>(*ent2_ptr)));
+  } else
+    lua_pushboolean(state, 0);
+  return 1;
+}
+
+i32 lua_entity_set_velocity(lua_State *state) {
+  Entity **ent_ptr = (Entity **)luaL_checkudata(state, 1, "EntityMeta");
+
+  if (lua_istable(state, 2) && lua_objlen(state, 2) == 3) {
+    lua_rawgeti(state, 2, 1);
+    const f32 x = (f32)luaL_checknumber(state, -1);
+    lua_rawgeti(state, 2, 2);
+    const f32 y = (f32)luaL_checknumber(state, -1);
+    lua_rawgeti(state, 2, 3);
+    const f32 z = (f32)luaL_checknumber(state, -1);
+    (*ent_ptr)->set_velocity({ x, y, z });
+    lua_pushboolean(state, 1);
+  } else
+    lua_pushboolean(state, 0);
+  return 1;
+}
+
+i32 lua_entity_set_velocity_x(lua_State *state) {
+  Entity **ent_ptr = (Entity **)luaL_checkudata(state, 1, "EntityMeta");
+
+  if (lua_isnumber(state, 2)) {
+    lua_rawgeti(state, 2, 1);
+    const f32 vel = (f32)luaL_checknumber(state, 2);
+    (*ent_ptr)->set_velocity_x(vel);
+    lua_pushboolean(state, 1);
+  } else
+    lua_pushboolean(state, 0);
+  return 1;
+}
+
+i32 lua_entity_set_velocity_y(lua_State *state) {
+  Entity **ent_ptr = (Entity **)luaL_checkudata(state, 1, "EntityMeta");
+
+  if (lua_isnumber(state, 2)) {
+    lua_rawgeti(state, 2, 1);
+    const f32 vel = (f32)luaL_checknumber(state, 2);
+    (*ent_ptr)->set_velocity_y(vel);
+    lua_pushboolean(state, 1);
+  } else
+    lua_pushboolean(state, 0);
+  return 1;
+}
+
+i32 lua_entity_set_parent(lua_State *state) {
+  Entity **ent_ptr = (Entity **)luaL_checkudata(state, 1, "EntityMeta");
+
+  if (lua_isuserdata(state, 2)) {
+    Entity **ent2_ptr = (Entity **)luaL_checkudata(state, 2, "EntityMeta");
+    (*ent_ptr)->set_parent(std::shared_ptr<Entity>(*ent2_ptr));
+  }
+
+  return 0;
+}
+
+i32 lua_entity_should_be_removed(lua_State *state) {
+  Entity **ent_ptr = (Entity **)luaL_checkudata(state, 1, "EntityMeta");
+
+  lua_pushboolean(state, (*ent_ptr)->should_be_removed());
+
+  return 1;
+}
+
+i32 lua_entity_is_valid(lua_State *state) {
+  Entity **ent_ptr = (Entity **)luaL_checkudata(state, 1, "EntityMeta");
+
+  lua_pushboolean(state, (*ent_ptr)->is_valid());
+
+  return 1;
+}
+
+i32 lua_entity_update(lua_State *state) {
+  Entity **ent_ptr = (Entity **)luaL_checkudata(state, 1, "EntityMeta");
+
+  (*ent_ptr)->update(platform_time_f64());
+
+  return 0;
+}
+
 /* Reg stuff */
 
 static luaL_Reg ent_functions[] = { { "get_active", lua_entity_get_active },
@@ -203,6 +328,16 @@ static luaL_Reg ent_functions[] = { { "get_active", lua_entity_get_active },
                                     { "set_uv_size", lua_entity_set_uv_size },
                                     { "set_scale", lua_entity_set_scale },
                                     { "set_pos", lua_entity_set_pos },
+                                    { "rotate_continuous", lua_entity_rotate_continuous },
+                                    { "collides_with", lua_entity_collides_with },
+                                    { "rotate", lua_entity_rotate },
+                                    { "set_parent", lua_entity_set_parent },
+                                    { "set_velocity", lua_entity_set_velocity },
+                                    { "set_velocity_x", lua_entity_set_velocity_x },
+                                    { "set_velocity_y", lua_entity_set_velocity_y },
+                                    { "update", lua_entity_update },
+                                    { "should_be_removed", lua_entity_should_be_removed },
+                                    { "is_valid", lua_entity_is_valid },
                                     { nullptr, nullptr } };
 
 void lua_push_entity(lua_State *state, Entity *ent) {

@@ -18,8 +18,6 @@ function table.length(t)
   return len
 end
 
-print 'penis'
-
 function printtable(t, indent, done, indent_length)
   done = done or {}
   indent = indent or 0

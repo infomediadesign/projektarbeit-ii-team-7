@@ -80,6 +80,7 @@ public:
   static i32 lua_set_stage(lua_State *state);
   static i32 lua_bind(lua_State *state);
   static i32 lua_get_stage(lua_State *state);
+  static i32 lua_player(lua_State *state);
   static i32 lua_ent_create(lua_State *state);
 };
 

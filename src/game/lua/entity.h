@@ -1,6 +1,7 @@
 #ifndef __GAME_LUA_ENTITY_H
 #define __GAME_LUA_ENTITY_H
 
+#include <engine/platform.h>
 #include <game/entities/entity.h>
 #include <lua.hpp>
 
