@@ -1,6 +1,7 @@
 module('event', package.seeall)
 
-local storage = {}
+local storage = EVENT_STORAGE or {}
+EVENT_STORAGE = EVENT_STORAGE or storage
 
 function event.handler(id, handler_id, callback)
   storage[id] = storage[id] or {}

@@ -35,7 +35,8 @@ static const luaL_Reg lua_game_lib[] = {
   { "getstage", Game::lua_get_stage },
   { NULL, NULL } /* sentinel */
 };
-static const i8 lua_game_index = 0;
+static const luaL_Reg lua_ent_lib[] = { { "create", Game::lua_ent_create }, { NULL, NULL } };
+static const i8 lua_game_index      = 0;
 
 void Game::init(GameState *state) {
   this->game_state = state;
@@ -350,6 +351,7 @@ void Game::init_lua() {
   lua_settable(this->lua, LUA_REGISTRYINDEX);
 
   luaL_register(this->lua, "game", lua_game_lib);
+  luaL_register(this->lua, "ent", lua_ent_lib);
 
   char real_path[256];
 
@@ -357,6 +359,9 @@ void Game::init_lua() {
 
   lua_pushstring(this->lua, real_path);
   lua_setglobal(this->lua, "INIT_FILE");
+
+  lua_newtable(this->lua);
+  lua_setglobal(this->lua, "ENTS");
 
   if (luaL_dofile(this->lua, real_path)) {
     std::cout << "Lua error:" << std::endl;
@@ -401,6 +406,16 @@ i32 Game::lua_get_stage(lua_State *state) {
   LUA_GET_GAME(state);
 
   lua_pushnumber(state, GAME->get_stage());
+
+  return 1;
+}
+
+i32 Game::lua_ent_create(lua_State *state) {
+  LUA_GET_GAME(state);
+
+  std::shared_ptr<Entity> ent = GAME->ent_manager.ent_create();
+
+  lua_push_entity(state, ent.get());
 
   return 1;
 }

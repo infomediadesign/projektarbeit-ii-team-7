@@ -19,6 +19,7 @@
 #include "entities/entity_manager.h"
 #include "entities/player.h"
 #include "level.h"
+#include "lua/entity.h"
 
 #include <engine/input/input.h>
 #include <engine/platform.h>
@@ -79,6 +80,7 @@ public:
   static i32 lua_set_stage(lua_State *state);
   static i32 lua_bind(lua_State *state);
   static i32 lua_get_stage(lua_State *state);
+  static i32 lua_ent_create(lua_State *state);
 };
 
 #endif

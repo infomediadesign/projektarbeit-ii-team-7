@@ -34,10 +34,32 @@ function require(mod)
   CURRENT_FILE_DIRECTORY = old_dir
 end
 
+require 'table_utils'
 require 'enums'
 require 'event'
 
 print 'Lua system initialized'
+
+local e = ent.create()
+
+print 'entity test:'
+print(e:get_active())
+print(e:get_entity_index())
+print(e:get_lifetime())
+
+local old_lifetime = e:set_lifetime(9999)
+
+printtable(e:get_scale())
+
+e:set_scale(10, 20)
+
+printtable(e:get_scale())
+
+e:set_scale({20, 10})
+
+printtable(e:get_scale())
+
+print('old lifetime: '..old_lifetime..', new lifetime: '..e:get_lifetime())
 
 event.handler('pre_set_stage', 'stage_handler', function(old, new)
   print('old stage: '..old..'\nnew stage: '..new)

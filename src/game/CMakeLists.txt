@@ -29,6 +29,8 @@ set(game_source_files
   controllers/menu_controller.cpp
   controllers/overworld_controller.h
   controllers/overworld_controller.cpp
+  lua/entity.h
+  lua/entity.cpp
   game.h
   game.cpp
   interface.h
