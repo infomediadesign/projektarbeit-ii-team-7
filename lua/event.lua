@@ -23,7 +23,7 @@ function event.run(id, ...)
   end
 
   if GAME and GAME[id] then
-    local success, a, b, c, d, e, f = pcall(GAME[id], ...)
+    local success, a, b, c, d, e, f = pcall(GAME[id], GAME, ...)
 
     if success then
       return a, b, c, d, e, f

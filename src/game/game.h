@@ -3,12 +3,6 @@
 
 #define GAME_GETTER(t, n) \
   t get_##n() const { return this->n; }
-#define LUA_EVENT_RUN(L, id)  \
-  lua_getglobal(L, "event");  \
-  lua_getfield(L, -1, "run"); \
-  lua_remove(L, -2);          \
-  lua_pushstring(L, id);
-#define LUA_EVENT_CALL(L, args, res) lua_call(L, args + 1, res);
 
 #include "controllers/battle_controller.h"
 #include "controllers/dungeon_controller.h"
@@ -19,6 +13,7 @@
 #include "entities/player.h"
 #include "level.h"
 #include "lua/entity.h"
+#include "lua/helpers.h"
 
 #include <engine/input/input.h>
 #include <engine/limits.h>
@@ -75,6 +70,8 @@ public:
   void process_input(GameState *state, const f64 update_time);
   void set_stage(const GameStage stage);
   void init_lua();
+  void ent_remove(Entity *ent);
+  void clear_entities();
 
   static i32 compare_renderables(const void *r1, const void *r2);
   static i32 lua_set_stage(lua_State *state);
@@ -82,6 +79,8 @@ public:
   static i32 lua_get_stage(lua_State *state);
   static i32 lua_player(lua_State *state);
   static i32 lua_ent_create(lua_State *state);
+  static i32 lua_ent_clear(lua_State *state);
+  static i32 lua_ent_remove(lua_State *state);
 };
 
 #endif

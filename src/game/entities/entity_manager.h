@@ -17,9 +17,11 @@ public:
   Entity entities[MAX_ENTITIES];
   std::vector<Renderable *> dangling_renderables;
   Player *player;
+  lua_State *lua;
 
   EntityManager() {
     this->player = nullptr;
+    this->lua    = nullptr;
 
     for (u32 i = 0; i < MAX_ENTITIES; i++) {
       this->entities[i].set_entity_index(i);

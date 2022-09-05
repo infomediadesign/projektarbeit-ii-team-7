@@ -37,7 +37,10 @@ static const luaL_Reg lua_game_lib[] = {
   { "player", Game::lua_player },
   { NULL, NULL } /* sentinel */
 };
-static const luaL_Reg lua_ent_lib[] = { { "create", Game::lua_ent_create }, { NULL, NULL } };
+static const luaL_Reg lua_ent_lib[] = { { "create", Game::lua_ent_create },
+                                        { "remove", Game::lua_ent_remove },
+                                        { "clear", Game::lua_ent_clear },
+                                        { NULL, NULL } };
 static const i8 lua_game_index      = 0;
 
 void Game::init(GameState *state) {
@@ -234,55 +237,57 @@ void Game::create_bindings(GameState *state, mutex_t *lock, InputState *input_st
   }
 
   LUA_EVENT_RUN(this->lua, "pre_create_bindings");
-  LUA_EVENT_CALL(this->lua, 0, 0);
+  LUA_EVENT_CALL(this->lua, 0, 1);
 
-  /* Movement */
-  input_bind(input_state, MF_KEY_W | MF_KEY_PRESS, Cmd::FORWARD);
-  input_bind(input_state, MF_KEY_A | MF_KEY_PRESS, Cmd::LEFT);
-  input_bind(input_state, MF_KEY_S | MF_KEY_PRESS, Cmd::BACK);
-  input_bind(input_state, MF_KEY_D | MF_KEY_PRESS, Cmd::RIGHT);
-  input_bind(input_state, MF_KEY_UP | MF_KEY_PRESS, Cmd::FORWARD);
-  input_bind(input_state, MF_KEY_LEFT | MF_KEY_PRESS, Cmd::LEFT);
-  input_bind(input_state, MF_KEY_DOWN | MF_KEY_PRESS, Cmd::BACK);
-  input_bind(input_state, MF_KEY_RIGHT | MF_KEY_PRESS, Cmd::RIGHT);
-  input_bind(input_state, MF_KEY_W | MF_KEY_RELEASE, -Cmd::FORWARD);
-  input_bind(input_state, MF_KEY_A | MF_KEY_RELEASE, -Cmd::LEFT);
-  input_bind(input_state, MF_KEY_S | MF_KEY_RELEASE, -Cmd::BACK);
-  input_bind(input_state, MF_KEY_D | MF_KEY_RELEASE, -Cmd::RIGHT);
-  input_bind(input_state, MF_KEY_UP | MF_KEY_RELEASE, -Cmd::FORWARD);
-  input_bind(input_state, MF_KEY_LEFT | MF_KEY_RELEASE, -Cmd::LEFT);
-  input_bind(input_state, MF_KEY_DOWN | MF_KEY_RELEASE, -Cmd::BACK);
-  input_bind(input_state, MF_KEY_RIGHT | MF_KEY_RELEASE, -Cmd::RIGHT);
+  if (!lua_isboolean(this->lua, -1) || lua_toboolean(this->lua, -1) == 1) {
+    /* Movement */
+    input_bind(input_state, MF_KEY_W | MF_KEY_PRESS, Cmd::FORWARD);
+    input_bind(input_state, MF_KEY_A | MF_KEY_PRESS, Cmd::LEFT);
+    input_bind(input_state, MF_KEY_S | MF_KEY_PRESS, Cmd::BACK);
+    input_bind(input_state, MF_KEY_D | MF_KEY_PRESS, Cmd::RIGHT);
+    input_bind(input_state, MF_KEY_UP | MF_KEY_PRESS, Cmd::FORWARD);
+    input_bind(input_state, MF_KEY_LEFT | MF_KEY_PRESS, Cmd::LEFT);
+    input_bind(input_state, MF_KEY_DOWN | MF_KEY_PRESS, Cmd::BACK);
+    input_bind(input_state, MF_KEY_RIGHT | MF_KEY_PRESS, Cmd::RIGHT);
+    input_bind(input_state, MF_KEY_W | MF_KEY_RELEASE, -Cmd::FORWARD);
+    input_bind(input_state, MF_KEY_A | MF_KEY_RELEASE, -Cmd::LEFT);
+    input_bind(input_state, MF_KEY_S | MF_KEY_RELEASE, -Cmd::BACK);
+    input_bind(input_state, MF_KEY_D | MF_KEY_RELEASE, -Cmd::RIGHT);
+    input_bind(input_state, MF_KEY_UP | MF_KEY_RELEASE, -Cmd::FORWARD);
+    input_bind(input_state, MF_KEY_LEFT | MF_KEY_RELEASE, -Cmd::LEFT);
+    input_bind(input_state, MF_KEY_DOWN | MF_KEY_RELEASE, -Cmd::BACK);
+    input_bind(input_state, MF_KEY_RIGHT | MF_KEY_RELEASE, -Cmd::RIGHT);
 
-  /* Interactions */
-  input_bind(input_state, MF_KEY_E | MF_KEY_PRESS, Cmd::USE);
-  input_bind(input_state, MF_KEY_E | MF_KEY_RELEASE, -Cmd::USE);
-  input_bind(input_state, MF_KEY_ENTER | MF_KEY_PRESS, Cmd::USE);
-  input_bind(input_state, MF_KEY_ENTER | MF_KEY_RELEASE, -Cmd::USE);
-  input_bind(input_state, MF_KEY_F6 | MF_KEY_PRESS, Cmd::SAVE);
-  input_bind(input_state, MF_KEY_F9 | MF_KEY_PRESS, Cmd::LOAD);
+    /* Interactions */
+    input_bind(input_state, MF_KEY_E | MF_KEY_PRESS, Cmd::USE);
+    input_bind(input_state, MF_KEY_E | MF_KEY_RELEASE, -Cmd::USE);
+    input_bind(input_state, MF_KEY_ENTER | MF_KEY_PRESS, Cmd::USE);
+    input_bind(input_state, MF_KEY_ENTER | MF_KEY_RELEASE, -Cmd::USE);
+    input_bind(input_state, MF_KEY_F6 | MF_KEY_PRESS, Cmd::SAVE);
+    input_bind(input_state, MF_KEY_F9 | MF_KEY_PRESS, Cmd::LOAD);
 
-  /* Menus */
-  input_bind(input_state, MF_KEY_TAB | MF_KEY_PRESS, Cmd::INVENTORY);
-  input_bind(input_state, MF_KEY_TAB | MF_KEY_RELEASE, -Cmd::INVENTORY);
-  input_bind(input_state, MF_KEY_I | MF_KEY_PRESS, Cmd::INVENTORY);
-  input_bind(input_state, MF_KEY_I | MF_KEY_RELEASE, -Cmd::INVENTORY);
-  input_bind(input_state, MF_KEY_RIGHT_CONTROL | MF_KEY_PRESS, Cmd::INVENTORY);
-  input_bind(input_state, MF_KEY_RIGHT_CONTROL | MF_KEY_RELEASE, -Cmd::INVENTORY);
-  input_bind(input_state, MF_KEY_ESCAPE | MF_KEY_PRESS, Cmd::MENU);
-  input_bind(input_state, MF_KEY_ESCAPE | MF_KEY_RELEASE, -Cmd::MENU);
-  input_bind(input_state, MF_KEY_BACKSPACE | MF_KEY_PRESS, Cmd::MENU);
-  input_bind(input_state, MF_KEY_BACKSPACE | MF_KEY_RELEASE, -Cmd::MENU);
+    /* Menus */
+    input_bind(input_state, MF_KEY_TAB | MF_KEY_PRESS, Cmd::INVENTORY);
+    input_bind(input_state, MF_KEY_TAB | MF_KEY_RELEASE, -Cmd::INVENTORY);
+    input_bind(input_state, MF_KEY_I | MF_KEY_PRESS, Cmd::INVENTORY);
+    input_bind(input_state, MF_KEY_I | MF_KEY_RELEASE, -Cmd::INVENTORY);
+    input_bind(input_state, MF_KEY_RIGHT_CONTROL | MF_KEY_PRESS, Cmd::INVENTORY);
+    input_bind(input_state, MF_KEY_RIGHT_CONTROL | MF_KEY_RELEASE, -Cmd::INVENTORY);
+    input_bind(input_state, MF_KEY_ESCAPE | MF_KEY_PRESS, Cmd::MENU);
+    input_bind(input_state, MF_KEY_ESCAPE | MF_KEY_RELEASE, -Cmd::MENU);
+    input_bind(input_state, MF_KEY_BACKSPACE | MF_KEY_PRESS, Cmd::MENU);
+    input_bind(input_state, MF_KEY_BACKSPACE | MF_KEY_RELEASE, -Cmd::MENU);
 
-  /* Zoom */
-  input_bind(input_state, MF_KEY_F1 | MF_KEY_PRESS, Cmd::ZOOM);
-  input_bind(input_state, MF_KEY_F2 | MF_KEY_PRESS, -Cmd::ZOOM);
-  input_bind(input_state, MF_KEY_F3 | MF_KEY_PRESS, Cmd::ZOOM_RESET);
+    /* Zoom */
+    input_bind(input_state, MF_KEY_F1 | MF_KEY_PRESS, Cmd::ZOOM);
+    input_bind(input_state, MF_KEY_F2 | MF_KEY_PRESS, -Cmd::ZOOM);
+    input_bind(input_state, MF_KEY_F3 | MF_KEY_PRESS, Cmd::ZOOM_RESET);
 
-  /* Debug */
-  if (game_is_debug(state)) {
-    input_bind(input_state, MF_KEY_F7 | MF_KEY_PRESS, Cmd::DEBUG_OVERWORLD);
-    input_bind(input_state, MF_KEY_F8 | MF_KEY_PRESS, Cmd::DEBUG_BATTLE);
+    /* Debug */
+    if (game_is_debug(state)) {
+      input_bind(input_state, MF_KEY_F7 | MF_KEY_PRESS, Cmd::DEBUG_OVERWORLD);
+      input_bind(input_state, MF_KEY_F8 | MF_KEY_PRESS, Cmd::DEBUG_BATTLE);
+    }
   }
 
   LUA_EVENT_RUN(this->lua, "create_bindings");
@@ -305,6 +310,19 @@ void Game::process_input(GameState *state, const f64 update_time) {
     }
   }
 
+  LUA_EVENT_RUN(this->lua, "process_input");
+  lua_createtable(this->lua, this->input_state->command_count, 0);
+
+  for (u32 i = 0; i < this->input_state->command_count; i++) {
+    /* Useless comment! Otherwise linter removes brackets here, and that errors */
+    LUA_TABLE_INSERT(this->lua, number, i + 1, this->input_state->commands[i]);
+  }
+
+  LUA_EVENT_CALL(this->lua, 1, 1);
+
+  if (lua_isboolean(this->lua, -1) && lua_toboolean(this->lua, -1) == 0)
+    return;
+
   RUN_METHOD(process_input, state, update_time)
 }
 
@@ -312,7 +330,12 @@ void Game::set_stage(const GameStage stage) {
   this->locked = true;
 
   LUA_EVENT_RUN(this->lua, "pre_stage_destroy");
-  LUA_EVENT_CALL(this->lua, 0, 0);
+  LUA_EVENT_CALL(this->lua, 0, 1);
+
+  if (lua_isboolean(this->lua, -1) && lua_toboolean(this->lua, -1) == 0) {
+    this->locked = false;
+    return;
+  }
 
   RUN_METHOD(destroy, this->game_state)
 
@@ -322,7 +345,12 @@ void Game::set_stage(const GameStage stage) {
   LUA_EVENT_RUN(this->lua, "pre_set_stage");
   lua_pushnumber(this->lua, this->stage);
   lua_pushnumber(this->lua, stage);
-  LUA_EVENT_CALL(this->lua, 2, 0);
+  LUA_EVENT_CALL(this->lua, 2, 1);
+
+  if (lua_isboolean(this->lua, -1) && lua_toboolean(this->lua, -1) == 0) {
+    this->locked = false;
+    return;
+  }
 
   this->stage = stage;
 
@@ -342,6 +370,10 @@ void Game::set_stage(const GameStage stage) {
 
   this->locked = false;
 }
+
+void Game::ent_remove(Entity *ent) { this->ent_manager.ent_remove(ent); }
+
+void Game::clear_entities() { this->ent_manager.clear_entities(); }
 
 void Game::init_lua() {
   this->lua = luaL_newstate();
@@ -366,6 +398,9 @@ void Game::init_lua() {
   lua_newtable(this->lua);
   lua_setglobal(this->lua, "ENTS");
 
+  lua_newtable(this->lua);
+  lua_setglobal(this->lua, "GAME");
+
   if (luaL_dofile(this->lua, real_path)) {
     std::cout << "Lua error:" << std::endl;
 
@@ -377,6 +412,8 @@ void Game::init_lua() {
       std::cout << "(error not on stack)" << std::endl;
     }
   }
+
+  this->ent_manager.lua = this->lua;
 }
 
 i32 Game::lua_set_stage(lua_State *state) {
@@ -437,4 +474,22 @@ i32 Game::lua_player(lua_State *state) {
     lua_pushnil(state);
 
   return 1;
+}
+
+i32 Game::lua_ent_clear(lua_State *state) {
+  LUA_GET_GAME(state);
+
+  GAME->clear_entities();
+
+  return 0;
+}
+
+i32 Game::lua_ent_remove(lua_State *state) {
+  LUA_GET_GAME(state);
+
+  Entity **ent_ptr = (Entity **)luaL_checkudata(state, 1, "EntityMeta");
+
+  GAME->ent_remove(*ent_ptr);
+
+  return 0;
 }

@@ -38,23 +38,6 @@ require 'table_utils'
 require 'enums'
 require 'event'
 require 'entity'
+require 'game/game'
 
-print 'Lua system initialized'
-
-event.handler('post_init', 'do_weird_stuff_with_player', function()
-  local ply = game.player()
-
-  if valid(ply) then
-    ply:set_scale(2, 2)
-  end
-end)
-
-event.handler('update', 'scale_player', function()
-  local ply = game.player()
-
-  if valid(ply) then
-    local scale = 1 + 0.5 * math.sin(platform.time() * 4)
-
-    ply:set_scale(scale, scale)
-  end
-end)
+print 'Lua boot complete'

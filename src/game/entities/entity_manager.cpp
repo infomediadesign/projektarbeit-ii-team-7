@@ -1,25 +1,51 @@
 #include "entity_manager.h"
 
+#include "../lua/entity.h"
+#include "../lua/helpers.h"
+
 Entity *EntityManager::ent_create(Entity *parent) {
   Entity &ent = this->find_free_ent();
 
   ent.set_default();
   ent.set_parent(parent);
 
+  LUA_EVENT_RUN(this->lua, "ent_create");
+  lua_push_entity(this->lua, &ent);
+  LUA_EVENT_CALL(this->lua, 1, 0);
+
   return &ent;
 }
 
 void EntityManager::ent_remove(Entity *ent) {
+  LUA_EVENT_RUN(this->lua, "pre_ent_remove");
+  lua_push_entity(this->lua, ent);
+  LUA_EVENT_CALL(this->lua, 1, 0);
+
+  LUA_EVENT_RUN(this->lua, "can_remove_entity");
+  lua_push_entity(this->lua, ent);
+  LUA_EVENT_CALL(this->lua, 1, 1);
+
+  if (lua_isboolean(this->lua, -1) && lua_toboolean(this->lua, -1) == 0)
+    return;
+
   this->dangling_renderables.push_back(ent->get_renderable());
 
   ent->set_should_remove(true);
   ent->set_active(false);
   ent->set_visible(false);
+
+  LUA_EVENT_RUN(this->lua, "ent_removed");
+  lua_push_entity(this->lua, ent);
+  LUA_EVENT_CALL(this->lua, 1, 0);
 }
 
 void EntityManager::create_player() {
   this->player = Player::make(this->ent_create());
   this->player->get_base()->set_active(true);
+
+  LUA_EVENT_RUN(this->lua, "player_created");
+  lua_push_entity(this->lua, this->player->get_base());
+  LUA_EVENT_CALL(this->lua, 1, 0);
 }
 
 bool EntityManager::can_delete_renderable(const Renderable *const renderable) {
@@ -34,13 +60,27 @@ bool EntityManager::can_delete_renderable(const Renderable *const renderable) {
 }
 
 void EntityManager::clear_entities() {
+  LUA_EVENT_RUN(this->lua, "pre_clear_entities");
+  LUA_EVENT_CALL(this->lua, 0, 0);
+
   for (Entity &target : this->entities) {
     if (!target.is_valid())
       continue;
 
-    if (target.get_ent_class() != EntClass::PLAYER)
+    if (target.get_ent_class() != EntClass::PLAYER) {
+      LUA_EVENT_RUN(this->lua, "can_clear_entity");
+      lua_push_entity(this->lua, &target);
+      LUA_EVENT_CALL(this->lua, 1, 1);
+
+      if (lua_isboolean(this->lua, -1) && lua_toboolean(this->lua, -1) == 0)
+        continue;
+
       this->ent_remove(&target);
+    }
   }
+
+  LUA_EVENT_RUN(this->lua, "post_clear_entities");
+  LUA_EVENT_CALL(this->lua, 0, 0);
 }
 
 Renderable *
