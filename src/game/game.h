@@ -1,7 +1,6 @@
 #ifndef __GAME_GAME_H
 #define __GAME_GAME_H
 
-#define MAX_ENTITIES 4096
 #define GAME_GETTER(t, n) \
   t get_##n() const { return this->n; }
 #define LUA_EVENT_RUN(L, id)  \
@@ -22,6 +21,7 @@
 #include "lua/entity.h"
 
 #include <engine/input/input.h>
+#include <engine/limits.h>
 #include <engine/platform.h>
 #include <engine/render/renderable.h>
 #include <engine/state/state.h>

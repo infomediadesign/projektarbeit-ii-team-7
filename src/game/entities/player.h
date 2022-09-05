@@ -16,19 +16,19 @@ enum {
 
 class Player {
 private:
-  std::shared_ptr<Entity> base;
+  Entity *base;
 
 public:
-  Player(std::shared_ptr<Entity> base) {
+  Player(Entity *base) {
     this->base = base;
     this->base->set_ent_class(EntClass::PLAYER);
   }
 
-  static std::shared_ptr<Player> make(std::shared_ptr<Entity> base);
+  static Player *make(Entity *base);
 
   void update_anim();
 
-  ENT_GETTER(std::shared_ptr<Entity>, base)
+  ENT_GETTER(Entity *, base)
 };
 
 #endif

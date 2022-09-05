@@ -38,9 +38,8 @@ private:
   Vector2 uv_size;
   Vector2 uv_offset;
   Vector2 scale;
-  std::shared_ptr<Entity> parent;
-  std::vector<std::shared_ptr<Entity>> attachments;
   std::string texture_path;
+  Entity *parent;
   Renderable *renderable;
   Animation *anims;
   f64 created_at;
@@ -62,46 +61,7 @@ private:
   bool ready;
 
 public:
-  Entity() : Entity(0U) {}
-
-  Entity(const u32 entity_index) {
-    const size_t addr     = (size_t)this;
-    this->id              = crc64(&addr, sizeof(size_t));
-    this->entity_index    = entity_index;
-    this->current_anim    = 0;
-    this->ready           = false;
-    this->active          = false;
-    this->animated        = false;
-    this->should_remove   = false;
-    this->should_sort     = false;
-    this->should_collide  = false;
-    this->should_update   = true;
-    this->visible         = true;
-    this->ent_class       = EntClass::UNKNOWN;
-    this->renderable      = nullptr;
-    this->anims           = nullptr;
-    this->uv_size         = { 1.0f, 1.0f };
-    this->scale           = { 1.0f, 1.0f };
-    this->uv_offset       = { 0.0f, 0.0f };
-    this->pos             = { 0.0f, 0.0f, 0.0f };
-    this->velocity        = { 0.0f, 0.0f, 0.0f };
-    this->aabb_min        = { -0.05f, -0.05f, 0.0f };
-    this->aabb_max        = { 0.05f, 0.05f, 0.0f };
-    this->axis            = { 0.0f, 0.0f, 1.0f };
-    this->rotation_matrix = {
-      { 1.0f, 0.0f, 0.0f, 0.0f },
-      { 0.0f, 1.0f, 0.0f, 0.0f },
-      { 0.0f, 0.0f, 1.0f, 0.0f },
-      { 0.0f, 0.0f, 0.0f, 1.0f },
-    };
-    this->angle            = 0.0f;
-    this->angular_velocity = 0.0f;
-    this->updated_at       = 0.0;
-    this->parent           = nullptr;
-    this->texture_path     = "";
-    this->lifetime         = 0.0;
-    this->created_at       = platform_time_f64();
-  }
+  Entity() { this->set_default(); }
 
   ENT_GETTER(std::string, texture_path);
   ENT_GETTER(Animation *, anims);
@@ -139,6 +99,7 @@ public:
   ENT_SETTER(Renderable *, renderable)
   ENT_SETTER(f64, lifetime)
   ENT_SETTER(u32, current_anim)
+  ENT_SETTER(u32, entity_index)
   ENT_SETTER(EntClass, ent_class)
   ENT_SETTER(bool, should_collide)
   ENT_SETTER(bool, should_remove)
@@ -149,15 +110,16 @@ public:
   ENT_SETTER(bool, ready)
 
   void rotate_continuous(const Vector3 axis, const f32 angular_velocity);
-  bool collides_with(std::shared_ptr<Entity> ent) const;
+  bool collides_with(Entity *ent) const;
   void rotate(const Vector3 axis, const f32 angle);
-  void set_parent(std::shared_ptr<Entity> ent);
+  void set_parent(Entity *ent);
   void set_velocity(const Vector3 velocity);
   void set_velocity_x(const f32 velocity);
   void set_velocity_y(const f32 velocity);
   void update(const f64 current_time);
   bool should_be_removed() const;
   bool is_valid() const;
+  void set_default();
 };
 
 #endif

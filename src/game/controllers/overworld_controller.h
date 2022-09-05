@@ -9,7 +9,7 @@ private:
   Controller base;
   Level *level;
 
-  void check_collision(std::shared_ptr<Entity> ent);
+  void check_collision(Entity *ent);
 
 public:
   CONTROLLER_METHOD_DEFINITIONS

@@ -23,7 +23,7 @@ void BattleController::init(GameState *state) {
   this->opponent->set_active(true);
 
   for (u8 i = 0; i < 4; i++) {
-    std::shared_ptr<Entity> ent = this->base.ent_manager->ent_create();
+    Entity *ent = this->base.ent_manager->ent_create();
     ent->set_ent_class(EntClass::BACKGROUND);
     ent->set_texture_path("assets/ui/text_box_64x32.png");
     ent->set_pos(center_vec3 + vector_make3(-1.0f + i * 0.5f + 0.25f, 0.45f, 0.0f));

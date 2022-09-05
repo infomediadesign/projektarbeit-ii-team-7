@@ -14,9 +14,9 @@ void OverworldController::init(GameState *state) {
 }
 
 void OverworldController::update(GameState *state, mutex_t *lock) {
-  for (std::shared_ptr<Entity> ent : this->base.ent_manager->entities)
-    if (this->base.ent_manager->is_valid(ent) && ent->get_should_collide())
-      this->check_collision(ent);
+  for (Entity &ent : this->base.ent_manager->entities)
+    if (ent.is_valid() && ent.get_should_collide())
+      this->check_collision(&ent);
 
   this->base.ent_manager->get_player()->update_anim();
 }
@@ -31,9 +31,9 @@ void OverworldController::update_renderables(
   if (this->base.ent_manager->player == nullptr)
     return;
 
-  const std::shared_ptr<Entity> ply = this->base.ent_manager->player->get_base();
+  const Entity *ply = this->base.ent_manager->player->get_base();
 
-  if (this->base.ent_manager->is_valid(ply)) {
+  if (ply->is_valid()) {
     const f32 delta = (f32)(platform_time_f64() - ply->get_updated_at());
 
 #ifndef _WIN32
@@ -93,18 +93,18 @@ void OverworldController::process_input(GameState *state, const f64 update_time)
   }
 }
 
-void OverworldController::check_collision(std::shared_ptr<Entity> ent) {
-  if (!this->base.ent_manager->is_valid(ent))
+void OverworldController::check_collision(Entity *ent) {
+  if (!ent->is_valid())
     return;
 
-  for (std::shared_ptr<Entity> target : this->base.ent_manager->entities) {
-    if (!this->base.ent_manager->is_valid(target))
+  for (Entity &target : this->base.ent_manager->entities) {
+    if (!target.is_valid())
       continue;
 
-    if (target->get_id() == ent->get_id())
+    if (target.get_id() == ent->get_id())
       continue;
 
-    if (ent->collides_with(target)) {
+    if (ent->collides_with(&target)) {
       // TODO: collision logic
     }
   }

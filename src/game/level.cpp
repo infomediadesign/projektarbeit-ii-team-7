@@ -129,7 +129,7 @@ void Level::init() {
     return;
 
   for (const LevelBackgroundTile tile : this->background) {
-    std::shared_ptr<Entity> ent = this->ent_manager->ent_create();
+    Entity *ent = this->ent_manager->ent_create();
     ent->set_ent_class(EntClass::BACKGROUND);
     ent->set_texture_path(this->tilesets.at(tile.tileset_id - 1));
     ent->set_pos(vector_make3(tile.x, tile.y, 0.0f));
@@ -141,7 +141,7 @@ void Level::init() {
   }
 
   for (const LevelCollisionTile tile : this->collisions) {
-    std::shared_ptr<Entity> ent = this->ent_manager->ent_create();
+    Entity *ent = this->ent_manager->ent_create();
     ent->set_ent_class(EntClass::CLIP);
     ent->set_texture_path("assets/debug/collide_32x32.png");
     ent->set_pos(vector_make3(tile.x, tile.y, 0.0f));

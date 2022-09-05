@@ -13,6 +13,7 @@ extern "C" {
 #include "render_state.h"
 #include "renderable.h"
 
+#include <engine/limits.h>
 #include <string.h>
 
 /**

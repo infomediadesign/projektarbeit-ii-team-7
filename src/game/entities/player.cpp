@@ -10,8 +10,8 @@
   name##_frames[2]       = { 2.0f / PLY_SPRITE_WIDTH, n / PLY_SPRITE_HEIGHT }; \
   name##_frames[3]       = { 3.0f / PLY_SPRITE_WIDTH, n / PLY_SPRITE_HEIGHT };
 
-std::shared_ptr<Player> Player::make(std::shared_ptr<Entity> base) {
-  std::shared_ptr<Player> ply = std::make_shared<Player>(base);
+Player *Player::make(Entity *base) {
+  Player *ply = new Player(base);
 
   ply->get_base()->set_texture_path("assets/animated/main_character.png");
   ply->get_base()->set_uv_size({ 1.0f / PLY_SPRITE_WIDTH, 1.0f / PLY_SPRITE_HEIGHT });

@@ -41,6 +41,7 @@ set(engine_source_files
   platform.c
   platform.h
   util.h
+  limits.h
   crc64.c
   crc64.h
   main.c

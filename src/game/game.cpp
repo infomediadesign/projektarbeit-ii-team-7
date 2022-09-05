@@ -72,9 +72,9 @@ void Game::update(GameState *state, mutex_t *lock) {
     input_flush(this->input_state);
   }
 
-  for (std::shared_ptr<Entity> ent : this->ent_manager.entities)
-    if (this->ent_manager.is_valid(ent))
-      ent->update(update_time);
+  for (Entity &ent : this->ent_manager.entities)
+    if (ent.is_valid())
+      ent.update(update_time);
 
   LUA_EVENT_RUN(this->lua, "update");
   LUA_EVENT_CALL(this->lua, 0, 0);
@@ -93,13 +93,12 @@ void Game::update_lazy(GameState *state, mutex_t *lock) {
 
   this->locked = true;
 
-  for (std::shared_ptr<Entity> ent : this->ent_manager.entities)
-    if (ent->should_be_removed())
-      this->ent_manager.dangling_renderables.push_back(ent->get_renderable());
-
-  std::erase_if(this->ent_manager.entities, [](std::shared_ptr<Entity> ent) {
-    return ent.get() == nullptr || ent->should_be_removed();
-  });
+  for (Entity &ent : this->ent_manager.entities) {
+    if (ent.should_be_removed()) {
+      this->ent_manager.dangling_renderables.push_back(ent.get_renderable());
+      ent.set_default();
+    }
+  }
 
   LUA_EVENT_RUN(this->lua, "update_lazy");
   LUA_EVENT_CALL(this->lua, 0, 0);
@@ -176,19 +175,18 @@ void Game::update_renderables(
 
   /* Assign renderables to entities that don't already have them assigned,
      and updates position and attributes of those which are assigned */
-  for (std::shared_ptr<Entity> ent : this->ent_manager.entities) {
-    /* remove the following 2 lines for a free segfault, "smart" pointers aint so "smart" eh */
-    if (ent.get() == nullptr || !ent->get_visible())
+  for (Entity &ent : this->ent_manager.entities) {
+    if (!ent.get_visible())
       continue;
 
-    Renderable *r = ent->get_renderable();
+    Renderable *r = ent.get_renderable();
 
-    if (ent->get_active() && !ent->should_be_removed()) {
-      if (!ent->get_ready()) {
-        Renderable *const renderable = this->ent_manager.ent_assign_renderable(renderables, renderables_count, ent);
+    if (ent.get_active() && !ent.should_be_removed()) {
+      if (!ent.get_ready()) {
+        Renderable *const renderable = this->ent_manager.ent_assign_renderable(renderables, renderables_count, &ent);
 
-        ent->set_renderable(renderable);
-        ent->set_ready(true);
+        ent.set_renderable(renderable);
+        ent.set_ready(true);
 
         r = renderable;
       }
@@ -196,26 +194,26 @@ void Game::update_renderables(
       if (r == nullptr)
         continue;
 
-      if (r->active != GS_TRUE && this->ent_manager.is_valid(ent)) {
-        const Vector2 uv_size = ent->get_uv_size();
+      if (r->active != GS_TRUE && ent.is_valid()) {
+        const Vector2 uv_size = ent.get_uv_size();
 
         renderable_init_rect_ex(render_state, r, 0.1f, 0.1f, uv_size.x, uv_size.y);
-        renderable_set_scale(r, ent->get_scale());
-        renderable_load_texture(render_state, r, ent->get_texture_path().c_str());
+        renderable_set_scale(r, ent.get_scale());
+        renderable_load_texture(render_state, r, ent.get_texture_path().c_str());
         renderable_set_active(r, GS_TRUE);
       }
 
-      if (r->assigned_to != ent->get_id() && r->assigned_to != -1)
+      if (r->assigned_to != ent.get_id() && r->assigned_to != -1)
         throw std::runtime_error("Renderable is not assigned to the correct entity.");
 
-      renderable_set_pos(r, vector3_to_vector4(ent->get_pos()));
-      renderable_set_rotation(r, ent->get_axis(), -ent->get_angle());
-      renderable_set_velocity(r, ent->get_velocity());
-      renderable_set_should_zsort(r, ent->get_should_sort() ? GS_TRUE : GS_FALSE);
-      renderable_set_uv_offset(r, ent->get_uv_offset());
-      renderable_set_scale(r, ent->get_scale());
-      renderable_set_updated(r, ent->get_updated_at());
-    } else if (r->active == GS_TRUE) {
+      renderable_set_pos(r, vector3_to_vector4(ent.get_pos()));
+      renderable_set_rotation(r, ent.get_axis(), -ent.get_angle());
+      renderable_set_velocity(r, ent.get_velocity());
+      renderable_set_should_zsort(r, ent.get_should_sort() ? GS_TRUE : GS_FALSE);
+      renderable_set_uv_offset(r, ent.get_uv_offset());
+      renderable_set_scale(r, ent.get_scale());
+      renderable_set_updated(r, ent.get_updated_at());
+    } else if (r != nullptr && r->active == GS_TRUE) {
       renderable_set_active(r, GS_FALSE);
     }
   }
@@ -418,9 +416,12 @@ i32 Game::lua_get_stage(lua_State *state) {
 i32 Game::lua_ent_create(lua_State *state) {
   LUA_GET_GAME(state);
 
-  std::shared_ptr<Entity> ent = GAME->ent_manager.ent_create();
+  Entity *ent = GAME->ent_manager.ent_create();
 
-  lua_push_entity(state, ent.get());
+  if (ent->get_entity_index() > 0)
+    lua_push_entity(state, ent);
+  else
+    lua_pushnil(state);
 
   return 1;
 }
@@ -428,10 +429,10 @@ i32 Game::lua_ent_create(lua_State *state) {
 i32 Game::lua_player(lua_State *state) {
   LUA_GET_GAME(state);
 
-  std::shared_ptr<Entity> ent = GAME->ent_manager.get_player_ent();
+  Entity *ent = GAME->ent_manager.get_player_ent();
 
-  if (ent.get() != nullptr)
-    lua_push_entity(state, ent.get());
+  if (ent != nullptr && ent->get_entity_index() > 0)
+    lua_push_entity(state, ent);
   else
     lua_pushnil(state);
 

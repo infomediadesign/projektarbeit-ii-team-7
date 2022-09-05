@@ -204,7 +204,7 @@ i32 lua_entity_collides_with(lua_State *state) {
 
   if (lua_isuserdata(state, 2)) {
     Entity **ent2_ptr = (Entity **)luaL_checkudata(state, 2, "EntityMeta");
-    lua_pushboolean(state, (*ent_ptr)->collides_with(std::shared_ptr<Entity>(*ent2_ptr)));
+    lua_pushboolean(state, (*ent_ptr)->collides_with(*ent2_ptr));
   } else
     lua_pushboolean(state, 0);
   return 1;
@@ -258,7 +258,7 @@ i32 lua_entity_set_parent(lua_State *state) {
 
   if (lua_isuserdata(state, 2)) {
     Entity **ent2_ptr = (Entity **)luaL_checkudata(state, 2, "EntityMeta");
-    (*ent_ptr)->set_parent(std::shared_ptr<Entity>(*ent2_ptr));
+    (*ent_ptr)->set_parent(*ent2_ptr);
   }
 
   return 0;
