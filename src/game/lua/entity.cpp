@@ -59,6 +59,20 @@
     return 1;                                                          \
   }
 
+#define ENT_LUA_STRING_SETTER(n)                                       \
+  i32 lua_entity_set_##n(lua_State *L) {                               \
+    Entity **ent_ptr = (Entity **)luaL_checkudata(L, 1, "EntityMeta"); \
+    if (!lua_isstring(L, 2)) {                                         \
+      lua_pushnil(L);                                                  \
+      return 1;                                                        \
+    }                                                                  \
+    std::string val      = std::string(lua_tostring(L, 2));            \
+    std::string prev_val = (*ent_ptr)->get_##n();                      \
+    (*ent_ptr)->set_##n(val);                                          \
+    lua_pushstring(L, prev_val.c_str());                               \
+    return 1;                                                          \
+  }
+
 #define ENT_LUA_VEC2_SETTER(n)                                         \
   i32 lua_entity_set_##n(lua_State *L) {                               \
     Entity **ent_ptr = (Entity **)luaL_checkudata(L, 1, "EntityMeta"); \
@@ -158,6 +172,7 @@ ENT_LUA_SETTER(animated, boolean, bool)
 ENT_LUA_SETTER(visible, boolean, bool)
 ENT_LUA_SETTER(active, boolean, bool)
 ENT_LUA_SETTER(ready, boolean, bool)
+ENT_LUA_STRING_SETTER(texture_path)
 ENT_LUA_VEC2_SETTER(uv_offset)
 ENT_LUA_VEC2_SETTER(uv_size)
 ENT_LUA_VEC2_SETTER(scale)
@@ -335,6 +350,7 @@ static luaL_Reg ent_functions[] = { { "get_active", lua_entity_get_active },
                                     { "set_velocity", lua_entity_set_velocity },
                                     { "set_velocity_x", lua_entity_set_velocity_x },
                                     { "set_velocity_y", lua_entity_set_velocity_y },
+                                    { "set_texture_path", lua_entity_set_texture_path },
                                     { "update", lua_entity_update },
                                     { "should_be_removed", lua_entity_should_be_removed },
                                     { "is_valid", lua_entity_is_valid },

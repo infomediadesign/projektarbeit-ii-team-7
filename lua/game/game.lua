@@ -10,7 +10,11 @@ end
 function GAME:process_input(cmds)
   for _k, cmd in ipairs(cmds) do
     if cmd == CUSTOM_LUA_COMMAND then
-      print 'you pressed F! congratulations!'
+      local e = ent.create()
+      e:set_texture_path('assets/debug/foxy_64x64.png')
+      e:set_pos({-10, -10})
+      e:set_scale({10, 10})
+      e:set_active(true)
     elseif cmd == -CUSTOM_LUA_COMMAND then
       print 'and you released it, good job'
     end
