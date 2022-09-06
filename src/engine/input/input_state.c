@@ -25,17 +25,23 @@ void input_bind(InputState *state, const i32 key, const i32 cmd) {
 }
 
 void input_flush(InputState *state) {
+  memcpy(state->gamepad_last, state->gamepad, sizeof(u8) * (GLFW_GAMEPAD_BUTTON_LAST + 1));
   memset(state->commands, 0, sizeof(i32) * 1024);
   memset(state->raw, 0, sizeof(u32) * 1024);
+  memset(state->gamepad, 0, sizeof(u8) * (GLFW_GAMEPAD_BUTTON_LAST + 1));
 
-  state->command_count    = 0U;
-  state->raw_count        = 0U;
-  state->mouse_last       = state->mouse;
-  state->left_stick_last  = state->left_stick;
-  state->right_stick_last = state->right_stick;
-  state->mouse            = (Axis2) { 0.0, 0.0 };
-  state->left_stick       = (Axis2) { 0.0, 0.0 };
-  state->right_stick      = (Axis2) { 0.0, 0.0 };
+  state->command_count      = 0U;
+  state->raw_count          = 0U;
+  state->mouse_last         = state->mouse;
+  state->left_stick_last    = state->left_stick;
+  state->right_stick_last   = state->right_stick;
+  state->left_trigger_last  = state->left_trigger;
+  state->right_trigger_last = state->right_trigger;
+  state->mouse              = (Axis2) { 0.0, 0.0 };
+  state->left_stick         = (Axis2) { 0.0, 0.0 };
+  state->right_stick        = (Axis2) { 0.0, 0.0 };
+  state->left_trigger       = 0.0f;
+  state->right_trigger      = 0.0f;
 }
 
 void input_push(InputState *state, const i32 cmd) { state->commands[state->command_count++] = cmd; }

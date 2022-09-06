@@ -246,7 +246,6 @@ i32 lua_entity_set_velocity_x(lua_State *state) {
   Entity **ent_ptr = (Entity **)luaL_checkudata(state, 1, "EntityMeta");
 
   if (lua_isnumber(state, 2)) {
-    lua_rawgeti(state, 2, 1);
     const f32 vel = (f32)luaL_checknumber(state, 2);
     (*ent_ptr)->set_velocity_x(vel);
     lua_pushboolean(state, 1);
@@ -259,7 +258,6 @@ i32 lua_entity_set_velocity_y(lua_State *state) {
   Entity **ent_ptr = (Entity **)luaL_checkudata(state, 1, "EntityMeta");
 
   if (lua_isnumber(state, 2)) {
-    lua_rawgeti(state, 2, 1);
     const f32 vel = (f32)luaL_checknumber(state, 2);
     (*ent_ptr)->set_velocity_y(vel);
     lua_pushboolean(state, 1);

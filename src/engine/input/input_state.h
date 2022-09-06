@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+#include <GLFW/glfw3.h>
 #include <engine/types/numeric.h>
 
 typedef struct KeyBind {
@@ -18,6 +19,8 @@ typedef struct Axis2 {
 } Axis2;
 
 typedef struct InputState {
+  u8 gamepad[GLFW_GAMEPAD_BUTTON_LAST + 1];
+  u8 gamepad_last[GLFW_GAMEPAD_BUTTON_LAST + 1];
   KeyBind *bindings;
   i32 *commands;
   u32 *raw;
@@ -27,6 +30,10 @@ typedef struct InputState {
   Axis2 left_stick_last;
   Axis2 right_stick;
   Axis2 right_stick_last;
+  f64 left_trigger;
+  f64 left_trigger_last;
+  f64 right_trigger;
+  f64 right_trigger_last;
   u32 top_binding;
   u32 command_count;
   u32 raw_count;

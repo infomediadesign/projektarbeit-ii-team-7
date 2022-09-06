@@ -63,7 +63,7 @@ function printtable(t, indent, done, indent_length)
       else
         done[value] = true
         io.write(str_key..':\n')
-        print_table(value, indent + 1, done, indent_length - 3)
+        printtable(value, indent + 1, done, indent_length - 3)
         done[value] = nil
       end
     else

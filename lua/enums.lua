@@ -4,6 +4,10 @@ KEY_RELEASE = bit.lshift(0, 30)
 KEY_PRESS = bit.lshift(1, 30)
 KEY_HOLD = bit.lshift(2, 30)
 
+GAMEPAD_RELEASE = 0
+GAMEPAD_PRESS = 1
+GAMEPAD_REPEAT = 2
+
 MOD_SHIFT = bit.lshift(1, 24)
 MOD_CONTROL = bit.lshift(2, 24)
 MOD_ALT = bit.lshift(4, 24)

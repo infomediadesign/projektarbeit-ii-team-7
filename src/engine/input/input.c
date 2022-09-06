@@ -41,10 +41,37 @@ int input_perform(void *args) {
 
   game_create_bindings(state, lock, IS);
 
+  GLFWgamepadstate gs_last;
+
   while (!game_should_exit(state)) {
 #ifndef _WIN32
     glfwPollEvents();
 #endif
+
+    GLFWgamepadstate gs;
+
+    if (glfwGetGamepadState(GLFW_JOYSTICK_1, &gs)) {
+      IS->left_stick.x  = gs.axes[0];
+      IS->left_stick.y  = gs.axes[1];
+      IS->right_stick.x = gs.axes[2];
+      IS->right_stick.y = gs.axes[3];
+      IS->left_trigger  = gs.axes[4];
+      IS->right_trigger = gs.axes[5];
+
+      for (u8 i = 0; i <= GLFW_GAMEPAD_BUTTON_LAST; i++) {
+        IS->gamepad[i] = gs.buttons[i];
+
+        if (gs.buttons[i] != gs_last.buttons[i]) {
+          i32 real_key = (gs.buttons[i] << 30) + (i << 17);
+          KeyBind bind = input_find_binding(IS, real_key);
+
+          if (bind.cmd != 0)
+            input_push(IS, bind.cmd);
+        }
+      }
+    }
+
+    memcpy(&gs_last, &gs, sizeof(GLFWgamepadstate));
 
     platform_sleep(2);
   }

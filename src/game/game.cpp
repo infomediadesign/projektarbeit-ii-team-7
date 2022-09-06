@@ -70,7 +70,7 @@ void Game::update(GameState *state, mutex_t *lock) {
 
   const f64 update_time = platform_time_f64();
 
-  if (this->input_state != nullptr && this->input_state->command_count > 0) {
+  if (this->input_state != nullptr && this->lua != nullptr) {
     this->process_input(state, update_time);
     input_flush(this->input_state);
   }
@@ -249,6 +249,10 @@ void Game::create_bindings(GameState *state, mutex_t *lock, InputState *input_st
     input_bind(input_state, MF_KEY_LEFT | MF_KEY_PRESS, Cmd::LEFT);
     input_bind(input_state, MF_KEY_DOWN | MF_KEY_PRESS, Cmd::BACK);
     input_bind(input_state, MF_KEY_RIGHT | MF_KEY_PRESS, Cmd::RIGHT);
+    input_bind(input_state, MF_GAMEPAD_DPAD_UP | MF_KEY_PRESS, Cmd::FORWARD);
+    input_bind(input_state, MF_GAMEPAD_DPAD_LEFT | MF_KEY_PRESS, Cmd::LEFT);
+    input_bind(input_state, MF_GAMEPAD_DPAD_DOWN | MF_KEY_PRESS, Cmd::BACK);
+    input_bind(input_state, MF_GAMEPAD_DPAD_RIGHT | MF_KEY_PRESS, Cmd::RIGHT);
     input_bind(input_state, MF_KEY_W | MF_KEY_RELEASE, -Cmd::FORWARD);
     input_bind(input_state, MF_KEY_A | MF_KEY_RELEASE, -Cmd::LEFT);
     input_bind(input_state, MF_KEY_S | MF_KEY_RELEASE, -Cmd::BACK);
@@ -257,6 +261,10 @@ void Game::create_bindings(GameState *state, mutex_t *lock, InputState *input_st
     input_bind(input_state, MF_KEY_LEFT | MF_KEY_RELEASE, -Cmd::LEFT);
     input_bind(input_state, MF_KEY_DOWN | MF_KEY_RELEASE, -Cmd::BACK);
     input_bind(input_state, MF_KEY_RIGHT | MF_KEY_RELEASE, -Cmd::RIGHT);
+    input_bind(input_state, MF_GAMEPAD_DPAD_UP | MF_KEY_RELEASE, -Cmd::FORWARD);
+    input_bind(input_state, MF_GAMEPAD_DPAD_LEFT | MF_KEY_RELEASE, -Cmd::LEFT);
+    input_bind(input_state, MF_GAMEPAD_DPAD_DOWN | MF_KEY_RELEASE, -Cmd::BACK);
+    input_bind(input_state, MF_GAMEPAD_DPAD_RIGHT | MF_KEY_RELEASE, -Cmd::RIGHT);
 
     /* Interactions */
     input_bind(input_state, MF_KEY_E | MF_KEY_PRESS, Cmd::USE);
@@ -318,7 +326,53 @@ void Game::process_input(GameState *state, const f64 update_time) {
     LUA_TABLE_INSERT(this->lua, number, i + 1, this->input_state->commands[i]);
   }
 
-  LUA_EVENT_CALL(this->lua, 1, 1);
+  lua_createtable(this->lua, 0, 13);
+
+  lua_pushstring(this->lua, "left_stick");
+  lua_createtable(this->lua, 0, 2);
+  LUA_TABLE_SET_NAMED(this->lua, number, "x", this->input_state->left_stick.x);
+  LUA_TABLE_SET_NAMED(this->lua, number, "y", this->input_state->left_stick.y);
+  lua_settable(this->lua, -3);
+
+  lua_pushstring(this->lua, "left_stick_last");
+  lua_createtable(this->lua, 0, 2);
+  LUA_TABLE_SET_NAMED(this->lua, number, "x", this->input_state->left_stick_last.x);
+  LUA_TABLE_SET_NAMED(this->lua, number, "y", this->input_state->left_stick_last.y);
+  lua_settable(this->lua, -3);
+
+  lua_pushstring(this->lua, "right_stick");
+  lua_createtable(this->lua, 0, 2);
+  LUA_TABLE_SET_NAMED(this->lua, number, "x", this->input_state->right_stick.x);
+  LUA_TABLE_SET_NAMED(this->lua, number, "y", this->input_state->right_stick.y);
+  lua_settable(this->lua, -3);
+
+  lua_pushstring(this->lua, "right_stick_last");
+  lua_createtable(this->lua, 0, 2);
+  LUA_TABLE_SET_NAMED(this->lua, number, "x", this->input_state->right_stick_last.x);
+  LUA_TABLE_SET_NAMED(this->lua, number, "y", this->input_state->right_stick_last.y);
+  lua_settable(this->lua, -3);
+
+  lua_pushstring(this->lua, "mouse");
+  lua_createtable(this->lua, 0, 2);
+  LUA_TABLE_SET_NAMED(this->lua, number, "x", this->input_state->mouse.x);
+  LUA_TABLE_SET_NAMED(this->lua, number, "y", this->input_state->mouse.y);
+  lua_settable(this->lua, -3);
+
+  lua_pushstring(this->lua, "mouse_last");
+  lua_createtable(this->lua, 0, 2);
+  LUA_TABLE_SET_NAMED(this->lua, number, "x", this->input_state->mouse_last.x);
+  LUA_TABLE_SET_NAMED(this->lua, number, "y", this->input_state->mouse_last.y);
+  lua_settable(this->lua, -3);
+
+  LUA_TABLE_SET_NAMED(this->lua, number, "left_trigger", this->input_state->left_trigger);
+  LUA_TABLE_SET_NAMED(this->lua, number, "left_trigger_last", this->input_state->left_trigger_last);
+  LUA_TABLE_SET_NAMED(this->lua, number, "right_trigger", this->input_state->right_trigger);
+  LUA_TABLE_SET_NAMED(this->lua, number, "right_trigger_last", this->input_state->right_trigger_last);
+  LUA_TABLE_SET_NAMED(this->lua, number, "top_binding", this->input_state->top_binding);
+  LUA_TABLE_SET_NAMED(this->lua, number, "command_count", this->input_state->command_count);
+  LUA_TABLE_SET_NAMED(this->lua, number, "raw_count", this->input_state->raw_count);
+
+  LUA_EVENT_CALL(this->lua, 2, 1);
 
   if (lua_isboolean(this->lua, -1) && lua_toboolean(this->lua, -1) == 0)
     return;
