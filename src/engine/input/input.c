@@ -2,6 +2,7 @@
 
 #include <GLFW/glfw3.h>
 #include <game/interface.h>
+#include <string.h>
 
 static InputState *IS;
 

@@ -25,8 +25,17 @@ int GLAD_VK_VERSION_1_1 = 0;
 int GLAD_VK_EXT_debug_marker = 0;
 int GLAD_VK_EXT_debug_report = 0;
 int GLAD_VK_EXT_debug_utils = 0;
+#if defined(VK_USE_PLATFORM_WIN32_KHR)
+int GLAD_VK_EXT_full_screen_exclusive = 0;
+
+#endif
+int GLAD_VK_EXT_headless_surface = 0;
+int GLAD_VK_EXT_validation_cache = 0;
+int GLAD_VK_EXT_validation_features = 0;
+int GLAD_VK_EXT_validation_flags = 0;
 int GLAD_VK_KHR_display_swapchain = 0;
 int GLAD_VK_KHR_surface = 0;
+int GLAD_VK_KHR_surface_protected_capabilities = 0;
 int GLAD_VK_KHR_swapchain = 0;
 #if defined(VK_USE_PLATFORM_WAYLAND_KHR)
 int GLAD_VK_KHR_wayland_surface = 0;
@@ -47,6 +56,10 @@ int GLAD_VK_KHR_xlib_surface = 0;
 
 
 
+#if defined(VK_USE_PLATFORM_WIN32_KHR)
+PFN_vkAcquireFullScreenExclusiveModeEXT glad_vkAcquireFullScreenExclusiveModeEXT = NULL;
+
+#endif
 PFN_vkAcquireNextImage2KHR glad_vkAcquireNextImage2KHR = NULL;
 PFN_vkAcquireNextImageKHR glad_vkAcquireNextImageKHR = NULL;
 PFN_vkAllocateCommandBuffers glad_vkAllocateCommandBuffers = NULL;
@@ -123,6 +136,7 @@ PFN_vkCreateEvent glad_vkCreateEvent = NULL;
 PFN_vkCreateFence glad_vkCreateFence = NULL;
 PFN_vkCreateFramebuffer glad_vkCreateFramebuffer = NULL;
 PFN_vkCreateGraphicsPipelines glad_vkCreateGraphicsPipelines = NULL;
+PFN_vkCreateHeadlessSurfaceEXT glad_vkCreateHeadlessSurfaceEXT = NULL;
 PFN_vkCreateImage glad_vkCreateImage = NULL;
 PFN_vkCreateImageView glad_vkCreateImageView = NULL;
 PFN_vkCreateInstance glad_vkCreateInstance = NULL;
@@ -136,6 +150,7 @@ PFN_vkCreateSemaphore glad_vkCreateSemaphore = NULL;
 PFN_vkCreateShaderModule glad_vkCreateShaderModule = NULL;
 PFN_vkCreateSharedSwapchainsKHR glad_vkCreateSharedSwapchainsKHR = NULL;
 PFN_vkCreateSwapchainKHR glad_vkCreateSwapchainKHR = NULL;
+PFN_vkCreateValidationCacheEXT glad_vkCreateValidationCacheEXT = NULL;
 #if defined(VK_USE_PLATFORM_WAYLAND_KHR)
 PFN_vkCreateWaylandSurfaceKHR glad_vkCreateWaylandSurfaceKHR = NULL;
 
@@ -181,6 +196,7 @@ PFN_vkDestroySemaphore glad_vkDestroySemaphore = NULL;
 PFN_vkDestroyShaderModule glad_vkDestroyShaderModule = NULL;
 PFN_vkDestroySurfaceKHR glad_vkDestroySurfaceKHR = NULL;
 PFN_vkDestroySwapchainKHR glad_vkDestroySwapchainKHR = NULL;
+PFN_vkDestroyValidationCacheEXT glad_vkDestroyValidationCacheEXT = NULL;
 PFN_vkDeviceWaitIdle glad_vkDeviceWaitIdle = NULL;
 PFN_vkEndCommandBuffer glad_vkEndCommandBuffer = NULL;
 PFN_vkEnumerateDeviceExtensionProperties glad_vkEnumerateDeviceExtensionProperties = NULL;
@@ -199,6 +215,10 @@ PFN_vkGetBufferMemoryRequirements2 glad_vkGetBufferMemoryRequirements2 = NULL;
 PFN_vkGetDescriptorSetLayoutSupport glad_vkGetDescriptorSetLayoutSupport = NULL;
 PFN_vkGetDeviceGroupPeerMemoryFeatures glad_vkGetDeviceGroupPeerMemoryFeatures = NULL;
 PFN_vkGetDeviceGroupPresentCapabilitiesKHR glad_vkGetDeviceGroupPresentCapabilitiesKHR = NULL;
+#if defined(VK_USE_PLATFORM_WIN32_KHR)
+PFN_vkGetDeviceGroupSurfacePresentModes2EXT glad_vkGetDeviceGroupSurfacePresentModes2EXT = NULL;
+
+#endif
 PFN_vkGetDeviceGroupSurfacePresentModesKHR glad_vkGetDeviceGroupSurfacePresentModesKHR = NULL;
 PFN_vkGetDeviceMemoryCommitment glad_vkGetDeviceMemoryCommitment = NULL;
 PFN_vkGetDeviceProcAddr glad_vkGetDeviceProcAddr = NULL;
@@ -232,6 +252,10 @@ PFN_vkGetPhysicalDeviceSparseImageFormatProperties glad_vkGetPhysicalDeviceSpars
 PFN_vkGetPhysicalDeviceSparseImageFormatProperties2 glad_vkGetPhysicalDeviceSparseImageFormatProperties2 = NULL;
 PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR glad_vkGetPhysicalDeviceSurfaceCapabilitiesKHR = NULL;
 PFN_vkGetPhysicalDeviceSurfaceFormatsKHR glad_vkGetPhysicalDeviceSurfaceFormatsKHR = NULL;
+#if defined(VK_USE_PLATFORM_WIN32_KHR)
+PFN_vkGetPhysicalDeviceSurfacePresentModes2EXT glad_vkGetPhysicalDeviceSurfacePresentModes2EXT = NULL;
+
+#endif
 PFN_vkGetPhysicalDeviceSurfacePresentModesKHR glad_vkGetPhysicalDeviceSurfacePresentModesKHR = NULL;
 PFN_vkGetPhysicalDeviceSurfaceSupportKHR glad_vkGetPhysicalDeviceSurfaceSupportKHR = NULL;
 #if defined(VK_USE_PLATFORM_WAYLAND_KHR)
@@ -254,9 +278,11 @@ PFN_vkGetPipelineCacheData glad_vkGetPipelineCacheData = NULL;
 PFN_vkGetQueryPoolResults glad_vkGetQueryPoolResults = NULL;
 PFN_vkGetRenderAreaGranularity glad_vkGetRenderAreaGranularity = NULL;
 PFN_vkGetSwapchainImagesKHR glad_vkGetSwapchainImagesKHR = NULL;
+PFN_vkGetValidationCacheDataEXT glad_vkGetValidationCacheDataEXT = NULL;
 PFN_vkInvalidateMappedMemoryRanges glad_vkInvalidateMappedMemoryRanges = NULL;
 PFN_vkMapMemory glad_vkMapMemory = NULL;
 PFN_vkMergePipelineCaches glad_vkMergePipelineCaches = NULL;
+PFN_vkMergeValidationCachesEXT glad_vkMergeValidationCachesEXT = NULL;
 PFN_vkQueueBeginDebugUtilsLabelEXT glad_vkQueueBeginDebugUtilsLabelEXT = NULL;
 PFN_vkQueueBindSparse glad_vkQueueBindSparse = NULL;
 PFN_vkQueueEndDebugUtilsLabelEXT glad_vkQueueEndDebugUtilsLabelEXT = NULL;
@@ -264,6 +290,10 @@ PFN_vkQueueInsertDebugUtilsLabelEXT glad_vkQueueInsertDebugUtilsLabelEXT = NULL;
 PFN_vkQueuePresentKHR glad_vkQueuePresentKHR = NULL;
 PFN_vkQueueSubmit glad_vkQueueSubmit = NULL;
 PFN_vkQueueWaitIdle glad_vkQueueWaitIdle = NULL;
+#if defined(VK_USE_PLATFORM_WIN32_KHR)
+PFN_vkReleaseFullScreenExclusiveModeEXT glad_vkReleaseFullScreenExclusiveModeEXT = NULL;
+
+#endif
 PFN_vkResetCommandBuffer glad_vkResetCommandBuffer = NULL;
 PFN_vkResetCommandPool glad_vkResetCommandPool = NULL;
 PFN_vkResetDescriptorPool glad_vkResetDescriptorPool = NULL;
@@ -479,6 +509,27 @@ static void glad_vk_load_VK_EXT_debug_utils( GLADuserptrloadfunc load, void* use
     glad_vkSetDebugUtilsObjectTagEXT = (PFN_vkSetDebugUtilsObjectTagEXT) load(userptr, "vkSetDebugUtilsObjectTagEXT");
     glad_vkSubmitDebugUtilsMessageEXT = (PFN_vkSubmitDebugUtilsMessageEXT) load(userptr, "vkSubmitDebugUtilsMessageEXT");
 }
+#if defined(VK_USE_PLATFORM_WIN32_KHR)
+static void glad_vk_load_VK_EXT_full_screen_exclusive( GLADuserptrloadfunc load, void* userptr) {
+    if(!GLAD_VK_EXT_full_screen_exclusive) return;
+    glad_vkAcquireFullScreenExclusiveModeEXT = (PFN_vkAcquireFullScreenExclusiveModeEXT) load(userptr, "vkAcquireFullScreenExclusiveModeEXT");
+    glad_vkGetDeviceGroupSurfacePresentModes2EXT = (PFN_vkGetDeviceGroupSurfacePresentModes2EXT) load(userptr, "vkGetDeviceGroupSurfacePresentModes2EXT");
+    glad_vkGetPhysicalDeviceSurfacePresentModes2EXT = (PFN_vkGetPhysicalDeviceSurfacePresentModes2EXT) load(userptr, "vkGetPhysicalDeviceSurfacePresentModes2EXT");
+    glad_vkReleaseFullScreenExclusiveModeEXT = (PFN_vkReleaseFullScreenExclusiveModeEXT) load(userptr, "vkReleaseFullScreenExclusiveModeEXT");
+}
+
+#endif
+static void glad_vk_load_VK_EXT_headless_surface( GLADuserptrloadfunc load, void* userptr) {
+    if(!GLAD_VK_EXT_headless_surface) return;
+    glad_vkCreateHeadlessSurfaceEXT = (PFN_vkCreateHeadlessSurfaceEXT) load(userptr, "vkCreateHeadlessSurfaceEXT");
+}
+static void glad_vk_load_VK_EXT_validation_cache( GLADuserptrloadfunc load, void* userptr) {
+    if(!GLAD_VK_EXT_validation_cache) return;
+    glad_vkCreateValidationCacheEXT = (PFN_vkCreateValidationCacheEXT) load(userptr, "vkCreateValidationCacheEXT");
+    glad_vkDestroyValidationCacheEXT = (PFN_vkDestroyValidationCacheEXT) load(userptr, "vkDestroyValidationCacheEXT");
+    glad_vkGetValidationCacheDataEXT = (PFN_vkGetValidationCacheDataEXT) load(userptr, "vkGetValidationCacheDataEXT");
+    glad_vkMergeValidationCachesEXT = (PFN_vkMergeValidationCachesEXT) load(userptr, "vkMergeValidationCachesEXT");
+}
 static void glad_vk_load_VK_KHR_display_swapchain( GLADuserptrloadfunc load, void* userptr) {
     if(!GLAD_VK_KHR_display_swapchain) return;
     glad_vkCreateSharedSwapchainsKHR = (PFN_vkCreateSharedSwapchainsKHR) load(userptr, "vkCreateSharedSwapchainsKHR");
@@ -668,8 +719,17 @@ static int glad_vk_find_extensions_vulkan( VkPhysicalDevice physical_device) {
     GLAD_VK_EXT_debug_marker = glad_vk_has_extension("VK_EXT_debug_marker", extension_count, extensions);
     GLAD_VK_EXT_debug_report = glad_vk_has_extension("VK_EXT_debug_report", extension_count, extensions);
     GLAD_VK_EXT_debug_utils = glad_vk_has_extension("VK_EXT_debug_utils", extension_count, extensions);
+#if defined(VK_USE_PLATFORM_WIN32_KHR)
+    GLAD_VK_EXT_full_screen_exclusive = glad_vk_has_extension("VK_EXT_full_screen_exclusive", extension_count, extensions);
+
+#endif
+    GLAD_VK_EXT_headless_surface = glad_vk_has_extension("VK_EXT_headless_surface", extension_count, extensions);
+    GLAD_VK_EXT_validation_cache = glad_vk_has_extension("VK_EXT_validation_cache", extension_count, extensions);
+    GLAD_VK_EXT_validation_features = glad_vk_has_extension("VK_EXT_validation_features", extension_count, extensions);
+    GLAD_VK_EXT_validation_flags = glad_vk_has_extension("VK_EXT_validation_flags", extension_count, extensions);
     GLAD_VK_KHR_display_swapchain = glad_vk_has_extension("VK_KHR_display_swapchain", extension_count, extensions);
     GLAD_VK_KHR_surface = glad_vk_has_extension("VK_KHR_surface", extension_count, extensions);
+    GLAD_VK_KHR_surface_protected_capabilities = glad_vk_has_extension("VK_KHR_surface_protected_capabilities", extension_count, extensions);
     GLAD_VK_KHR_swapchain = glad_vk_has_extension("VK_KHR_swapchain", extension_count, extensions);
 #if defined(VK_USE_PLATFORM_WAYLAND_KHR)
     GLAD_VK_KHR_wayland_surface = glad_vk_has_extension("VK_KHR_wayland_surface", extension_count, extensions);
@@ -744,6 +804,12 @@ int gladLoadVulkanUserPtr( VkPhysicalDevice physical_device, GLADuserptrloadfunc
     glad_vk_load_VK_EXT_debug_marker(load, userptr);
     glad_vk_load_VK_EXT_debug_report(load, userptr);
     glad_vk_load_VK_EXT_debug_utils(load, userptr);
+#if defined(VK_USE_PLATFORM_WIN32_KHR)
+    glad_vk_load_VK_EXT_full_screen_exclusive(load, userptr);
+
+#endif
+    glad_vk_load_VK_EXT_headless_surface(load, userptr);
+    glad_vk_load_VK_EXT_validation_cache(load, userptr);
     glad_vk_load_VK_KHR_display_swapchain(load, userptr);
     glad_vk_load_VK_KHR_surface(load, userptr);
     glad_vk_load_VK_KHR_swapchain(load, userptr);

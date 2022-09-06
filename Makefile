@@ -20,6 +20,7 @@ dist:
 	cp build/engine/miniflow dist/miniflow
 	cp -r assets/ dist/assets
 	cp -r levels/ dist/levels
+	cp -r lua/ dist/lua
 
 lint:
 	find ./src -type f -name '*.c' -exec clang-format -i {} \;
