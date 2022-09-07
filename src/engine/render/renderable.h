@@ -14,6 +14,7 @@ extern "C" {
 #include "render_state.h"
 
 typedef struct Renderable {
+  char texture_path[256];
   Matrix4 transform_matrix;
   Vector4 last_position;
   Vector4 position;
