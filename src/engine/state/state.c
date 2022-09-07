@@ -11,7 +11,7 @@ GameState *game_default_state() {
   state->width              = 800U;
   state->height             = 600U;
   state->fps_max            = 300U;
-  state->preferred_platform = "wayland";
+  state->preferred_platform = "x11";
   state->window             = NULL;
 
   return state;

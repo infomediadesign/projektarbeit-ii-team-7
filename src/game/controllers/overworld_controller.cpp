@@ -51,7 +51,7 @@ void OverworldController::update_renderables(
     render_state->camera_transform.w[1] = util_lerp_f32(
       lerp_factor,
       render_state->camera_transform.w[1],
-      -util_lerp_f32(delta, ply->get_pos().y, ply->get_pos().y + ply->get_velocity().y) * (768.0f / 432.0f) *
+      -util_lerp_f32(delta, ply->get_pos().y, ply->get_pos().y + ply->get_velocity().y) * (1280.0f / 720.0f) *
         render_state->render_scale
     );
   }
