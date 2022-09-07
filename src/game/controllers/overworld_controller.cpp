@@ -104,37 +104,72 @@ void OverworldController::check_collision(std::shared_ptr<Entity> ent) {
 
 		if (ent->collides_with(target)) {
 			if (target->get_ent_class() == EntClass::CLIP) {
-				if (target->get_pos().x - ent->get_pos().x < target->get_pos().y - ent->get_pos().y && target->get_pos().y - ent->get_pos().y < 0) {
-					if (target->get_pos().x < ent->get_pos().x) {
-						PLAYER_ENT->set_velocity_x(0);
-						PLAYER_ENT->set_pos(vector_make3(PLAYER_ENT->get_pos().x + 0.01, PLAYER_ENT->get_pos().y, PLAYER_ENT->get_pos().z));
 
-						break;
+				if ((target->get_pos().y - 0.05) - (ent->get_pos().y + 0.05) <= 0) {
+					
+					f64 l = 0.1;
+
+					if (ent->get_pos().x < target->get_pos().x)
+						l = (ent->get_pos().x + 0.05) - (target->get_pos().x - 0.05);
+					if (ent->get_pos().x > target->get_pos().x)
+						l = (target->get_pos().x + 0.05) - (ent->get_pos().x - 0.05);
+					if (ent->get_pos().x == target->get_pos().x)
+						l = 0.1;
+
+					if (l >= (ent->get_pos().y + 0.05) - (target->get_pos().y - 0.05)) {
+						ent->set_velocity_y(0.0f);
+						ent->set_pos(vector_make3(ent->get_pos().x, target->get_pos().y - 0.1, ent->get_pos().z));
 					}
 				}
-				if (target->get_pos().x - ent->get_pos().x > target->get_pos().y - ent->get_pos().y && target->get_pos().y - ent->get_pos().y < 0.1) {
-					if (target->get_pos().x > ent->get_pos().x) {
-						PLAYER_ENT->set_velocity_x(0);
-						PLAYER_ENT->set_pos(vector_make3(PLAYER_ENT->get_pos().x - 0.01, PLAYER_ENT->get_pos().y, PLAYER_ENT->get_pos().z));
 
-						break;
+				if ((ent->get_pos().y - 0.05) - (target->get_pos().y + 0.05) <= 0) {
+					
+					f64 l = 0.1;
+
+					if (ent->get_pos().x < target->get_pos().x)
+						l = (ent->get_pos().x + 0.05) - (target->get_pos().x - 0.05);
+					if (ent->get_pos().x > target->get_pos().x)
+						l = (target->get_pos().x + 0.05) - (ent->get_pos().x - 0.05);
+					if (ent->get_pos().x == target->get_pos().x)
+						l = 0.1;
+
+					if (l >= (target->get_pos().y + 0.05) - (ent->get_pos().y - 0.05)) {
+						ent->set_velocity_y(0.0f);
+						ent->set_pos(vector_make3(ent->get_pos().x, target->get_pos().y + 0.1, ent->get_pos().z));
 					}
 				}
 
-				if (target->get_pos().x - ent->get_pos().x > target->get_pos().y - ent->get_pos().y) {
-					if (target->get_pos().y < ent->get_pos().y) {
-						PLAYER_ENT->set_velocity_y(0);
-						PLAYER_ENT->set_pos(vector_make3(PLAYER_ENT->get_pos().x, PLAYER_ENT->get_pos().y + 0.01, PLAYER_ENT->get_pos().z));
+				if ((ent->get_pos().x - 0.05) - (target->get_pos().x + 0.05) <= 0) {
+					
+					f64 l = 0.1;
 
-						break;
+					if (ent->get_pos().y < target->get_pos().y)
+						l = (ent->get_pos().y + 0.05) - (target->get_pos().y - 0.05);
+					if (ent->get_pos().y > target->get_pos().y)
+						l = (target->get_pos().y + 0.05) - (ent->get_pos().y - 0.05);
+					if (ent->get_pos().y == target->get_pos().y)
+						l = 0.1;
+
+					if (l >= (target->get_pos().x + 0.05) - (ent->get_pos().x - 0.05)) {
+						ent->set_velocity_x(0.0f);
+						ent->set_pos(vector_make3(target->get_pos().x + 0.1, ent->get_pos().y, ent->get_pos().z));
 					}
 				}
-				if (target->get_pos().x - ent->get_pos().x < target->get_pos().y - ent->get_pos().y) {
-					if (target->get_pos().y > ent->get_pos().y) {
-						PLAYER_ENT->set_velocity_y(0);
-						PLAYER_ENT->set_pos(vector_make3(PLAYER_ENT->get_pos().x, PLAYER_ENT->get_pos().y - 0.01, PLAYER_ENT->get_pos().z));
 
-						break;
+				if ((target->get_pos().x - 0.05) - (ent->get_pos().x + 0.05) <= 0) {
+					
+					f64 l = 0.1;
+
+					if (ent->get_pos().y < target->get_pos().y)
+						l = (ent->get_pos().y + 0.05) - (target->get_pos().y - 0.05);
+					if (ent->get_pos().y > target->get_pos().y)
+						l = (target->get_pos().y + 0.05) - (ent->get_pos().y - 0.05);
+					if (ent->get_pos().y == target->get_pos().y)
+						l = 0.1;
+
+					if (l >= (ent->get_pos().x + 0.05) - (target->get_pos().x - 0.05)) {
+						ent->set_velocity_x(0.0f);
+						ent->set_pos(vector_make3(target->get_pos().x - 0.1, ent->get_pos().y, ent->get_pos().z));
 					}
 				}
 			}
