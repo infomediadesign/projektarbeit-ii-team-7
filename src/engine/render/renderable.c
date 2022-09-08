@@ -182,6 +182,8 @@ void renderable_load_texture(RenderState *state, Renderable *r, const char *imag
   Image tex_img;
   asset_load_image(&tex_img, image_path);
 
+  strcpy(r->texture_path, image_path);
+
   geyser_create_texture(state, vector_make2((f32)tex_img.width, (f32)tex_img.height), &r->texture);
 
   geyser_set_image_memory(state, &r->texture.base.base, &tex_img);

@@ -37,11 +37,13 @@ static const luaL_Reg lua_game_lib[] = {
   { "player", Game::lua_player },
   { NULL, NULL } /* sentinel */
 };
-static const luaL_Reg lua_ent_lib[] = { { "create", Game::lua_ent_create },
-                                        { "remove", Game::lua_ent_remove },
-                                        { "clear", Game::lua_ent_clear },
-                                        { NULL, NULL } };
-static const i8 lua_game_index      = 0;
+static const luaL_Reg lua_ent_lib[] = {
+  { "create", Game::lua_ent_create },
+  { "remove", Game::lua_ent_remove },
+  { "clear", Game::lua_ent_clear },
+  { NULL, NULL } /* sentinel */
+};
+static const i8 lua_game_index = 0;
 
 void Game::init(GameState *state) {
   this->game_state = state;
@@ -154,7 +156,7 @@ void Game::update_renderables(
   render_state->render_scale = this->scale;
 
   render_state->camera_transform.x[0] = render_state->render_scale;
-  render_state->camera_transform.y[1] = 768.0f / 432.0f * render_state->render_scale;
+  render_state->camera_transform.y[1] = 1280.0f / 720.0f * render_state->render_scale;
 
   /* Clean up renderables that are no longer in use */
   for (Renderable *renderable : this->ent_manager.dangling_renderables) {

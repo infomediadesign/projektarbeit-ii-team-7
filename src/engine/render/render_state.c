@@ -14,15 +14,15 @@ RenderState *render_state_init() {
 
   state->current_frame           = 0;
   state->current_swapchain_image = 0;
-  state->window_width            = 768.0f * xscale;
-  state->window_height           = 432.0f * yscale;
+  state->window_width            = 1280.0f * xscale;
+  state->window_height           = 720.0f * yscale;
   state->debug                   = 0;
   state->rendering               = 0;
   state->camera_transform        = null_mat4;
   state->render_scale            = RENDER_SCALE * xscale;
 
   state->camera_transform.x[0] = state->render_scale;
-  state->camera_transform.y[1] = 768.0f / 432.0f * state->render_scale;
+  state->camera_transform.y[1] = 1280.0f / 720.0f * state->render_scale;
   state->camera_transform.w[1] = RENDER_CENTER_OFFSET;
 
   return state;

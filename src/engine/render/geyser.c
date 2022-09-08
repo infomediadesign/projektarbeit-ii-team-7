@@ -832,7 +832,7 @@ void geyser_create_pipeline(
   const VkPipelineMultisampleStateCreateInfo multisample_state_info = {
     GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO),
     .rasterizationSamples  = VK_SAMPLE_COUNT_1_BIT,
-    .sampleShadingEnable   = VK_TRUE,
+    .sampleShadingEnable   = VK_FALSE,
     .minSampleShading      = 1.0f,
     .pSampleMask           = NULL,
     .alphaToCoverageEnable = VK_FALSE,
@@ -841,8 +841,8 @@ void geyser_create_pipeline(
 
   const VkPipelineDepthStencilStateCreateInfo stencil_state_info = {
     GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO),
-    .depthTestEnable       = VK_TRUE,
-    .depthWriteEnable      = VK_TRUE,
+    .depthTestEnable       = VK_FALSE,
+    .depthWriteEnable      = VK_FALSE,
     .depthCompareOp        = VK_COMPARE_OP_LESS,
     .depthBoundsTestEnable = VK_FALSE,
     .stencilTestEnable     = VK_FALSE

@@ -114,7 +114,8 @@ int render_perform(void *args) {
 
   i64 delay = state->fps_max != 0 ? 1000000 / state->fps_max : 0;
   i64 start_time, end_time;
-  VkDeviceSize offsets[1] = { 0 };
+  VkDeviceSize offsets[1]       = { 0 };
+  VkDeviceSize first_offsets[1] = { 0 };
 
   render_state->init_time = platform_time();
 
@@ -158,6 +159,11 @@ int render_perform(void *args) {
       }
     }
 
+    first_offsets[0] = renderables[first]->offset;
+    vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1, &renderables[first]->pool->buffer, first_offsets);
+    first_offsets[0] = renderables[first]->offset + sizeof(Vector4) * renderables[first]->vertices_count;
+    vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1, &renderables[first]->pool->buffer, first_offsets);
+
     for (u32 i = first; i < MAX_RENDERABLES; i++) {
       /* Since renderables are sorted in a way such that non-active come last, we can just stop once we spot one of
        * these */
@@ -165,8 +171,6 @@ int render_perform(void *args) {
         break;
 
       if (renderables[i]->vertices_count > 0) {
-        offsets[0] = renderables[i]->offset;
-
         renderable_interpolate(renderables[i]);
 
         push_constants.quaternion   = quaternion_to_vec(renderables[i]->rotation);
@@ -176,30 +180,23 @@ int render_perform(void *args) {
         push_constants.uv_offset    = renderables[i]->uv_offset;
         push_constants.camera       = render_state->camera_transform;
 
-        if (i != first && renderables[i]->vertices_count == renderables[i - 1]->vertices_count) {
-          if (memcmp(renderables[i]->vertices, renderables[i - 1]->vertices, sizeof(Vector4) * renderables[i]->vertices_count) != 0)
-            vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1, &renderables[i]->pool->buffer, offsets);
-
-          if (memcmp(renderables[i]->uv, renderables[i - 1]->uv, sizeof(Vector2) * renderables[i]->vertices_count) != 0) {
-            offsets[0] = renderables[i]->offset + sizeof(Vector4) * renderables[i]->vertices_count;
-            vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1, &renderables[i]->pool->buffer, offsets);
-          }
-        } else {
-          vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1, &renderables[i]->pool->buffer, offsets);
+        if (i != first && memcmp(renderables[i]->uv, renderables[i - 1]->uv, sizeof(Vector2) * renderables[i]->vertices_count) != 0) {
           offsets[0] = renderables[i]->offset + sizeof(Vector4) * renderables[i]->vertices_count;
           vkCmdBindVertexBuffers(render_state->command_buffer, 1, 1, &renderables[i]->pool->buffer, offsets);
         }
 
-        vkCmdBindDescriptorSets(
-          render_state->command_buffer,
-          VK_PIPELINE_BIND_POINT_GRAPHICS,
-          render_state->pipeline.pipeline_layout,
-          0,
-          1,
-          &renderables[i]->texture.descriptor_set,
-          0,
-          NULL
-        );
+        if (i == first || strcmp(renderables[i]->texture_path, renderables[i - 1]->texture_path) != 0) {
+          vkCmdBindDescriptorSets(
+            render_state->command_buffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            render_state->pipeline.pipeline_layout,
+            0,
+            1,
+            &renderables[i]->texture.descriptor_set,
+            0,
+            NULL
+          );
+        }
 
         vkCmdPushConstants(
           render_state->command_buffer,

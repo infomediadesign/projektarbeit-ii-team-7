@@ -16,7 +16,7 @@ extern "C" {
 #include <glad/vulkan.h>
 #include <GLFW/glfw3.h>
 
-#define RENDER_CENTER_OFFSET 432.0f / 768.0f + 0.21f
+#define RENDER_CENTER_OFFSET 720.0f / 1280.0f + 0.21f
 #define RENDER_SCALE 1.0f
 
 // clang-format on

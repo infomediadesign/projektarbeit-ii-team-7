@@ -7,7 +7,7 @@ extern "C" {
 
 #define GEYSER_MINIMAL_VK_STRUCT_INFO(t) .sType = t, .pNext = NULL
 #define GEYSER_BASIC_VK_STRUCT_INFO(t)   .sType = t, .pNext = NULL, .flags = 0
-#define GEYSER_MAX_TEXTURES              8196
+#define GEYSER_MAX_TEXTURES              16384
 
 /**
  * Geyser is a minimalistic Vulkan middleware library.
