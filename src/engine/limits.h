@@ -1,7 +1,8 @@
 #ifndef __ENGINE_LIMITS_H
 #define __ENGINE_LIMITS_H
 
-#define MAX_ENTITIES    16384
-#define MAX_RENDERABLES MAX_ENTITIES * 2
+#define MAX_ENTITIES          16384
+#define MAX_RENDERABLES       MAX_ENTITIES * 2
+#define MAX_MEMORY_COMPONENTS 8192
 
 #endif

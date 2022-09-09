@@ -239,7 +239,7 @@ void geyser_init_vk(RenderState *restrict state) {
   state->queue_family_indices       = family_indices;
   state->queue_family_indices_count = 1;
 
-  const float queue_prios[] = { 1.0f, 1.0f };
+  const f32 queue_prios[] = { 1.0f, 1.0f };
 
   const VkDeviceQueueCreateInfo queue_create_info = {
     GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO),

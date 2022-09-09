@@ -4,7 +4,7 @@
 
 #include <game/interface.h>
 
-void glfw_error_fun(int error_code, const char *error_message) {
+void glfw_error_fun(i32 error_code, const char *error_message) {
   printf("\033[1;31m[GLFW Error]\033[0m %s\n", error_message);
 }
 
@@ -18,7 +18,7 @@ static inline const char *platform_name(i32 platform) {
   }
 }
 
-int render_perform(void *args) {
+i32 render_perform(void *args) {
   ThreadData *const td     = (ThreadData *)args;
   mutex_t *lock            = (mutex_t *)td->lock;
   GameState *const state   = (GameState *)td->state;

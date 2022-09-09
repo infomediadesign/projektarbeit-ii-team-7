@@ -17,9 +17,9 @@ extern "C" {
  * @warning On Windows, the input polling is performed in the render thread!
  *
  * @param args Thread arguments.
- * @return int Always returns 0.
+ * @return i32 Always returns 0.
  */
-int input_perform(void *args);
+i32 input_perform(void *args);
 
 #ifdef __cplusplus
 }

@@ -23,7 +23,20 @@ void input_key_callback(GLFWwindow *window, i32 key, i32 scancode, i32 action, i
 
 void input_char_callback(GLFWwindow *window, u32 codepoint) { input_push_raw(IS, codepoint); }
 
-int input_perform(void *args) {
+void input_cursor_position_callback(GLFWwindow *window, f64 x, f64 y) {
+  IS->mouse.x = x;
+  IS->mouse.y = y;
+}
+
+void input_mouse_button_callback(GLFWwindow *window, i32 button, i32 action, i32 mods) {
+  i32 real_key = (action << 30) + (mods << 24) + (button << 21);
+  KeyBind bind = input_find_binding(IS, real_key);
+
+  if (bind.cmd != 0)
+    input_push(IS, bind.cmd);
+}
+
+i32 input_perform(void *args) {
   ThreadData *const td   = (ThreadData *)args;
   GameState *const state = (GameState *)td->state;
   mutex_t *lock          = (mutex_t *)td->lock;
@@ -39,6 +52,8 @@ int input_perform(void *args) {
   glfwSetWindowRefreshCallback(window, input_refresh_callback);
   glfwSetFramebufferSizeCallback(window, input_resize_callback);
   glfwSetKeyCallback(window, input_key_callback);
+  glfwSetCursorPosCallback(window, input_cursor_position_callback);
+  glfwSetMouseButtonCallback(window, input_mouse_button_callback);
 
   game_create_bindings(state, lock, IS);
 

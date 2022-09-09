@@ -6,6 +6,13 @@
 
 #include "render_state.h"
 
+typedef struct MemoryComponent {
+  u64 crc;
+  u64 offset;
+  u64 size;
+  u32 pool_id;
+} MemoryComponent;
+
 typedef struct FreeList {
   struct FreeList *next;
   u64 offset;
@@ -30,6 +37,7 @@ typedef struct ImageMemoryPool {
 typedef struct MemoryManager {
   MemoryPool *pools;
   ImageMemoryPool *image_pools;
+  MemoryComponent *components;
 } MemoryManager;
 
 typedef struct FreeMemoryBlock {

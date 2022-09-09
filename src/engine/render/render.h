@@ -23,9 +23,9 @@ extern "C" {
  * the window, rendering contexts, interpolation, and so on.
  *
  * @param args ThreadData structure
- * @return int Always returns 0
+ * @return i32 Always returns 0
  */
-int render_perform(void *args);
+i32 render_perform(void *args);
 
 #ifdef __cplusplus
 }

@@ -61,7 +61,7 @@ typedef struct Time {
 Time platform_time();
 
 /**
- * @brief Current time in seconds expressed as a float.
+ * @brief Current time in seconds expressed as a 64-bit floating point number.
  *
  * ```
  * Time t = platform_time_f64();
@@ -72,7 +72,7 @@ Time platform_time();
  * }
  * ```
  *
- * @return f64 Time Current time as a float.
+ * @return f64 Time Current time as a 64-bit floating point number.
  */
 f64 platform_time_f64();
 

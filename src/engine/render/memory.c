@@ -1,11 +1,13 @@
 #include "memory.h"
 
+#include "../limits.h"
 #include "../util.h"
 #include "geyser.h"
 
 void memory_create_manager(RenderState *state, MemoryManager *m) {
   m->pools       = (MemoryPool *)calloc(1, sizeof(MemoryPool));
   m->image_pools = (ImageMemoryPool *)calloc(1, sizeof(ImageMemoryPool));
+  m->components  = (MemoryComponent *)calloc(MAX_MEMORY_COMPONENTS, sizeof(MemoryComponent));
 
   memory_allocate_pool(state, m->pools);
   memory_allocate_image_pool(state, m->image_pools);

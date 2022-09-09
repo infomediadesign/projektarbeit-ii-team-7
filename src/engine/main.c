@@ -14,9 +14,9 @@
  * @param argc Amount of command-line parameters passed
  * @param argv List of parameters separated by space, including executable name
  * itself
- * @return int Exit status code
+ * @return i32 Exit status code
  */
-int main(const int argc, const char *argv[]) {
+i32 main(const i32 argc, const char *argv[]) {
   printf("[Miniflow] Starting...\n");
 
   /* Initialize game state and a mutex lock */

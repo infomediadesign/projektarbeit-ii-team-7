@@ -13,8 +13,8 @@
  * and manages entities.
  *
  * @param args Pointer to ThreadData structure passed to the thread
- * @return int Always returns 0
+ * @return i32 Always returns 0
  */
-int logic_perform(void *args);
+i32 logic_perform(void *args);
 
 #endif

@@ -13,6 +13,11 @@ void OverworldController::init(GameState *state) {
   PLAYER_ENT->set_pos({ 0.2f, 0.2f, 0.0f });
 }
 
+void OverworldController::destroy(GameState *state) {
+  this->base.ent_manager->clear_entities();
+  delete this->level;
+}
+
 void OverworldController::update(GameState *state, mutex_t *lock) {
   for (Entity &ent : this->base.ent_manager->entities)
     if (ent.is_valid() && ent.get_should_collide())
@@ -55,11 +60,6 @@ void OverworldController::update_renderables(
         render_state->render_scale
     );
   }
-}
-
-void OverworldController::destroy(GameState *state) {
-  this->base.ent_manager->clear_entities();
-  delete this->level;
 }
 
 void OverworldController::process_input(GameState *state, const f64 update_time) {
