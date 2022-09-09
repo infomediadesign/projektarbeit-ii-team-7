@@ -37,9 +37,6 @@ void input_flush(InputState *state) {
   state->right_stick_last   = state->right_stick;
   state->left_trigger_last  = state->left_trigger;
   state->right_trigger_last = state->right_trigger;
-  state->mouse              = (Axis2) { 0.0, 0.0 };
-  state->left_stick         = (Axis2) { 0.0, 0.0 };
-  state->right_stick        = (Axis2) { 0.0, 0.0 };
   state->left_trigger       = 0.0f;
   state->right_trigger      = 0.0f;
 }

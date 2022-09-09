@@ -6,9 +6,7 @@
 #define PLAYER_ENT this->base.ent_manager->get_player_ent()
 
 void OverworldController::init(GameState *state) {
-  this->level = new Level(this->base.lua, this->base.ent_manager);
-  this->level->load_json("levels/dev.json");
-  this->level->init();
+  this->changelevel("dev");
 
   PLAYER_ENT->set_pos({ 0.2f, 0.2f, 0.0f });
 }
@@ -16,6 +14,19 @@ void OverworldController::init(GameState *state) {
 void OverworldController::destroy(GameState *state) {
   this->base.ent_manager->clear_entities();
   delete this->level;
+  this->level = nullptr;
+}
+
+void OverworldController::changelevel(const std::string level) {
+  if (this->level != nullptr) {
+    this->base.ent_manager->clear_entities();
+    delete this->level;
+    this->level = nullptr;
+  }
+
+  this->level = new Level(this->base.lua, this->base.ent_manager);
+  this->level->load_json("levels/" + level + ".json");
+  this->level->init();
 }
 
 void OverworldController::update(GameState *state, mutex_t *lock) {

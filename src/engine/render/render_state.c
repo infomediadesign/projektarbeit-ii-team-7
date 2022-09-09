@@ -16,6 +16,8 @@ RenderState *render_state_init() {
   state->current_swapchain_image = 0;
   state->window_width            = 1280.0f * xscale;
   state->window_height           = 720.0f * yscale;
+  state->window_scale_x          = xscale;
+  state->window_scale_y          = yscale;
   state->debug                   = 0;
   state->rendering               = 0;
   state->camera_transform        = null_mat4;

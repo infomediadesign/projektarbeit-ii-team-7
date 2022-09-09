@@ -39,6 +39,10 @@ private:
   BattleController *battle_controller;
   MenuController *menu_controller;
   GameStage stage;
+  f32 window_width;
+  f32 window_height;
+  f32 window_scale_x;
+  f32 window_scale_y;
   f32 scale;
   bool locked;
 
@@ -53,10 +57,19 @@ public:
     this->scale                = RENDER_SCALE;
     this->stage                = GameStage::GS_UNKNOWN;
     this->locked               = false;
+    this->window_width         = 1280.0f;
+    this->window_height        = 720.0f;
+    this->window_scale_x       = 1.0f;
+    this->window_scale_y       = 1.0f;
   }
 
   GAME_GETTER(InputState *, input_state);
   GAME_GETTER(GameStage, stage);
+  GAME_GETTER(f32, scale);
+  GAME_GETTER(f32, window_width);
+  GAME_GETTER(f32, window_height);
+  GAME_GETTER(f32, window_scale_x);
+  GAME_GETTER(f32, window_scale_y);
 
   /* Events called from the engine */
   void init(GameState *state);
@@ -72,15 +85,21 @@ public:
   void init_lua();
   void ent_remove(Entity *ent);
   void clear_entities();
+  void changelevel(const std::string level);
 
   static i32 compare_renderables(const void *r1, const void *r2);
   static i32 lua_set_stage(lua_State *state);
   static i32 lua_bind(lua_State *state);
   static i32 lua_get_stage(lua_State *state);
   static i32 lua_player(lua_State *state);
+  static i32 lua_getscale(lua_State *state);
   static i32 lua_ent_create(lua_State *state);
   static i32 lua_ent_clear(lua_State *state);
   static i32 lua_ent_remove(lua_State *state);
+  static i32 lua_changelevel(lua_State *state);
+  static i32 lua_window_getheight(lua_State *state);
+  static i32 lua_window_getwidth(lua_State *state);
+  static i32 lua_window_getscale(lua_State *state);
 };
 
 #endif

@@ -13,6 +13,7 @@ private:
 
 public:
   CONTROLLER_METHOD_DEFINITIONS
+  void changelevel(const std::string level);
 };
 
 #endif

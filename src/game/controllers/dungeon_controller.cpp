@@ -15,3 +15,15 @@ void DungeonController::update_renderables(
 void DungeonController::destroy(GameState *state) {}
 
 void DungeonController::process_input(GameState *state, const f64 update_time) {}
+
+void DungeonController::changelevel(const std::string level) {
+  if (this->level != nullptr) {
+    this->base.ent_manager->clear_entities();
+    delete this->level;
+    this->level = nullptr;
+  }
+
+  this->level = new Level(this->base.lua, this->base.ent_manager);
+  this->level->load_json("levels/" + level + ".json");
+  this->level->init();
+}

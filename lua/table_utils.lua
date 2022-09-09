@@ -18,6 +18,26 @@ function table.length(t)
   return len
 end
 
+function table.hasvalue(t, val)
+  for _, v in pairs(t) do
+    if v == val then
+      return true
+    end
+  end
+
+  return false
+end
+
+function table.hasvaluei(t, val)
+  for _, v in ipairs(t) do
+    if v == val then
+      return true
+    end
+  end
+
+  return false
+end
+
 function printtable(t, indent, done, indent_length)
   done = done or {}
   indent = indent or 0

@@ -86,6 +86,8 @@ typedef struct RenderState {
   VkRect2D scissor;
   f32 window_width;
   f32 window_height;
+  f32 window_scale_x;
+  f32 window_scale_y;
   f32 render_scale;
   u32 current_swapchain_image;
   u32 queue_family_index;

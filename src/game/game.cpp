@@ -35,12 +35,20 @@ static const luaL_Reg lua_game_lib[] = {
   { "bind", Game::lua_bind },
   { "getstage", Game::lua_get_stage },
   { "player", Game::lua_player },
+  { "changelevel", Game::lua_changelevel },
+  { "getscale", Game::lua_getscale },
   { NULL, NULL } /* sentinel */
 };
 static const luaL_Reg lua_ent_lib[] = {
   { "create", Game::lua_ent_create },
   { "remove", Game::lua_ent_remove },
   { "clear", Game::lua_ent_clear },
+  { NULL, NULL } /* sentinel */
+};
+static const luaL_Reg lua_window_lib[] = {
+  { "getwidth", Game::lua_window_getwidth },
+  { "getheight", Game::lua_window_getheight },
+  { "getscale", Game::lua_window_getscale },
   { NULL, NULL } /* sentinel */
 };
 static const i8 lua_game_index = 0;
@@ -153,6 +161,10 @@ void Game::update_renderables(
   GameState *state, mutex_t *lock, RenderState *render_state, Renderable **renderables, const u32 renderables_count
 ) {
   this->game_state           = state;
+  this->window_width         = render_state->window_width;
+  this->window_height        = render_state->window_height;
+  this->window_scale_x       = render_state->window_scale_x;
+  this->window_scale_y       = render_state->window_scale_y;
   render_state->render_scale = this->scale;
 
   render_state->camera_transform.x[0] = render_state->render_scale;
@@ -431,6 +443,16 @@ void Game::ent_remove(Entity *ent) { this->ent_manager.ent_remove(ent); }
 
 void Game::clear_entities() { this->ent_manager.clear_entities(); }
 
+void Game::changelevel(const std::string level) {
+  if (this->stage == GS_OVERWORLD || this->stage == GS_DUNGEON) {
+    switch (this->stage) {
+    case GameStage::GS_OVERWORLD: this->overworld_controller->changelevel(level); break;
+    case GameStage::GS_DUNGEON: this->dungeon_controller->changelevel(level); break;
+    default: break;
+    }
+  }
+}
+
 void Game::init_lua() {
   this->lua = luaL_newstate();
   luaL_openlibs(this->lua);
@@ -441,6 +463,7 @@ void Game::init_lua() {
 
   luaL_register(this->lua, "game", lua_game_lib);
   luaL_register(this->lua, "ent", lua_ent_lib);
+  luaL_register(this->lua, "window", lua_window_lib);
 
   lua_register_common(this->lua);
 
@@ -548,4 +571,48 @@ i32 Game::lua_ent_remove(lua_State *state) {
   GAME->ent_remove(*ent_ptr);
 
   return 0;
+}
+
+i32 Game::lua_changelevel(lua_State *state) {
+  const char *level = luaL_checkstring(state, 1);
+
+  LUA_GET_GAME(state);
+
+  GAME->changelevel(level);
+
+  return 0;
+}
+
+i32 Game::lua_getscale(lua_State *state) {
+  LUA_GET_GAME(state);
+
+  lua_pushnumber(state, GAME->get_scale());
+
+  return 1;
+};
+
+i32 Game::lua_window_getheight(lua_State *state) {
+  LUA_GET_GAME(state);
+
+  lua_pushnumber(state, GAME->get_window_height());
+
+  return 1;
+}
+
+i32 Game::lua_window_getwidth(lua_State *state) {
+  LUA_GET_GAME(state);
+
+  lua_pushnumber(state, GAME->get_window_width());
+
+  return 1;
+}
+
+i32 Game::lua_window_getscale(lua_State *state) {
+  LUA_GET_GAME(state);
+
+  lua_createtable(state, 0, 2);
+  LUA_TABLE_SET_NAMED(state, number, "x", GAME->get_window_scale_x());
+  LUA_TABLE_SET_NAMED(state, number, "y", GAME->get_window_scale_x());
+
+  return 1;
 }
