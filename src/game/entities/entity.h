@@ -24,7 +24,7 @@
     this->updated_at = platform_time_f64(); \
   }
 
-enum EntClass { UNKNOWN, PLAYER, BACKGROUND, CLIP, ENEMY };
+enum EntClass { PLAYER, BACKGROUND, CLIP, ENEMY, UI, TRIGGER, INTERACTABLE, UNKNOWN };
 
 class Entity {
 private:
@@ -98,6 +98,7 @@ public:
   ENT_SETTER(std::string, texture_path)
   ENT_SETTER(Renderable *, renderable)
   ENT_SETTER(f64, lifetime)
+  ENT_SETTER(i64, id)
   ENT_SETTER(u32, current_anim)
   ENT_SETTER(u32, entity_index)
   ENT_SETTER(EntClass, ent_class)

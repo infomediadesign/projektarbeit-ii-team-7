@@ -162,6 +162,7 @@ ENT_LUA_VEC3_GETTER(velocity)
 ENT_LUA_VEC3_GETTER(axis)
 ENT_LUA_VEC3_GETTER(pos)
 
+ENT_LUA_SETTER(id, number, i64)
 ENT_LUA_SETTER(lifetime, number, f64)
 ENT_LUA_SETTER(current_anim, number, u32)
 ENT_LUA_SETTER(ent_class, number, EntClass)
@@ -328,6 +329,7 @@ static const luaL_Reg lua_ent_functions[] = {
   { "get_velocity", lua_entity_get_velocity },
   { "get_axis", lua_entity_get_axis },
   { "get_pos", lua_entity_get_pos },
+  { "set_id", lua_entity_set_id },
   { "set_lifetime", lua_entity_set_lifetime },
   { "set_current_anim", lua_entity_set_current_anim },
   { "set_ent_class", lua_entity_set_ent_class },

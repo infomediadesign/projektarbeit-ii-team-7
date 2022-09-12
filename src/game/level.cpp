@@ -28,7 +28,8 @@ void Level::load_json(const std::string path) {
     return;
   }
 
-  this->loaded = true;
+  this->level_path = path;
+  this->loaded     = true;
 }
 
 void Level::parse_layers(simdjson::ondemand::array layers) {
@@ -84,12 +85,41 @@ void Level::parse_collision_layer(simdjson::ondemand::value layer) {
   }
 }
 
-void Level::parse_object_layer(simdjson::ondemand::value layer) { /* todo: parse objects */
+void Level::parse_object_layer(simdjson::ondemand::value layer) {
+  for (simdjson::ondemand::value obj : layer.find_field_unordered("objects").get_array()) {
+    const i64 uid      = obj.find_field("gid");
+    const i64 height   = obj.find_field("height");
+    const i64 width    = obj.find_field("width");
+    const i64 x        = obj.find_field("x");
+    const i64 y        = obj.find_field("y");
+    std::string script = "";
+
+    for (simdjson::ondemand::value props : obj.find_field_unordered("properties").get_array()) {
+      const std::string_view name = props.find_field_unordered("name");
+      const std::string_view t    = props.find_field_unordered("type");
+
+      if (name == "script" && t == "string") {
+        const std::string_view val = props.find_field_unordered("value");
+        script                     = std::string(val);
+      }
+    }
+
+    this->objects.push_back({ .script     = script,
+                              .tileset_id = uid,
+                              .width      = (f32)width / 32.0f,
+                              .height     = (f32)height / 32.0f,
+                              .x          = (f32)(x + width / 2) / 32.0f * 0.1f - 0.05f,
+                              .y          = (f32)(y - height / 2) / 32.0f * 0.1f - 0.05f });
+  }
 }
 
 void Level::parse_tilesets(simdjson::ondemand::array tilesets) {
-  for (simdjson::ondemand::value tileset : tilesets)
-    this->load_tileset(tileset.find_field_unordered("source").get_string());
+  for (simdjson::ondemand::value tileset : tilesets) {
+    const u64 uid               = tileset.find_field_unordered("firstgid").get_uint64();
+    const std::string_view path = tileset.find_field_unordered("source").get_string();
+
+    this->load_tileset(uid, path);
+  }
 }
 
 std::string absolute_path(const std::string str) {
@@ -99,7 +129,7 @@ std::string absolute_path(const std::string str) {
   return str;
 }
 
-void Level::load_tileset(const std::string_view path) {
+void Level::load_tileset(const u64 uid, const std::string_view path) {
   char real_path[256];
 
   asset_find(std::string(path).c_str(), real_path);
@@ -116,29 +146,108 @@ void Level::load_tileset(const std::string_view path) {
   try {
     simdjson::ondemand::document data = this->json_parser.iterate(json);
     std::string_view image            = data.find_field("image").get_string();
-    this->tilesets.push_back(absolute_path(std::string(image)));
+    LevelTileset ts                   = { .path = absolute_path(std::string(image)), .uid = uid };
+    this->tilesets.push_back(ts);
   } catch (...) {
     std::cout << "Tileset " << path << " is invalid!" << std::endl;
-    this->tilesets.push_back("assets/debug/missing.png");
     return;
   }
+}
+
+LevelTileset *Level::find_tileset(const u64 uid) {
+  for (LevelTileset &ts : this->tilesets)
+    if (ts.uid == uid)
+      return &ts;
+
+  return nullptr;
 }
 
 void Level::init() {
   if (!this->loaded)
     return;
 
+  LUA_EVENT_RUN(this->lua, "level_init");
+  lua_pushstring(this->lua, this->level_path.c_str());
+  LUA_EVENT_CALL(this->lua, 1, 1);
+
+  if (lua_isboolean(this->lua, -1) && lua_toboolean(this->lua, -1) == 0)
+    return;
+
   for (const LevelBackgroundTile tile : this->background) {
+    LevelTileset *ts = this->find_tileset(tile.tileset_id);
+
+    LUA_EVENT_RUN(this->lua, "pre_level_background_ent_create");
+    lua_pushnumber(this->lua, ts->uid);
+    lua_pushstring(this->lua, ts->path.c_str());
+    LUA_EVENT_CALL(this->lua, 2, 1);
+
+    if (lua_isboolean(this->lua, -1) && lua_toboolean(this->lua, -1) == 0)
+      continue;
+
     Entity *ent = this->ent_manager->ent_create();
     ent->set_ent_class(EntClass::BACKGROUND);
-    ent->set_texture_path(this->tilesets.at(tile.tileset_id - 1));
+    ent->set_texture_path(ts != nullptr ? ts->path : "assets/debug/missing.png");
     ent->set_pos(vector_make3(tile.x, tile.y, 0.0f));
     ent->set_active(true);
+
+    LUA_EVENT_RUN(this->lua, "level_background_ent_create");
+    lua_push_entity(this->lua, ent);
+    lua_pushnumber(this->lua, ts->uid);
+    lua_pushstring(this->lua, ts->path.c_str());
+    LUA_EVENT_CALL(this->lua, 3, 0);
   }
 
   for (const LevelObject obj : this->objects) {
-    /* todo: object spawning */
+    LevelTileset *ts = this->find_tileset(obj.tileset_id);
+
+    LUA_EVENT_RUN(this->lua, "pre_level_object_create");
+    lua_pushnumber(this->lua, ts->uid);
+    lua_pushstring(this->lua, ts->path.c_str());
+    LUA_EVENT_CALL(this->lua, 2, 1);
+
+    if (lua_isboolean(this->lua, -1) && lua_toboolean(this->lua, -1) == 0)
+      continue;
+
+    Entity *ent = this->ent_manager->ent_create();
+    ent->set_pos({ obj.x, obj.y, 0.0f });
+    ent->set_scale({ obj.width, obj.height });
+    ent->set_texture_path(ts != nullptr ? ts->path : "assets/debug/missing.png");
+    ent->set_id(obj.tileset_id);
+    ent->set_active(true);
+
+    LUA_EVENT_RUN(this->lua, "level_object_create");
+    lua_push_entity(this->lua, ent);
+    lua_pushnumber(this->lua, ts->uid);
+    lua_pushstring(this->lua, ts->path.c_str());
+    LUA_EVENT_CALL(this->lua, 3, 0);
+
+    lua_push_entity(this->lua, ent);
+    lua_setglobal(this->lua, "ENT");
+
+    if (luaL_dostring(this->lua, obj.script.c_str())) {
+      std::cout << "Lua error in LevelObject(" << ent->get_texture_path() << "):" << std::endl;
+
+      if (lua_isstring(this->lua, -1)) {
+        const char *err = luaL_checkstring(this->lua, -1);
+
+        std::cout << err << std::endl;
+      } else {
+        std::cout << "(error not on stack)" << std::endl;
+      }
+    }
+
+    lua_pushnil(this->lua);
+    lua_setglobal(this->lua, "ENT");
   }
+
+  lua_pushnil(this->lua);
+  lua_setglobal(this->lua, "ENT");
+
+  LUA_EVENT_RUN(this->lua, "level_should_spawn_collission");
+  LUA_EVENT_CALL(this->lua, 0, 1);
+
+  if (lua_isboolean(this->lua, -1) && lua_toboolean(this->lua, -1) == 0)
+    return;
 
   for (const LevelCollisionTile tile : this->collisions) {
     Entity *ent = this->ent_manager->ent_create();

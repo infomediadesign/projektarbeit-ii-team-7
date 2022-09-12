@@ -220,7 +220,7 @@ void Game::update_renderables(
         renderable_set_active(r, GS_TRUE);
       }
 
-      if (r->assigned_to != ent.get_id() && r->assigned_to != -1)
+      if (r->assigned_to != ent.get_entity_index() && r->assigned_to != -1)
         throw std::runtime_error("Renderable is not assigned to the correct entity.");
 
       renderable_set_pos(r, vector3_to_vector4(ent.get_pos()));

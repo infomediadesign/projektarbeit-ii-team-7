@@ -87,7 +87,7 @@ Renderable *
   EntityManager::ent_assign_renderable(Renderable **renderables, const u32 renderables_count, Entity *ent) const {
   for (u32 i = 0; i < renderables_count; i++) {
     if (renderables[i]->assigned_to == -1) {
-      renderable_set_assigned(renderables[i], ent->get_id());
+      renderable_set_assigned(renderables[i], ent->get_entity_index());
       return renderables[i];
     }
   }

@@ -15,12 +15,11 @@ void BattleController::init(GameState *state) {
   this->background->set_scale({ 20.0f, 11.25f });
   this->background->set_active(true);
 
-  this->opponent = this->base.ent_manager->ent_create();
-  this->opponent->set_ent_class(EntClass::ENEMY);
-  this->opponent->set_texture_path("assets/debug/foxy_64x64.png");
-  this->opponent->set_pos(opponent_pos);
-  this->opponent->set_scale({ 4.0f, 4.0f });
-  this->opponent->set_active(true);
+  LUA_EVENT_RUN(this->base.lua, "battle_setup_opponents");
+  LUA_EVENT_CALL(this->base.lua, 0, 1);
+
+  if (lua_isboolean(this->base.lua, -1) && lua_toboolean(this->base.lua, -1) == 0)
+    return;
 
   for (u8 i = 0; i < 4; i++) {
     Entity *ent = this->base.ent_manager->ent_create();
@@ -35,9 +34,8 @@ void BattleController::init(GameState *state) {
 }
 
 void BattleController::update(GameState *state, mutex_t *lock) {
-  const f64 curtime = platform_time_f64();
-
-  this->opponent->set_pos(opponent_pos + vector_make3(sin(curtime * 2.0) * 0.08, sin(curtime * 4.0) * 0.04, 0.0f));
+  LUA_EVENT_RUN(this->base.lua, "battle_update");
+  LUA_EVENT_CALL(this->base.lua, 0, 0);
 }
 
 void BattleController::update_lazy(GameState *state, mutex_t *lock) {}

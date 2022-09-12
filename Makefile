@@ -22,6 +22,11 @@ dist:
 	cp -r levels/ dist/levels
 	cp -r lua/ dist/lua
 
+exec:
+	./build/engine/miniflow
+
+run: configure build exec
+
 lint:
 	find ./src -type f -name '*.c' -exec clang-format -i {} \;
 	find ./src -type f -name '*.h' -exec clang-format -i {} \;

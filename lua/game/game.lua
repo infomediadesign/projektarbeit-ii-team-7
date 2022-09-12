@@ -1,7 +1,10 @@
 require 'bit'
+require 'battle'
 
 local MOUSE_MOVE = 14
 local active_commands = {}
+
+CAN_MOVE = true
 
 -- function GAME:post_init()
 --   for i = 1, 8192 do
@@ -11,6 +14,21 @@ local active_commands = {}
 --     e:set_active(true)
 --   end
 -- end
+
+function GAME:ent_create(e)
+  table.insert(ENTS, e)
+end
+
+function GAME:ent_removed(e)
+  local ent_index = e:get_entity_index()
+
+  for k, v in ipairs(ENTS) do
+    if v:get_entity_index() == ent_index then
+      table.remove(ENTS, k)
+      break
+    end
+  end
+end
 
 function GAME:get_active_commands()
   return active_commands
@@ -25,6 +43,8 @@ function GAME:process_input(cmds, input_state)
   for _, v in ipairs(cmds) do
     active_commands[math.abs(v)] = v > 0
   end
+
+  if not CAN_MOVE then return false end
 
   local ply = game.player()
 
@@ -52,4 +72,8 @@ function GAME:process_input(cmds, input_state)
       ply:set_velocity_y(0)
     end
   end
+end
+
+function GAME:post_set_stage()
+  CAN_MOVE = game.getstage() == GS_OVERWORLD or game.getstage() == GS_DUNGEON
 end

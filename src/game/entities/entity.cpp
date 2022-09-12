@@ -73,7 +73,7 @@ bool Entity::should_be_removed() const { return this->should_remove; }
 
 void Entity::set_default() {
   const size_t addr     = (size_t)this;
-  this->id              = crc64(&addr, sizeof(size_t));
+  this->id              = -1;
   this->current_anim    = 0;
   this->ready           = false;
   this->active          = false;

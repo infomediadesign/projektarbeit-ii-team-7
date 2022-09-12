@@ -112,7 +112,7 @@ void OverworldController::check_collision(Entity *ent) {
     if (!target.is_valid())
       continue;
 
-    if (target.get_id() == ent->get_id())
+    if (target.get_entity_index() == ent->get_entity_index())
       continue;
 
     if (ent->collides_with(&target)) {
