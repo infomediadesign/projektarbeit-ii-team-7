@@ -1,0 +1,14 @@
+{ "columns":17,
+ "image":"..\/tiles\/test_props.png",
+ "imageheight":256,
+ "imagewidth":544,
+ "margin":0,
+ "name":"test-props",
+ "spacing":0,
+ "tilecount":136,
+ "tiledversion":"1.9.1",
+ "tileheight":32,
+ "tilewidth":32,
+ "type":"tileset",
+ "version":"1.8"
+}

@@ -1,0 +1,14 @@
+{ "columns":17,
+ "image":"..\/..\/tiles\/base_props.png",
+ "imageheight":448,
+ "imagewidth":544,
+ "margin":0,
+ "name":"base_props",
+ "spacing":0,
+ "tilecount":238,
+ "tiledversion":"1.9.1",
+ "tileheight":32,
+ "tilewidth":32,
+ "type":"tileset",
+ "version":"1.8"
+}

@@ -1,0 +1,19 @@
+{ "columns":15,
+ "image":"..\/tiles\/test_house.png",
+ "imageheight":288,
+ "imagewidth":511,
+ "margin":0,
+ "name":"red-test-house",
+ "spacing":0,
+ "tilecount":135,
+ "tiledversion":"1.9.1",
+ "tileheight":32,
+ "tiles":[
+        {
+         "id":46,
+         "probability":0
+        }],
+ "tilewidth":32,
+ "type":"tileset",
+ "version":"1.8"
+}

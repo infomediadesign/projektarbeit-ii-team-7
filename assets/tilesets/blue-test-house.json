@@ -1,0 +1,14 @@
+{ "columns":11,
+ "image":"..\/tiles\/blue_test_house.png",
+ "imageheight":288,
+ "imagewidth":383,
+ "margin":0,
+ "name":"blue-test-house",
+ "spacing":0,
+ "tilecount":99,
+ "tiledversion":"1.9.1",
+ "tileheight":32,
+ "tilewidth":32,
+ "type":"tileset",
+ "version":"1.8"
+}

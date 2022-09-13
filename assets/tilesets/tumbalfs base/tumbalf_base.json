@@ -1,0 +1,14 @@
+{ "columns":14,
+ "image":"..\/..\/tiles\/tumbalf_base.png",
+ "imageheight":320,
+ "imagewidth":448,
+ "margin":0,
+ "name":"tumbalf_base",
+ "spacing":0,
+ "tilecount":140,
+ "tiledversion":"1.9.1",
+ "tileheight":32,
+ "tilewidth":32,
+ "type":"tileset",
+ "version":"1.8"
+}
