@@ -40,4 +40,10 @@ require 'event'
 require 'entity'
 require 'game/game'
 
-print 'Lua boot complete'
+if not LUA_STARTED then
+  print 'Lua boot complete'
+else
+  print 'Lua refreshed'
+end
+
+LUA_STARTED = true

@@ -2,6 +2,7 @@ require 'bit'
 require 'battle'
 
 local MOUSE_MOVE = 14
+local REFRESH_CMD = 15
 local active_commands = {}
 
 CAN_MOVE = true
@@ -37,11 +38,24 @@ end
 function GAME:create_bindings()
   game.bind(bit.bor(KEY_MOUSE1, KEY_PRESS), MOUSE_MOVE)
   game.bind(bit.bor(KEY_MOUSE1, KEY_RELEASE), -MOUSE_MOVE)
+  game.bind(bit.bor(KEY_F5, KEY_PRESS), REFRESH_CMD)
 end
 
 function GAME:process_input(cmds, input_state)
   for _, v in ipairs(cmds) do
     active_commands[math.abs(v)] = v > 0
+
+    if v == REFRESH_CMD then
+      for k, v in pairs(package.loaded) do
+        if k ~= 'bit' then
+          package.loaded[k] = false
+        end
+      end
+
+      require '../init'
+
+      return
+    end
   end
 
   if not CAN_MOVE then return false end
