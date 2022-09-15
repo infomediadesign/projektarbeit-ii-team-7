@@ -9,7 +9,6 @@ class BattleController {
 private:
   Controller base;
   Entity *background;
-  std::vector<Entity *> buttons;
 
 public:
   CONTROLLER_METHOD_DEFINITIONS

@@ -21,16 +21,8 @@ void BattleController::init(GameState *state) {
   if (lua_isboolean(this->base.lua, -1) && lua_toboolean(this->base.lua, -1) == 0)
     return;
 
-  for (u8 i = 0; i < 4; i++) {
-    Entity *ent = this->base.ent_manager->ent_create();
-    ent->set_ent_class(EntClass::BACKGROUND);
-    ent->set_texture_path("assets/ui/text_box_64x32.png");
-    ent->set_pos(center_vec3 + vector_make3(-1.0f + i * 0.5f + 0.25f, 0.45f, 0.0f));
-    ent->set_scale({ 4.0f, 2.0f });
-    ent->set_active(true);
-
-    this->buttons.push_back(ent);
-  }
+  LUA_EVENT_RUN(this->base.lua, "battle_setup_gui");
+  LUA_EVENT_CALL(this->base.lua, 0, 0);
 }
 
 void BattleController::update(GameState *state, mutex_t *lock) {

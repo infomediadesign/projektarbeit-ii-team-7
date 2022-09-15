@@ -3,7 +3,9 @@ require 'battle'
 
 local MOUSE_MOVE = 14
 local REFRESH_CMD = 15
-local active_commands = {}
+local DEBUG_CHANGELEVEL_CMD = 16
+local active_commands = ACTIVE_COMMANDS or {}
+ACTIVE_COMMANDS = active_commands
 
 CAN_MOVE = true
 
@@ -39,6 +41,7 @@ function GAME:create_bindings()
   game.bind(bit.bor(KEY_MOUSE1, KEY_PRESS), MOUSE_MOVE)
   game.bind(bit.bor(KEY_MOUSE1, KEY_RELEASE), -MOUSE_MOVE)
   game.bind(bit.bor(KEY_F5, KEY_PRESS), REFRESH_CMD)
+  game.bind(bit.bor(KEY_F10, KEY_PRESS), DEBUG_CHANGELEVEL_CMD)
 end
 
 function GAME:process_input(cmds, input_state)
@@ -55,6 +58,9 @@ function GAME:process_input(cmds, input_state)
       require '../init'
 
       return
+    elseif v == DEBUG_CHANGELEVEL_CMD then
+      NEXT_OPPONENT = 'test'
+      game.setstage(GS_BATTLE)
     end
   end
 

@@ -24,7 +24,6 @@ static const Matrix4 null_mat4 = {
 // clang-format on
 
 void renderable_make_default(Renderable *r) {
-  r->vertices         = NULL;
   r->uv               = NULL;
   r->vertices_count   = 0U;
   r->position         = null_vec4;
@@ -50,17 +49,15 @@ Renderable renderable_default() {
 }
 
 void renderable_send_memory(RenderState *state, Renderable *r) {
-  const u64 vertex_size = sizeof(Vector4) * r->vertices_count;
-  const u64 uv_size     = sizeof(Vector2) * r->vertices_count;
+  const u64 uv_size = sizeof(Vector2) * r->vertices_count;
   void *data;
 
-  VkBufferCopy copy_info = { .srcOffset = 0, .dstOffset = r->offset, .size = vertex_size + uv_size };
+  VkBufferCopy copy_info = { .srcOffset = 0, .dstOffset = r->offset, .size = uv_size };
 
   geyser_success_or_message(
-    vkMapMemory(state->device, state->memory, 0, vertex_size + uv_size, 0, &data), "Failed to map vertex memory!"
+    vkMapMemory(state->device, state->memory, 0, uv_size, 0, &data), "Failed to map vertex memory!"
   );
-  memcpy(data, r->vertices, vertex_size);
-  memcpy((u8 *)data + vertex_size, r->uv, uv_size);
+  memcpy(data, r->uv, uv_size);
   vkUnmapMemory(state->device, state->memory);
 
   vkCmdCopyBuffer(state->command_buffer, state->buffer, r->pool->buffer, 1, &copy_info);
@@ -68,17 +65,8 @@ void renderable_send_memory(RenderState *state, Renderable *r) {
   geyser_cmd_submit_staging(state);
 }
 
-void renderable_make_rect(const RenderState *state, Renderable *r, const f32 width, const f32 height) {
+void renderable_make_rect(const RenderState *state, Renderable *r) {
   // clang-format off
-  Vector4 vertices[6] = {
-    {-width * 0.5f, -height * 0.5f, 0.0f, 1.0f},
-    {-width * 0.5f,  height * 0.5f, 0.0f, 1.0f},
-    { width * 0.5f, -height * 0.5f, 0.0f, 1.0f},
-    { width * 0.5f, -height * 0.5f, 0.0f, 1.0f},
-    {-width * 0.5f,  height * 0.5f, 0.0f, 1.0f},
-    { width * 0.5f,  height * 0.5f, 0.0f, 1.0f}
-  };
-
   Vector2 uvmap[6] = {
     {0.0f, 0.0f},
     {0.0f, 1.0f},
@@ -89,28 +77,15 @@ void renderable_make_rect(const RenderState *state, Renderable *r, const f32 wid
   };
   // clang-format on
 
-  r->vertices = (Vector4 *)malloc(sizeof(Vector4) * 6);
-  r->uv       = (Vector2 *)malloc(sizeof(Vector2) * 6);
+  r->uv = (Vector2 *)malloc(sizeof(Vector2) * 6);
 
-  memcpy(r->vertices, vertices, sizeof(Vector4) * 6);
   memcpy(r->uv, uvmap, sizeof(Vector2) * 6);
 
   r->vertices_count = 6U;
 }
 
-void renderable_make_rect_ex(
-  const RenderState *state, Renderable *r, const f32 width, const f32 height, const f32 uv_width, const f32 uv_height
-) {
+void renderable_make_rect_ex(const RenderState *state, Renderable *r, const f32 uv_width, const f32 uv_height) {
   // clang-format off
-  Vector4 vertices[6] = {
-    {-width * 0.5f, -height * 0.5f, 0.0f, 1.0f},
-    {-width * 0.5f,  height * 0.5f, 0.0f, 1.0f},
-    { width * 0.5f, -height * 0.5f, 0.0f, 1.0f},
-    { width * 0.5f, -height * 0.5f, 0.0f, 1.0f},
-    {-width * 0.5f,  height * 0.5f, 0.0f, 1.0f},
-    { width * 0.5f,  height * 0.5f, 0.0f, 1.0f}
-  };
-
   Vector2 uvmap[6] = {
     {0.0f,     0.0f},
     {0.0f,     uv_height},
@@ -121,10 +96,8 @@ void renderable_make_rect_ex(
   };
   // clang-format on
 
-  r->vertices = (Vector4 *)malloc(sizeof(Vector4) * 6);
-  r->uv       = (Vector2 *)malloc(sizeof(Vector2) * 6);
+  r->uv = (Vector2 *)malloc(sizeof(Vector2) * 6);
 
-  memcpy(r->vertices, vertices, sizeof(Vector4) * 6);
   memcpy(r->uv, uvmap, sizeof(Vector2) * 6);
 
   r->vertices_count = 6U;
@@ -136,7 +109,6 @@ void renderable_free(RenderState *state, Renderable *r) {
   // memory_free_image_block(r->texture.base.base.pool, r->texture.base.base.offset, r->texture.base.base.size);
   geyser_free_texture_descriptor_set(state, &r->texture);
 
-  free(r->vertices);
   free(r->uv);
 }
 
@@ -199,16 +171,14 @@ void renderable_set_texture(RenderState *state, Renderable *r, const Image tex_i
   geyser_update_texture_descriptor_set(state, &r->texture);
 }
 
-void renderable_init_rect(RenderState *state, Renderable *r, const f32 width, const f32 height) {
-  renderable_make_rect(state, r, width, height);
+void renderable_init_rect(RenderState *state, Renderable *r) {
+  renderable_make_rect(state, r);
   renderable_assign_memory(state, (MemoryManager *)state->memory_manager, r);
   renderable_send_memory(state, r);
 }
 
-void renderable_init_rect_ex(
-  RenderState *state, Renderable *r, const f32 width, const f32 height, const f32 uv_width, const f32 uv_height
-) {
-  renderable_make_rect_ex(state, r, width, height, uv_width, uv_height);
+void renderable_init_rect_ex(RenderState *state, Renderable *r, const f32 uv_width, const f32 uv_height) {
+  renderable_make_rect_ex(state, r, uv_width, uv_height);
   renderable_assign_memory(state, (MemoryManager *)state->memory_manager, r);
   renderable_send_memory(state, r);
 }
@@ -225,9 +195,7 @@ void renderable_set_should_zsort(Renderable *r, const GeyserBool should_zsort) {
 
 void renderable_set_uv_offset(Renderable *r, const Vector2 offset) { r->uv_offset = offset; }
 
-u64 renderable_get_size(const Renderable *r) {
-  return sizeof(Vector4) * r->vertices_count + sizeof(Vector2) * r->vertices_count;
-}
+u64 renderable_get_size(const Renderable *r) { return sizeof(Vector2) * r->vertices_count; }
 
 void renderable_assign_memory(RenderState *state, MemoryManager *m, Renderable *r) {
   const u64 size = renderable_get_size(r);

@@ -175,7 +175,7 @@ void Game::update_renderables(
     if (!this->ent_manager.can_delete_renderable(renderable))
       continue;
 
-    if (renderable->vertices != NULL && renderable->uv != NULL)
+    if (renderable->uv != NULL)
       renderable_free(render_state, renderable);
 
     renderable_set_active(renderable, GS_FALSE);
@@ -214,7 +214,7 @@ void Game::update_renderables(
       if (r->active != GS_TRUE && ent.is_valid()) {
         const Vector2 uv_size = ent.get_uv_size();
 
-        renderable_init_rect_ex(render_state, r, 0.1f, 0.1f, uv_size.x, uv_size.y);
+        renderable_init_rect_ex(render_state, r, uv_size.x, uv_size.y);
         renderable_set_scale(r, ent.get_scale());
         renderable_load_texture(render_state, r, ent.get_texture_path().c_str());
         renderable_set_active(r, GS_TRUE);

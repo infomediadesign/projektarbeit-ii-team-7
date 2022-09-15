@@ -1,7 +1,6 @@
 #version 460
 
-layout (location = 0) in vec4 position;
-layout (location = 1) in vec2 uv;
+layout (location = 0) in vec2 uv;
 
 layout (location = 0) out vec2 v_uv;
 layout (location = 1) out vec4 v_color;
@@ -14,6 +13,15 @@ layout (push_constant, std430) uniform constants {
   vec2 scale;
   vec2 uvoffset;
 } PushConstants;
+
+const vec4 vertices[] = {
+  vec4(-0.05, -0.05, 0, 1),
+  vec4(-0.05, 0.05, 0, 1),
+  vec4(0.05, -0.05, 0, 1),
+  vec4(0.05, -0.05, 0, 1),
+  vec4(-0.05, 0.05, 0, 1),
+  vec4(0.05, 0.05, 0, 1)
+};
 
 vec4 quaternion_rotation(vec4 q) {
   return vec4(q.xyz * sin(q.w * 0.5), cos(q.w * 0.5));
@@ -55,7 +63,7 @@ void main() {
   trans_mat = trans_mat * quaternion_rotation_matrix(quaternion_rotation(PushConstants.quat));
   trans_mat[3] = PushConstants.pos;
 
-  gl_Position = PushConstants.camera_matrix * trans_mat * position;
+  gl_Position = PushConstants.camera_matrix * trans_mat * vertices[gl_VertexIndex];
 
   v_uv = uv + PushConstants.uvoffset;
   v_color = PushConstants.color;

@@ -39,10 +39,10 @@ contents += make_shader_fragment "#{path}unlit_generic.frag"
 contents += "\n\n"
 contents += make_shader_fragment "#{path}unlit_generic.vert"
 contents += "\n\n"
-contents += make_shader_fragment "#{path}text.frag"
-contents += "\n\n"
-contents += make_shader_fragment "#{path}text.vert"
-contents += "\n\n"
+#contents += make_shader_fragment "#{path}text.frag"
+#contents += "\n\n"
+#contents += make_shader_fragment "#{path}text.vert"
+#contents += "\n\n"
 contents += <<-TEXT
 #ifdef __cplusplus
 }

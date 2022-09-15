@@ -53,6 +53,7 @@ typedef struct RsMemoryManager {
 typedef struct RenderState {
   Matrix4 camera_transform;
   RsPipeline pipeline;
+  RsPipeline text_pipeline;
   BackbufferView backbuffer;
   Time init_time;
   u64 current_frame;
