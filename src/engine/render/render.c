@@ -112,7 +112,7 @@ i32 render_perform(void *args) {
   geyser_cmd_end_staging(render_state);
 
   i64 delay = state->fps_max != 0 ? 1000000 / state->fps_max : 0;
-  i64 start_time, end_time;
+  i64 start_time, end_time, gpu_start, gpu_end;
   VkDeviceSize offsets[1]       = { 0 };
   VkDeviceSize first_offsets[1] = { 0 };
 
@@ -208,15 +208,33 @@ i32 render_perform(void *args) {
       }
     }
 
+    gpu_start = platform_time_usec();
+
     geyser_cmd_end_renderpass(render_state);
     geyser_cmd_end_draw(render_state);
 
-    vkDeviceWaitIdle(render_state->device);
+    gpu_end = platform_time_usec();
 
     render_state->rendering = 0;
     render_state->current_frame++;
 
     end_time = platform_time_usec();
+
+    if (game_is_verbose(state) && render_state->current_frame % 100 == 0) {
+      const i64 total_time = end_time - start_time;
+      const i64 gpu_time   = gpu_end - gpu_start;
+      const i64 cpu_time   = total_time - gpu_time;
+
+      printf(
+        "Frame times\nTotal: %liμs (%li FPS)\nCPU: %liμs (%li FPS)\nGPU: %liμs (%li FPS)\n",
+        total_time,
+        1000000 / total_time,
+        cpu_time,
+        1000000 / cpu_time,
+        gpu_time,
+        1000000 / gpu_time
+      );
+    }
 
     if (state->fps_max > 0 && (end_time - start_time) < delay)
       platform_usleep(delay - (end_time - start_time));

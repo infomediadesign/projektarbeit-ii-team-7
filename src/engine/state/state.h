@@ -35,7 +35,7 @@ typedef struct GameState {
  * behavior of the engine.
  *
  */
-enum GameFlag { GS_PAUSED = 1, GS_DEBUG = 2, GS_EXIT = 4, GS_FULLSCREEN = 8 };
+enum GameFlag { GS_PAUSED = 1, GS_DEBUG = 2, GS_EXIT = 4, GS_FULLSCREEN = 8, GS_VERBOSE = 16 };
 
 /**
  * @brief Creates a new game state.
@@ -106,6 +106,20 @@ u8 game_is_paused(const GameState RESTRICTED_PTR state);
  * @return u8 Whether or not the game is in debug mode
  */
 u8 game_is_debug(const GameState RESTRICTED_PTR state);
+
+/**
+ * @brief Checks whether the game should produce extra console output.
+ *
+ * ```
+ * if (game_is_verbose(state)) {
+ *   printf(debug_information);
+ * }
+ * ```
+ *
+ * @param state Current game state
+ * @return u8 Whether or not the game is verbose
+ */
+u8 game_is_verbose(const GameState RESTRICTED_PTR state);
 
 /**
  * @brief Checks whether or not the game should exit.

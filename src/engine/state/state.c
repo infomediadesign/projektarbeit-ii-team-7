@@ -26,3 +26,5 @@ u8 game_is_debug(const GameState *restrict state) { return state->flags & GS_DEB
 u8 game_should_exit(const GameState *restrict state) { return state->flags & GS_EXIT; }
 
 u8 game_is_fullscreen(const GameState *restrict state) { return state->flags & GS_FULLSCREEN; }
+
+u8 game_is_verbose(const GameState *restrict state) { return state->flags & GS_VERBOSE; }
