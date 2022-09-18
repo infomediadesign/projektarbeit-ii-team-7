@@ -119,7 +119,12 @@ static const luaL_Reg lua_util_lib[] = {
   { NULL, NULL } /* sentinel */
 };
 
+i32 lua_dostring(lua_State *state) { return 0; }
+
 void lua_register_common(lua_State *state) {
   luaL_register(state, "platform", lua_platform_lib);
   luaL_register(state, "util", lua_util_lib);
+
+  lua_pushcfunction(state, lua_dostring);
+  lua_setglobal(state, "dostring");
 }

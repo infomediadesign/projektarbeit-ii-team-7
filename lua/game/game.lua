@@ -1,5 +1,6 @@
 require 'bit'
-require 'battle'
+include 'tileset_ent'
+include 'battle'
 
 local MOUSE_MOVE = 14
 local REFRESH_CMD = 15

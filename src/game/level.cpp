@@ -89,6 +89,7 @@ void Level::parse_object_layer(simdjson::ondemand::value layer) {
   for (simdjson::ondemand::value obj : layer.find_field_unordered("objects").get_array()) {
     const i64 uid      = obj.find_field("gid");
     const i64 height   = obj.find_field("height");
+    const u64 id       = obj.find_field("id");
     const i64 width    = obj.find_field("width");
     const i64 x        = obj.find_field("x");
     const i64 y        = obj.find_field("y");
@@ -105,6 +106,7 @@ void Level::parse_object_layer(simdjson::ondemand::value layer) {
     }
 
     this->objects.push_back({ .script     = script,
+                              .uid        = id,
                               .tileset_id = uid,
                               .width      = (f32)width / 32.0f,
                               .height     = (f32)height / 32.0f,
@@ -145,8 +147,19 @@ void Level::load_tileset(const u64 uid, const std::string_view path) {
 
   try {
     simdjson::ondemand::document data = this->json_parser.iterate(json);
-    std::string_view image            = data.find_field("image").get_string();
-    LevelTileset ts                   = { .path = absolute_path(std::string(image)), .uid = uid };
+    const std::string_view image      = data.find_field("image").get_string();
+    const u64 height                  = data.find_field("imageheight");
+    const u64 width                   = data.find_field("imagewidth");
+    const u64 count                   = data.find_field("tilecount");
+    const u64 tileheight              = data.find_field("tileheight");
+    const u64 tilewidth               = data.find_field("tilewidth");
+
+    LevelTileset ts = { .path            = absolute_path(std::string(image)),
+                        .uid             = uid,
+                        .count           = count,
+                        .aperture_width  = (f32)tilewidth / (f32)width,
+                        .aperture_height = (f32)tileheight / (f32)height };
+
     this->tilesets.push_back(ts);
   } catch (...) {
     std::cout << "Tileset " << path << " is invalid!" << std::endl;
@@ -155,11 +168,17 @@ void Level::load_tileset(const u64 uid, const std::string_view path) {
 }
 
 LevelTileset *Level::find_tileset(const u64 uid) {
-  for (LevelTileset &ts : this->tilesets)
-    if (ts.uid == uid)
-      return &ts;
+  LevelTileset *winner = nullptr;
+  u64 highest_uid      = 0;
 
-  return nullptr;
+  for (LevelTileset &ts : this->tilesets) {
+    if (ts.uid <= uid && ts.uid > highest_uid) {
+      highest_uid = ts.uid;
+      winner      = &ts;
+    }
+  }
+
+  return winner;
 }
 
 void Level::init() {
@@ -177,33 +196,72 @@ void Level::init() {
     LevelTileset *ts = this->find_tileset(tile.tileset_id);
 
     LUA_EVENT_RUN(this->lua, "pre_level_background_ent_create");
-    lua_pushnumber(this->lua, ts->uid);
-    lua_pushstring(this->lua, ts->path.c_str());
-    LUA_EVENT_CALL(this->lua, 2, 1);
+
+    if (ts != nullptr) {
+      lua_createtable(this->lua, 0, 6);
+      LUA_TABLE_SET_NAMED(this->lua, number, "id", tile.tileset_id);
+      LUA_TABLE_SET_NAMED(this->lua, number, "uid", ts->uid);
+      LUA_TABLE_SET_NAMED(this->lua, number, "aperture_width", ts->aperture_width);
+      LUA_TABLE_SET_NAMED(this->lua, number, "aperture_height", ts->aperture_height);
+      LUA_TABLE_SET_NAMED(this->lua, number, "count", ts->count);
+      LUA_TABLE_SET_NAMED(this->lua, string, "texture", ts->path.c_str());
+    } else {
+      lua_pushnil(this->lua);
+    }
+
+    LUA_EVENT_CALL(this->lua, 1, 1);
 
     if (lua_isboolean(this->lua, -1) && lua_toboolean(this->lua, -1) == 0)
       continue;
 
     Entity *ent = this->ent_manager->ent_create();
     ent->set_ent_class(EntClass::BACKGROUND);
-    ent->set_texture_path(ts != nullptr ? ts->path : "assets/debug/missing.png");
     ent->set_pos(vector_make3(tile.x, tile.y, 0.0f));
     ent->set_active(true);
+    ent->set_texture_path(ts != nullptr ? ts->path : "assets/debug/missing.png");
 
     LUA_EVENT_RUN(this->lua, "level_background_ent_create");
     lua_push_entity(this->lua, ent);
-    lua_pushnumber(this->lua, ts->uid);
-    lua_pushstring(this->lua, ts->path.c_str());
-    LUA_EVENT_CALL(this->lua, 3, 0);
+
+    if (ts != nullptr) {
+      const u64 real_id  = tile.tileset_id - ts->uid;
+      const u64 row_size = (u64)(1 / ts->aperture_width);
+
+      ent->set_uv_size({ ts->aperture_width, ts->aperture_height });
+      ent->set_uv_offset({ ts->aperture_width * (real_id % row_size), ts->aperture_height * (real_id / row_size) });
+
+      lua_createtable(this->lua, 0, 6);
+      LUA_TABLE_SET_NAMED(this->lua, number, "id", tile.tileset_id);
+      LUA_TABLE_SET_NAMED(this->lua, number, "uid", ts->uid);
+      LUA_TABLE_SET_NAMED(this->lua, number, "aperture_width", ts->aperture_width);
+      LUA_TABLE_SET_NAMED(this->lua, number, "aperture_height", ts->aperture_height);
+      LUA_TABLE_SET_NAMED(this->lua, number, "count", ts->count);
+      LUA_TABLE_SET_NAMED(this->lua, string, "texture", ts->path.c_str());
+    } else {
+      lua_pushnil(this->lua);
+    }
+
+    LUA_EVENT_CALL(this->lua, 2, 0);
   }
 
   for (const LevelObject obj : this->objects) {
     LevelTileset *ts = this->find_tileset(obj.tileset_id);
 
     LUA_EVENT_RUN(this->lua, "pre_level_object_create");
-    lua_pushnumber(this->lua, ts->uid);
-    lua_pushstring(this->lua, ts->path.c_str());
-    LUA_EVENT_CALL(this->lua, 2, 1);
+
+    if (ts != nullptr) {
+      lua_createtable(this->lua, 0, 6);
+      LUA_TABLE_SET_NAMED(this->lua, number, "id", obj.tileset_id);
+      LUA_TABLE_SET_NAMED(this->lua, number, "uid", ts->uid);
+      LUA_TABLE_SET_NAMED(this->lua, number, "aperture_width", ts->aperture_width);
+      LUA_TABLE_SET_NAMED(this->lua, number, "aperture_height", ts->aperture_height);
+      LUA_TABLE_SET_NAMED(this->lua, number, "count", ts->count);
+      LUA_TABLE_SET_NAMED(this->lua, string, "texture", ts->path.c_str());
+    } else {
+      lua_pushnil(this->lua);
+    }
+
+    LUA_EVENT_CALL(this->lua, 1, 1);
 
     if (lua_isboolean(this->lua, -1) && lua_toboolean(this->lua, -1) == 0)
       continue;
@@ -217,15 +275,32 @@ void Level::init() {
 
     LUA_EVENT_RUN(this->lua, "level_object_create");
     lua_push_entity(this->lua, ent);
-    lua_pushnumber(this->lua, ts->uid);
-    lua_pushstring(this->lua, ts->path.c_str());
-    LUA_EVENT_CALL(this->lua, 3, 0);
+
+    if (ts != nullptr) {
+      const u64 real_id  = obj.tileset_id - ts->uid;
+      const u64 row_size = (u64)(1 / ts->aperture_width);
+
+      ent->set_uv_size({ ts->aperture_width, ts->aperture_height });
+      ent->set_uv_offset({ ts->aperture_width * (real_id % row_size), ts->aperture_height * (real_id / row_size) });
+
+      lua_createtable(this->lua, 0, 6);
+      LUA_TABLE_SET_NAMED(this->lua, number, "id", obj.tileset_id);
+      LUA_TABLE_SET_NAMED(this->lua, number, "uid", ts->uid);
+      LUA_TABLE_SET_NAMED(this->lua, number, "aperture_width", ts->aperture_width);
+      LUA_TABLE_SET_NAMED(this->lua, number, "aperture_height", ts->aperture_height);
+      LUA_TABLE_SET_NAMED(this->lua, number, "count", ts->count);
+      LUA_TABLE_SET_NAMED(this->lua, string, "texture", ts->path.c_str());
+    } else {
+      lua_pushnil(this->lua);
+    }
+
+    LUA_EVENT_CALL(this->lua, 2, 0);
 
     lua_push_entity(this->lua, ent);
     lua_setglobal(this->lua, "ENT");
 
     if (luaL_dostring(this->lua, obj.script.c_str())) {
-      std::cout << "Lua error in LevelObject(" << ent->get_texture_path() << "):" << std::endl;
+      std::cout << "Lua error in LevelObject #" << obj.uid << ":" << std::endl;
 
       if (lua_isstring(this->lua, -1)) {
         const char *err = luaL_checkstring(this->lua, -1);

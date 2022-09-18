@@ -20,6 +20,7 @@ struct LevelBackgroundTile {
 
 struct LevelObject {
   std::string script;
+  u64 uid;
   i64 tileset_id;
   f32 width;
   f32 height;
@@ -35,6 +36,9 @@ struct LevelCollisionTile {
 struct LevelTileset {
   std::string path;
   u64 uid;
+  u64 count;
+  f32 aperture_width;
+  f32 aperture_height;
 };
 
 class Level {
