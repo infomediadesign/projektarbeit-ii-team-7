@@ -94,6 +94,7 @@ void Entity::set_default() {
   this->aabb_min        = { -0.05f, -0.05f, 0.0f };
   this->aabb_max        = { 0.05f, 0.05f, 0.0f };
   this->axis            = { 0.0f, 0.0f, 1.0f };
+  this->color           = { 1.0f, 1.0f, 1.0f, 1.0f };
   this->rotation_matrix = {
     { 1.0f, 0.0f, 0.0f, 0.0f },
     { 0.0f, 1.0f, 0.0f, 0.0f },

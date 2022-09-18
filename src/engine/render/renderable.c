@@ -141,6 +141,8 @@ void renderable_set_pos(Renderable *r, const Vector4 pos) {
   r->last_position = pos;
 }
 
+void renderable_set_color(Renderable *r, const Vector4 col) { r->color = col; }
+
 void renderable_set_rotation(Renderable *r, const Vector3 axis, const f32 rotation) {
   if (!vector_is_normal3(&axis))
     return;

@@ -30,6 +30,7 @@ class Entity {
 private:
   Matrix4 rotation_matrix;
   Quaternion quaternion;
+  Vector4 color;
   Vector3 aabb_max;
   Vector3 aabb_min;
   Vector3 velocity;
@@ -65,6 +66,7 @@ public:
 
   ENT_GETTER(std::string, texture_path);
   ENT_GETTER(Animation *, anims);
+  ENT_GETTER(Vector4, color)
   ENT_GETTER(Vector3, aabb_max)
   ENT_GETTER(Vector3, aabb_min)
   ENT_GETTER(Vector3, velocity)
@@ -91,6 +93,7 @@ public:
   ENT_GETTER(bool, ready)
 
   ENT_SETTER(Animation *, anims);
+  ENT_SETTER(Vector4, color)
   ENT_SETTER(Vector3, pos)
   ENT_SETTER(Vector2, uv_offset)
   ENT_SETTER(Vector2, uv_size)
