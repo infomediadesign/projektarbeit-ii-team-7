@@ -24,7 +24,7 @@ void OverworldController::changelevel(const std::string level) {
     this->level = nullptr;
   }
 
-  this->level = new Level(this->base.lua, this->base.ent_manager);
+  this->level = new Level(this->base.lua, this->base.ent_manager, true);
   this->level->load_json("levels/" + level + ".json");
   this->level->init();
 }

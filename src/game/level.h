@@ -54,6 +54,7 @@ private:
   lua_State *lua;
   EntityManager *ent_manager;
   bool loaded;
+  bool verbose;
 
   void parse_layers(simdjson::ondemand::array layers);
   void parse_background_layer(simdjson::ondemand::value layer);
@@ -64,10 +65,11 @@ private:
   LevelTileset *find_tileset(const u64 uid);
 
 public:
-  Level(lua_State *lua, EntityManager *ent_manager) {
+  Level(lua_State *lua, EntityManager *ent_manager, const bool verbose = false) {
     this->lua         = lua;
     this->ent_manager = ent_manager;
     this->loaded      = false;
+    this->verbose     = verbose;
   }
 
   void load_json(const std::string path);

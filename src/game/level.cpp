@@ -12,16 +12,26 @@ void Level::load_json(const std::string path) {
   simdjson::padded_string json;
 
   try {
+    if (this->verbose)
+      std::cout << "Loading level JSON..." << std::endl;
+
     json = simdjson::padded_string::load(real_path);
   } catch (...) {
-    std::cout << "Level " << path << " does not exist!" << std::endl;
+    std::cout << "Level " << path << " does not exist or is invalid!" << std::endl;
     return;
   }
 
   this->json_data = this->json_parser.iterate(json);
 
   try {
+    if (this->verbose)
+      std::cout << "Loading layers..." << std::endl;
+
     this->parse_layers(this->json_data["layers"]);
+
+    if (this->verbose)
+      std::cout << "Loading tilesets..." << std::endl;
+
     this->parse_tilesets(this->json_data["tilesets"]);
   } catch (...) {
     std::cout << "Level " << path << " is invalid!" << std::endl;
@@ -34,23 +44,48 @@ void Level::load_json(const std::string path) {
 
 void Level::parse_layers(simdjson::ondemand::array layers) {
   for (simdjson::ondemand::value layer : layers) {
-    if (layer.find_field_unordered("type") == std::string_view("tilelayer"))
-      if (layer.find_field_unordered("name") == std::string_view("collision"))
+    if (this->verbose)
+      std::cout << "  -> Parsing layer (determining type)..." << std::endl;
+
+    if (layer.find_field_unordered("type") == std::string_view("tilelayer")) {
+      if (this->verbose)
+        std::cout << "  -> Tile layer, determining if collision..." << std::endl;
+
+      if (layer.find_field_unordered("name") == std::string_view("collision")) {
+        if (this->verbose)
+          std::cout << "  -> Parsing collision layer..." << std::endl;
+
         this->parse_collision_layer(layer);
-      else
+      } else {
+        if (this->verbose)
+          std::cout << "  -> Parsing background layer..." << std::endl;
+
         this->parse_background_layer(layer);
-    else if (layer.find_field_unordered("type") == std::string_view("objectgroup"))
+      }
+    } else if (layer.find_field_unordered("type") == std::string_view("objectgroup")) {
+      if (this->verbose)
+        std::cout << "  -> Parsing object layer..." << std::endl;
+
       this->parse_object_layer(layer);
+    }
   }
 }
 
 void Level::parse_background_layer(simdjson::ondemand::value layer) {
+  if (this->verbose)
+    std::cout << "    -> Reading chunks..." << std::endl;
+
   for (simdjson::ondemand::value chunk : layer.find_field_unordered("chunks").get_array()) {
     const i64 height = chunk.find_field("height");
     const i64 width  = chunk.find_field("width");
     const i64 x      = chunk.find_field("x");
     const i64 y      = chunk.find_field("y");
     u32 i            = 0;
+
+    if (this->verbose) {
+      std::cout << "    -> Reading chunk at { x: " << x << ", y: " << y << ", width: " << width
+                << ", height: " << height << " }" << std::endl;
+    }
 
     for (simdjson::ondemand::value data : chunk.find_field_unordered("data").get_array()) {
       const i64 tileset_id = data.get_int64();
@@ -67,12 +102,20 @@ void Level::parse_background_layer(simdjson::ondemand::value layer) {
 }
 
 void Level::parse_collision_layer(simdjson::ondemand::value layer) {
+  if (this->verbose)
+    std::cout << "    -> Reading chunks..." << std::endl;
+
   for (simdjson::ondemand::value chunk : layer.find_field_unordered("chunks").get_array()) {
     const i64 height = chunk.find_field("height");
     const i64 width  = chunk.find_field("width");
     const i64 x      = chunk.find_field("x");
     const i64 y      = chunk.find_field("y");
     u32 i            = 0;
+
+    if (this->verbose) {
+      std::cout << "    -> Reading chunk at { x: " << x << ", y: " << y << ", width: " << width
+                << ", height: " << height << " }" << std::endl;
+    }
 
     for (simdjson::ondemand::value data : chunk.find_field_unordered("data").get_array()) {
       const i64 tileset_id = data.get_int64();
@@ -86,6 +129,9 @@ void Level::parse_collision_layer(simdjson::ondemand::value layer) {
 }
 
 void Level::parse_object_layer(simdjson::ondemand::value layer) {
+  if (this->verbose)
+    std::cout << "    -> Reading objects..." << std::endl;
+
   for (simdjson::ondemand::value obj : layer.find_field_unordered("objects").get_array()) {
     const i64 uid      = obj.find_field("gid");
     const i64 height   = obj.find_field("height");
@@ -94,6 +140,11 @@ void Level::parse_object_layer(simdjson::ondemand::value layer) {
     const i64 x        = obj.find_field("x");
     const i64 y        = obj.find_field("y");
     std::string script = "";
+
+    if (this->verbose) {
+      std::cout << "    -> Read object { x: " << x << ", y: " << y << ", width: " << width << ", height: " << height
+                << ", id: " << id << ", uid: " << uid << " }" << std::endl;
+    }
 
     for (simdjson::ondemand::value props : obj.find_field_unordered("properties").get_array()) {
       const std::string_view name = props.find_field_unordered("name");
@@ -116,9 +167,15 @@ void Level::parse_object_layer(simdjson::ondemand::value layer) {
 }
 
 void Level::parse_tilesets(simdjson::ondemand::array tilesets) {
+  if (this->verbose)
+    std::cout << "    -> Reading tilesets..." << std::endl;
+
   for (simdjson::ondemand::value tileset : tilesets) {
     const u64 uid               = tileset.find_field_unordered("firstgid").get_uint64();
     const std::string_view path = tileset.find_field_unordered("source").get_string();
+
+    if (this->verbose)
+      std::cout << "    -> Reading tileset { uid: " << uid << ", path: " << path << " }" << std::endl;
 
     this->load_tileset(uid, path);
   }
@@ -134,11 +191,17 @@ std::string absolute_path(const std::string str) {
 void Level::load_tileset(const u64 uid, const std::string_view path) {
   char real_path[256];
 
+  if (this->verbose)
+    std::cout << "      -> Finding asset..." << std::endl;
+
   asset_find(std::string(path).c_str(), real_path);
 
   simdjson::padded_string json;
 
   try {
+    if (this->verbose)
+      std::cout << "      -> Loading tileset..." << std::endl;
+
     json = simdjson::padded_string::load(real_path);
   } catch (...) {
     std::cout << "Tileset " << path << " does not exist!" << std::endl;
@@ -146,6 +209,9 @@ void Level::load_tileset(const u64 uid, const std::string_view path) {
   }
 
   try {
+    if (this->verbose)
+      std::cout << "      -> Parsing tileset..." << std::endl;
+
     simdjson::ondemand::document data = this->json_parser.iterate(json);
     const std::string_view image      = data.find_field("image").get_string();
     const u64 height                  = data.find_field("imageheight");
@@ -184,6 +250,9 @@ LevelTileset *Level::find_tileset(const u64 uid) {
 void Level::init() {
   if (!this->loaded)
     return;
+
+  if (this->verbose)
+    std::cout << "Initializing level..." << std::endl;
 
   LUA_EVENT_RUN(this->lua, "level_init");
   lua_pushstring(this->lua, this->level_path.c_str());
