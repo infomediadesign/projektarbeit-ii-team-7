@@ -1,0 +1,14 @@
+{ "columns":10,
+ "image":"..\/..\/tiles\/base_special.png",
+ "imageheight":384,
+ "imagewidth":320,
+ "margin":0,
+ "name":"base_special",
+ "spacing":0,
+ "tilecount":120,
+ "tiledversion":"1.9.1",
+ "tileheight":32,
+ "tilewidth":32,
+ "type":"tileset",
+ "version":"1.8"
+}
