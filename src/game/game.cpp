@@ -66,7 +66,7 @@ void Game::init(GameState *state) {
   this->ent_manager.create_player();
   this->ent_manager.get_player_ent()->set_pos(center_vec3 + vector_make3(0.0f, 0.0f, 1.0f));
   this->ent_manager.get_player_ent()->set_should_sort(true);
-  this->set_stage(GameStage::GS_OVERWORLD);
+  this->set_stage(GameStage::GS_MENU);
 
   LUA_EVENT_RUN(this->lua, "post_init");
   LUA_EVENT_CALL(this->lua, 0, 0);
@@ -286,6 +286,8 @@ void Game::create_bindings(GameState *state, mutex_t *lock, InputState *input_st
     input_bind(input_state, MF_KEY_E | MF_KEY_RELEASE, -Cmd::USE);
     input_bind(input_state, MF_KEY_ENTER | MF_KEY_PRESS, Cmd::USE);
     input_bind(input_state, MF_KEY_ENTER | MF_KEY_RELEASE, -Cmd::USE);
+    input_bind(input_state, MF_KEY_SPACE | MF_KEY_PRESS, Cmd::USE);
+    input_bind(input_state, MF_KEY_SPACE | MF_KEY_RELEASE, -Cmd::USE);
     input_bind(input_state, MF_KEY_F6 | MF_KEY_PRESS, Cmd::SAVE);
     input_bind(input_state, MF_KEY_F9 | MF_KEY_PRESS, Cmd::LOAD);
 
@@ -328,7 +330,17 @@ void Game::process_input(GameState *state, const f64 update_time) {
     case Cmd::ZOOM_RESET: this->scale = RENDER_SCALE; break;
     case Cmd::DEBUG_OVERWORLD: this->set_stage(GameStage::GS_OVERWORLD); break;
     case Cmd::DEBUG_BATTLE: this->set_stage(GameStage::GS_BATTLE); break;
-
+    case Cmd::USE:
+        if (this->stage == GS_MENU) {
+            this->set_stage(GameStage::GS_OVERWORLD);
+            break;
+        }
+    case Cmd::MENU:
+        if (this->stage == GS_MENU) {
+            exit(0);
+            break;
+        }
+  
     default: break;
     }
   }
