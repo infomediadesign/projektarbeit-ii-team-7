@@ -134,11 +134,11 @@ void Level::parse_object_layer(simdjson::ondemand::value layer) {
 
   for (simdjson::ondemand::value obj : layer.find_field_unordered("objects").get_array()) {
     const i64 uid      = obj.find_field("gid");
-    const i64 height   = obj.find_field("height");
+    const f64 height   = obj.find_field("height");
     const u64 id       = obj.find_field("id");
-    const i64 width    = obj.find_field("width");
-    const i64 x        = obj.find_field("x");
-    const i64 y        = obj.find_field("y");
+    const f64 width    = obj.find_field("width");
+    const f64 x        = obj.find_field("x");
+    const f64 y        = obj.find_field("y");
     std::string script = "";
 
     if (this->verbose) {
@@ -146,14 +146,18 @@ void Level::parse_object_layer(simdjson::ondemand::value layer) {
                 << ", id: " << id << ", uid: " << uid << " }" << std::endl;
     }
 
-    for (simdjson::ondemand::value props : obj.find_field_unordered("properties").get_array()) {
-      const std::string_view name = props.find_field_unordered("name");
-      const std::string_view t    = props.find_field_unordered("type");
+    try {
+      for (simdjson::ondemand::value props : obj.find_field_unordered("properties").get_array()) {
+        const std::string_view name = props.find_field_unordered("name");
+        const std::string_view t    = props.find_field_unordered("type");
 
-      if (name == "script" && t == "string") {
-        const std::string_view val = props.find_field_unordered("value");
-        script                     = std::string(val);
+        if (name == "script" && t == "string") {
+          const std::string_view val = props.find_field_unordered("value");
+          script                     = std::string(val);
+        }
       }
+    } catch (...) {
+      // ...
     }
 
     this->objects.push_back({ .script     = script,

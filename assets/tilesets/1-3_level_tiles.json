@@ -1,0 +1,14 @@
+{ "columns":96,
+ "image":"..\/tiles\/level_tiles\/1-3_level_tiles.png",
+ "imageheight":3072,
+ "imagewidth":3072,
+ "margin":0,
+ "name":"1-3_level_tiles",
+ "spacing":0,
+ "tilecount":9,
+ "tiledversion":"1.9.2",
+ "tileheight":1024,
+ "tilewidth":1024,
+ "type":"tileset",
+ "version":"1.9"
+}
