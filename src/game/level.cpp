@@ -261,6 +261,9 @@ void Level::init() {
   if (lua_isboolean(this->lua, -1) && lua_toboolean(this->lua, -1) == 0)
     return;
 
+  if (this->verbose)
+    std::cout << "  -> Spawning background" << std::endl;
+
   for (const LevelBackgroundTile tile : this->background) {
     LevelTileset *ts = this->find_tileset(tile.tileset_id);
 
@@ -312,6 +315,9 @@ void Level::init() {
 
     LUA_EVENT_CALL(this->lua, 2, 0);
   }
+
+  if (this->verbose)
+    std::cout << "  -> Spawning objects" << std::endl;
 
   for (const LevelObject obj : this->objects) {
     LevelTileset *ts = this->find_tileset(obj.tileset_id);
@@ -392,6 +398,9 @@ void Level::init() {
 
   if (lua_isboolean(this->lua, -1) && lua_toboolean(this->lua, -1) == 0)
     return;
+
+  if (this->verbose)
+    std::cout << "  -> Spawning collisions" << std::endl;
 
   for (const LevelCollisionTile tile : this->collisions) {
     Entity *ent = this->ent_manager->ent_create();

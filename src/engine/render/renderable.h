@@ -145,6 +145,16 @@ void renderable_interpolate(Renderable *r);
 void renderable_set_pos(Renderable *r, const Vector4 pos);
 
 /**
+ * @brief Sets the position of the renderable.
+ *
+ * Also sets various helper variables to help the interpolation logic.
+ *
+ * @param r The renderable.
+ * @param pos Color, RGBA.
+ */
+void renderable_set_color(Renderable *r, const Vector4 col);
+
+/**
  * @brief Sets the scale of the renderable.
  *
  * Where 1.0 is 100%, or the original size.
