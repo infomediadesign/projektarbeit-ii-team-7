@@ -11,6 +11,16 @@ ACTIVE_COMMANDS = active_commands
 
 CAN_MOVE = true
 
+-- function GAME:post_init()
+--   for i = 1, 8192 do
+--     local e = ent.create()
+--     e:set_ent_class(ENTCLASS_CLIP)
+--     e:set_pos({(i % 64) * 0.1, -0.1 - 0.1 * (i / 64), 0})
+--     e:set_texture_path('assets/debug/wall_32x32.png')
+--     e:set_active(true)
+--   end
+-- end
+
 function GAME:ent_create(e)
   table.insert(ENTS, e)
 end

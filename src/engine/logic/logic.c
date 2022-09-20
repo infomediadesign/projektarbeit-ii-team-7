@@ -30,6 +30,12 @@ i32 logic_perform(void *args) {
 
     end_time = platform_time_usec();
 
+    if (game_is_verbose(state) && state->tick % 32 == 0) {
+      const i64 total_time = end_time - start_time;
+
+      printf("Logic: %liμs (%li potential TPS)\n", total_time, 1000000 / total_time);
+    }
+
     if ((end_time - start_time) < delay)
       platform_usleep(delay - (end_time - start_time));
   }
