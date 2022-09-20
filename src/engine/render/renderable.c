@@ -273,9 +273,16 @@ u64 renderable_get_size(const Renderable *r) { return sizeof(Vector2) * r->verti
 
 void renderable_assign_memory(RenderState *state, MemoryManager *m, Renderable *r) {
   const u64 size = renderable_get_size(r);
+
+#ifndef _WIN32
+  const u64 crc = crc64(r->uv, size);
+#else
+  const u64 crc = 0;
+#endif
+
   FreeMemoryBlock mblock;
 
-  memory_find_free_block(state, m, crc64(r->uv, size), size, &mblock);
+  memory_find_free_block(state, m, crc, size, &mblock);
 
   r->offset = mblock.free->offset;
   r->pool   = mblock.pool;
