@@ -17,7 +17,7 @@ function event.run(id, ...)
       if success and a ~= nil then
         return a, b, c, d, e, f
       elseif not success then
-        print('Handler "'..handler_id..'" for event "'..id..'" has failed to run! ('..a..')')
+        print('Handler "'..handler_id..'" for event "'..id..'" has failed to run! ('..tostring(a)..')')
       end
     end
   end
@@ -28,7 +28,7 @@ function event.run(id, ...)
     if success then
       return a, b, c, d, e, f
     elseif not success then
-      print('Event "'..id..'" has failed to run! ('..a..')')
+      print('Event "'..id..'" has failed to run! ('..tostring(a)..')')
     end
   end
 end

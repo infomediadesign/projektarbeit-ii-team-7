@@ -15,7 +15,10 @@ function Tileset.create(tex, w, h, aw, ah)
   obj.ent:set_texture_path(tex)
   obj.ent:set_active(true)
 
-  return setmetatable(obj, Tileset)
+  setmetatable(obj, Tileset)
+  Tileset.__index = Tileset
+
+  return obj
 end
 
 function Tileset:set_index(idx, opt)
