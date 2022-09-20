@@ -94,6 +94,8 @@ public:
 
   ENT_SETTER(Animation *, anims);
   ENT_SETTER(Vector4, color)
+  ENT_SETTER(Vector3, aabb_max)
+  ENT_SETTER(Vector3, aabb_min)
   ENT_SETTER(Vector3, pos)
   ENT_SETTER(Vector2, uv_offset)
   ENT_SETTER(Vector2, uv_size)
@@ -124,6 +126,10 @@ public:
   bool should_be_removed() const;
   bool is_valid() const;
   void set_default();
+  Vector3 get_aabb_center() const;
+  Vector3 get_aabb_center_absolute() const;
+  Vector3 get_aabb_min_absolute() const;
+  Vector3 get_aabb_max_absolute() const;
 };
 
 #endif

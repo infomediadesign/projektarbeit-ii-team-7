@@ -52,10 +52,6 @@ end
 local stuck_since = nil
 
 local function unstuck_player(ply)
-  local vel = ply:get_velocity()
-
-  if vel[1] ~= 0 or vel[2] ~= 0 then return false end
-
   local e = get_collision_ent(ply)
 
   if not e then
@@ -73,13 +69,14 @@ local function unstuck_player(ply)
   end
 
   local orig_pos = ply:get_pos()
+  local aabb_pos = ply:get_aabb_center_absolute()
   local ent_pos = e:get_pos()
-  local diff = { -(ent_pos[1] - orig_pos[1]), -(ent_pos[2] - orig_pos[2]), ent_pos[3] - orig_pos[3] }
+  local diff = { -(ent_pos[1] - aabb_pos[1]), -(ent_pos[2] - aabb_pos[2]), ent_pos[3] - aabb_pos[3] }
 
   for i = 1, 50 do
     ply:set_pos(
-      util.lerp(0.05 * i, orig_pos[1], orig_pos[1] + diff[1]),
-      util.lerp(0.05 * i, orig_pos[2], orig_pos[2] + diff[2]),
+      util.lerp(0.1 * i, orig_pos[1], orig_pos[1] + diff[1]),
+      util.lerp(0.1 * i, orig_pos[2], orig_pos[2] + diff[2]),
       orig_pos[3]
     )
 
@@ -93,24 +90,14 @@ local function unstuck_player(ply)
   return true
 end
 
-local function aabb_to_absolute(ent)
-  local pos = ent:get_pos()
-  local scale = ent:get_scale()
-  local target_aabb_min = ent:get_aabb_min()
-  local target_aabb_max = ent:get_aabb_max()
-
-  return { pos[1] + target_aabb_min[1] * scale[1], pos[2] + target_aabb_min[2] * scale[2], target_aabb_min[3] },
-         { pos[1] + target_aabb_max[1] * scale[1], pos[2] + target_aabb_max[2] * scale[2], target_aabb_max[3] }
-end
-
 local function collides_with(aabb_min, aabb_max, ent)
-  local target_min, target_max = aabb_to_absolute(ent)
+  local target_min, target_max = ent:get_aabb_min_absolute(), ent:get_aabb_max_absolute()
 
-  if math.round(aabb_min[1]) - math.round(target_max[1]) > 0.001 or math.round(aabb_max[1]) - math.round(target_min[1]) < 0.001 then
+  if math.round(aabb_min[1]) - math.round(target_max[1]) > 0.001 or math.round(aabb_max[1]) - math.round(target_min[1]) < -0.001 then
     return false
   end
 
-  if math.round(aabb_min[2]) - math.round(target_max[2]) > 0.001 or math.round(aabb_max[2]) - math.round(target_min[2]) < 0.001 then
+  if math.round(aabb_min[2]) - math.round(target_max[2]) > 0.001 or math.round(aabb_max[2]) - math.round(target_min[2]) < -0.001 then
     return false
   end
 
@@ -190,14 +177,14 @@ function GAME:process_input(cmds, input_state)
     end
 
     local vel = ply:get_velocity()
-    local pos = ply:get_pos()
-    local aabb_min, aabb_max = aabb_to_absolute(ply)
-    local aabb_min_orig, aabb_max_orig = aabb_to_absolute(ply)
+    local pos = ply:get_aabb_center_absolute()
+    local aabb_min, aabb_max = ply:get_aabb_min_absolute(), ply:get_aabb_max_absolute()
+    local aabb_min_orig, aabb_max_orig = ply:get_aabb_min_absolute(), ply:get_aabb_max_absolute()
 
-    aabb_min[1] = aabb_min[1] + vel[1] * 0.01
-    aabb_min[2] = aabb_min[2] + vel[2] * 0.01
-    aabb_max[1] = aabb_max[1] + vel[1] * 0.01
-    aabb_max[2] = aabb_max[2] + vel[2] * 0.01
+    aabb_min[1] = aabb_min[1] + vel[1] * 0.02
+    aabb_min[2] = aabb_min[2] + vel[2] * 0.02
+    aabb_max[1] = aabb_max[1] + vel[1] * 0.02
+    aabb_max[2] = aabb_max[2] + vel[2] * 0.02
 
     for _, v in ipairs(clip_ents) do
       if collides_with(aabb_min, aabb_max, v) then
@@ -241,7 +228,7 @@ function GAME:update_lazy()
 
   clip_ents = {}
 
-  local ply_pos = ply:get_pos()
+  local ply_pos = ply:get_aabb_center_absolute()
 
   for k, v in ipairs(ent.find_by_class(ENTCLASS_CLIP)) do
     if vec_distance_sqr(ply_pos, v:get_pos()) < 1 then

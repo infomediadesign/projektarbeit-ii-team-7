@@ -158,6 +158,10 @@ ENT_LUA_VEC2_GETTER(uv_size)
 ENT_LUA_VEC2_GETTER(scale)
 ENT_LUA_VEC3_GETTER(aabb_max)
 ENT_LUA_VEC3_GETTER(aabb_min)
+ENT_LUA_VEC3_GETTER(aabb_center)
+ENT_LUA_VEC3_GETTER(aabb_center_absolute)
+ENT_LUA_VEC3_GETTER(aabb_max_absolute)
+ENT_LUA_VEC3_GETTER(aabb_min_absolute)
 ENT_LUA_VEC3_GETTER(velocity)
 ENT_LUA_VEC3_GETTER(axis)
 ENT_LUA_VEC3_GETTER(pos)
@@ -178,6 +182,8 @@ ENT_LUA_VEC2_SETTER(uv_offset)
 ENT_LUA_VEC2_SETTER(uv_size)
 ENT_LUA_VEC2_SETTER(scale)
 ENT_LUA_VEC3_SETTER(pos)
+ENT_LUA_VEC3_SETTER(aabb_min)
+ENT_LUA_VEC3_SETTER(aabb_max)
 
 i32 lua_entity_rotate_continuous(lua_State *state) {
   Entity **ent_ptr = (Entity **)luaL_checkudata(state, 1, "EntityMeta");
@@ -326,6 +332,10 @@ static const luaL_Reg lua_ent_functions[] = {
   { "get_scale", lua_entity_get_scale },
   { "get_aabb_max", lua_entity_get_aabb_max },
   { "get_aabb_min", lua_entity_get_aabb_min },
+  { "get_aabb_center", lua_entity_get_aabb_center },
+  { "get_aabb_center_absolute", lua_entity_get_aabb_center_absolute },
+  { "get_aabb_max_absolute", lua_entity_get_aabb_max_absolute },
+  { "get_aabb_min_absolute", lua_entity_get_aabb_min_absolute },
   { "get_velocity", lua_entity_get_velocity },
   { "get_axis", lua_entity_get_axis },
   { "get_pos", lua_entity_get_pos },
@@ -352,6 +362,8 @@ static const luaL_Reg lua_ent_functions[] = {
   { "set_velocity_x", lua_entity_set_velocity_x },
   { "set_velocity_y", lua_entity_set_velocity_y },
   { "set_texture_path", lua_entity_set_texture_path },
+  { "set_aabb_max", lua_entity_set_aabb_max },
+  { "set_aabb_min", lua_entity_set_aabb_min },
   { "update", lua_entity_update },
   { "should_be_removed", lua_entity_should_be_removed },
   { "is_valid", lua_entity_is_valid },

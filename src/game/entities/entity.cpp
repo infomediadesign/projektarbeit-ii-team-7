@@ -71,6 +71,16 @@ void Entity::rotate_continuous(const Vector3 axis, const f32 angular_velocity) {
 
 bool Entity::should_be_removed() const { return this->should_remove; }
 
+Vector3 Entity::get_aabb_center() const { return (this->aabb_max + this->aabb_min) / 2; }
+
+Vector3 Entity::get_aabb_center_absolute() const {
+  return (this->aabb_max + this->aabb_min) / 2 * this->scale.x + this->pos;
+}
+
+Vector3 Entity::get_aabb_min_absolute() const { return this->aabb_min * this->scale.x + this->pos; }
+
+Vector3 Entity::get_aabb_max_absolute() const { return this->aabb_max * this->scale.x + this->pos; }
+
 void Entity::set_default() {
   const size_t addr     = (size_t)this;
   this->id              = -1;

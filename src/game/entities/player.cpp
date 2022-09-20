@@ -15,6 +15,8 @@ Player *Player::make(Entity *base) {
 
   ply->get_base()->set_texture_path("assets/animated/main_character.png");
   ply->get_base()->set_uv_size({ 1.0f / PLY_SPRITE_WIDTH, 1.0f / PLY_SPRITE_HEIGHT });
+  ply->get_base()->set_aabb_min({ -0.025f, 0.03f, 0.0f });
+  ply->get_base()->set_aabb_max({ 0.025f, 0.05f, 0.0f });
 
   PLY_ANIM_ROW(idle_front, 0.0f)
   PLY_ANIM_ROW(idle_back, 1.0f)
