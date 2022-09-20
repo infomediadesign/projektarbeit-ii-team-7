@@ -1,8 +1,36 @@
 #include "memory.h"
 
+#include "../crc64.h"
 #include "../limits.h"
 #include "../util.h"
 #include "geyser.h"
+
+MemoryComponent *_find_existing_memory_block(MemoryManager *manager, const u64 crc) {
+  if (crc == 0)
+    return NULL;
+
+  for (u32 i = 0; i < MAX_MEMORY_COMPONENTS; i++)
+    if (manager->components[i].crc != 0 && manager->components[i].crc == crc)
+      return &manager->components[i];
+
+  return NULL;
+}
+
+void _add_memory_component(MemoryManager *manager, const u64 crc, MemoryPool *mp, ImageMemoryPool *imp, FreeList *fl) {
+  if (crc == 0)
+    return;
+
+  for (u32 i = 0; i < MAX_MEMORY_COMPONENTS; i++) {
+    if (manager->components[i].crc == 0) {
+      manager->components[i].crc        = crc;
+      manager->components[i].pool       = mp;
+      manager->components[i].image_pool = imp;
+      manager->components[i].free_list  = fl;
+
+      return;
+    }
+  }
+}
 
 void memory_create_manager(RenderState *state, MemoryManager *m) {
   m->pools       = (MemoryPool *)calloc(1, sizeof(MemoryPool));
@@ -127,7 +155,9 @@ FreeList *memory_pool_find_free_block_aligned(const ImageMemoryPool *m, const u6
   return l;
 }
 
-void memory_find_free_block(RenderState *state, MemoryManager *m, const u64 size, FreeMemoryBlock *block) {
+void memory_find_free_block(
+  RenderState *state, MemoryManager *m, const u64 crc, const u64 size, FreeMemoryBlock *block
+) {
   if (size > util_mebibytes(MEMORY_POOL_SIZE)) {
     printf(
       "[Geyser Error] Cannot assign more than %lu MiB of GPU memory! (%lu bytes requested)\n", MEMORY_POOL_SIZE, size
@@ -138,6 +168,16 @@ void memory_find_free_block(RenderState *state, MemoryManager *m, const u64 size
   if (m == NULL || m->pools == NULL) {
     printf("[Geyser Error] Memory manager is not initialized!\n");
     abort();
+  }
+
+  MemoryComponent *mc = _find_existing_memory_block(m, crc);
+
+  if (mc != NULL) {
+    block->pool     = mc->pool;
+    block->free     = mc->free_list;
+    block->newblock = 0;
+
+    return;
   }
 
   FreeList *l      = NULL;
@@ -154,17 +194,20 @@ void memory_find_free_block(RenderState *state, MemoryManager *m, const u64 size
 
   if (l == NULL) {
     memory_extend_pool(state, m->pools);
-    memory_find_free_block(state, m, size, block);
+    memory_find_free_block(state, m, crc, size, block);
 
     return;
   }
 
-  block->pool = pool;
-  block->free = l;
+  _add_memory_component(m, crc, pool, NULL, l);
+
+  block->pool     = pool;
+  block->free     = l;
+  block->newblock = 1;
 }
 
 void memory_find_free_image_block(
-  RenderState *state, MemoryManager *m, const u64 alignment, const u64 size, FreeImageMemoryBlock *block
+  RenderState *state, MemoryManager *m, const u64 alignment, const u64 crc, const u64 size, FreeImageMemoryBlock *block
 ) {
   if (size > util_mebibytes(MEMORY_POOL_SIZE)) {
     printf(
@@ -176,6 +219,16 @@ void memory_find_free_image_block(
   if (m == NULL || m->image_pools == NULL) {
     printf("[Geyser Error] Memory manager is not initialized!\n");
     abort();
+  }
+
+  MemoryComponent *mc = _find_existing_memory_block(m, crc);
+
+  if (mc != NULL) {
+    block->pool     = mc->image_pool;
+    block->free     = mc->free_list;
+    block->newblock = 0;
+
+    return;
   }
 
   FreeList *l           = NULL;
@@ -192,13 +245,16 @@ void memory_find_free_image_block(
 
   if (l == NULL) {
     memory_extend_image_pool(state, m->image_pools);
-    memory_find_free_image_block(state, m, alignment, size, block);
+    memory_find_free_image_block(state, m, alignment, crc, size, block);
 
     return;
   }
 
-  block->pool = pool;
-  block->free = l;
+  _add_memory_component(m, crc, NULL, pool, l);
+
+  block->pool     = pool;
+  block->free     = l;
+  block->newblock = 1;
 }
 
 void memory_free_block(MemoryPool *pool, const u64 offset, const u64 size) {

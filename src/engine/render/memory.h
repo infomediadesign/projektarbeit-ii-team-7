@@ -6,13 +6,6 @@
 
 #include "render_state.h"
 
-typedef struct MemoryComponent {
-  u64 crc;
-  u64 offset;
-  u64 size;
-  u32 pool_id;
-} MemoryComponent;
-
 typedef struct FreeList {
   struct FreeList *next;
   u64 offset;
@@ -34,6 +27,13 @@ typedef struct ImageMemoryPool {
   VkDeviceSize size;
 } ImageMemoryPool;
 
+typedef struct MemoryComponent {
+  MemoryPool *pool;
+  ImageMemoryPool *image_pool;
+  FreeList *free_list;
+  u64 crc;
+} MemoryComponent;
+
 typedef struct MemoryManager {
   MemoryPool *pools;
   ImageMemoryPool *image_pools;
@@ -43,11 +43,13 @@ typedef struct MemoryManager {
 typedef struct FreeMemoryBlock {
   MemoryPool *pool;
   FreeList *free;
+  u8 newblock;
 } FreeMemoryBlock;
 
 typedef struct FreeImageMemoryBlock {
   ImageMemoryPool *pool;
   FreeList *free;
+  u8 newblock;
 } FreeImageMemoryBlock;
 
 /**
@@ -63,9 +65,11 @@ void memory_allocate_image_pool(RenderState *state, ImageMemoryPool *m);
 void memory_extend_image_pool(RenderState *state, ImageMemoryPool *pool);
 FreeList *memory_pool_find_free_block(const MemoryPool *m, const u64 size);
 FreeList *memory_pool_find_free_block_aligned(const ImageMemoryPool *m, const u64 alignment, const u64 size);
-void memory_find_free_block(RenderState *state, MemoryManager *m, const u64 size, FreeMemoryBlock *block);
+void memory_find_free_block(
+  RenderState *state, MemoryManager *m, const u64 crc, const u64 size, FreeMemoryBlock *block
+);
 void memory_find_free_image_block(
-  RenderState *state, MemoryManager *m, const u64 alignment, const u64 size, FreeImageMemoryBlock *block
+  RenderState *state, MemoryManager *m, const u64 alignment, const u64 crc, const u64 size, FreeImageMemoryBlock *block
 );
 void memory_free_block(MemoryPool *pool, const u64 offset, const u64 size);
 void memory_free_image_block(ImageMemoryPool *pool, const u64 offset, const u64 size);

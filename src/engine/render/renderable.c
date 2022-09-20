@@ -1,5 +1,6 @@
 #include "renderable.h"
 
+#include "../crc64.h"
 #include "../input/asset.h"
 #include "../util.h"
 
@@ -11,6 +12,13 @@ static const Vector2 one_vec2     = { 1.0f, 1.0f };
 static const Vector3 null_vec3    = { 0.0f, 0.0f, 0.0f };
 static const Vector4 null_vec4    = { 0.0f, 0.0f, 0.0f, 1.0f };
 static const Quaternion null_quat = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+struct RenderableTexture {
+  GeyserTexture *tex;
+  u64 crc;
+};
+
+static struct RenderableTexture *RENDERABLE_TEXTURES = NULL;
 
 // clang-format off
 
@@ -104,7 +112,7 @@ void renderable_make_rect_ex(const RenderState *state, Renderable *r, const f32 
 }
 
 void renderable_free(RenderState *state, Renderable *r) {
-  memory_free_block(r->pool, r->offset, renderable_get_size(r));
+  // memory_free_block(r->pool, r->offset, renderable_get_size(r));
   /* TODO: fix memory freeing */
   // memory_free_image_block(r->texture.base.base.pool, r->texture.base.base.offset, r->texture.base.base.size);
   geyser_free_texture_descriptor_set(state, &r->texture);
@@ -152,25 +160,89 @@ void renderable_set_rotation(Renderable *r, const Vector3 axis, const f32 rotati
 
 void renderable_set_velocity(Renderable *r, const Vector3 vel) { r->velocity = vel; }
 
+GeyserTexture *_get_geyser_texture(const u64 crc) {
+  if (crc == 0)
+    return NULL;
+
+  if (RENDERABLE_TEXTURES == NULL)
+    RENDERABLE_TEXTURES = (struct RenderableTexture *)calloc(1024, sizeof(struct RenderableTexture));
+
+  for (u16 i = 0; i < 1024; i++)
+    if (RENDERABLE_TEXTURES[i].crc != 0 && RENDERABLE_TEXTURES[i].crc == crc)
+      return RENDERABLE_TEXTURES[i].tex;
+
+  return NULL;
+}
+
+void _add_geyser_texture(const u64 crc, GeyserTexture *tex) {
+  if (crc == 0)
+    return;
+
+  if (RENDERABLE_TEXTURES == NULL)
+    RENDERABLE_TEXTURES = (struct RenderableTexture *)calloc(1024, sizeof(struct RenderableTexture));
+
+  for (u16 i = 0; i < 1024; i++) {
+    if (RENDERABLE_TEXTURES[i].crc == 0) {
+      RENDERABLE_TEXTURES[i].crc = crc;
+      RENDERABLE_TEXTURES[i].tex = tex;
+
+      return;
+    }
+  }
+}
+
 void renderable_load_texture(RenderState *state, Renderable *r, const char *image_path) {
   Image tex_img;
   asset_load_image(&tex_img, image_path);
 
   strcpy(r->texture_path, image_path);
 
-  geyser_create_texture(state, vector_make2((f32)tex_img.width, (f32)tex_img.height), &r->texture);
+  const u64 crc = crc64(tex_img.data, tex_img.width * tex_img.height * 4);
 
-  geyser_set_image_memory(state, &r->texture.base.base, &tex_img);
-  geyser_allocate_texture_descriptor_set(state, &r->texture, (GeyserPipeline *)&state->pipeline);
-  geyser_update_texture_descriptor_set(state, &r->texture);
+  GeyserTexture *tex = _get_geyser_texture(crc);
+
+  if (tex == NULL) {
+    geyser_create_texture(state, crc, vector_make2((f32)tex_img.width, (f32)tex_img.height), &r->texture);
+
+    if (r->texture.base.base.newblock == 1)
+      geyser_set_image_memory(state, &r->texture.base.base, &tex_img);
+    else
+      geyser_set_image_memory_barrier(state, &r->texture.base.base);
+
+    geyser_allocate_texture_descriptor_set(state, &r->texture, (GeyserPipeline *)&state->pipeline);
+    geyser_update_texture_descriptor_set(state, &r->texture);
+
+    _add_geyser_texture(crc, &r->texture);
+  } else {
+    memcpy(&r->texture, tex, sizeof(GeyserTexture));
+  }
 }
 
 void renderable_set_texture(RenderState *state, Renderable *r, const Image tex_img) {
-  geyser_create_texture(state, vector_make2((f32)tex_img.width, (f32)tex_img.height), &r->texture);
+  const u64 crc = crc64(tex_img.data, tex_img.width * tex_img.height * 4);
 
-  geyser_set_image_memory(state, &r->texture.base.base, &tex_img);
-  geyser_allocate_texture_descriptor_set(state, &r->texture, (GeyserPipeline *)&state->pipeline);
-  geyser_update_texture_descriptor_set(state, &r->texture);
+  GeyserTexture *tex = _get_geyser_texture(crc);
+
+  if (tex == NULL) {
+    geyser_create_texture(
+      state,
+      crc64(tex_img.data, tex_img.width * tex_img.height * 4),
+      vector_make2((f32)tex_img.width, (f32)tex_img.height),
+      &r->texture
+    );
+
+    if (r->texture.base.base.newblock == 1)
+      geyser_set_image_memory(state, &r->texture.base.base, &tex_img);
+    else
+      geyser_set_image_memory_barrier(state, &r->texture.base.base);
+
+    geyser_allocate_texture_descriptor_set(state, &r->texture, (GeyserPipeline *)&state->pipeline);
+    geyser_update_texture_descriptor_set(state, &r->texture);
+
+    _add_geyser_texture(crc, &r->texture);
+  } else {
+    memcpy(&r->texture, tex, sizeof(GeyserTexture));
+  }
 }
 
 void renderable_init_rect(RenderState *state, Renderable *r) {
@@ -203,11 +275,13 @@ void renderable_assign_memory(RenderState *state, MemoryManager *m, Renderable *
   const u64 size = renderable_get_size(r);
   FreeMemoryBlock mblock;
 
-  memory_find_free_block(state, m, size, &mblock);
+  memory_find_free_block(state, m, crc64(r->uv, size), size, &mblock);
 
   r->offset = mblock.free->offset;
   r->pool   = mblock.pool;
 
-  mblock.free->offset += size;
-  mblock.free->size -= size;
+  if (mblock.newblock == 1) {
+    mblock.free->offset += size;
+    mblock.free->size -= size;
+  }
 }

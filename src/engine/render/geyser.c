@@ -591,6 +591,7 @@ void geyser_create_image_view(
   const VkImageUsageFlags usage,
   const VkSampleCountFlags samples,
   MemoryManager *mm,
+  const u64 crc,
   GeyserImageView *gs_image_view
 ) {
   VkImageSubresourceRange resource_range;
@@ -623,14 +624,17 @@ void geyser_create_image_view(
 
   FreeImageMemoryBlock mblock;
 
-  memory_find_free_image_block(state, mm, memory_requirements.alignment, memory_requirements.size, &mblock);
+  memory_find_free_image_block(state, mm, memory_requirements.alignment, crc, memory_requirements.size, &mblock);
 
-  gs_image_view->base.pool   = mblock.pool;
-  gs_image_view->base.offset = mblock.free->offset;
-  gs_image_view->base.size   = memory_requirements.size;
+  gs_image_view->base.pool     = mblock.pool;
+  gs_image_view->base.offset   = mblock.free->offset;
+  gs_image_view->base.size     = memory_requirements.size;
+  gs_image_view->base.newblock = mblock.newblock;
 
-  mblock.free->offset += memory_requirements.size;
-  mblock.free->size -= memory_requirements.size;
+  if (mblock.newblock == 1) {
+    mblock.free->offset += memory_requirements.size;
+    mblock.free->size -= memory_requirements.size;
+  }
 
   geyser_success_or_message(
     vkBindImageMemory(
@@ -642,26 +646,6 @@ void geyser_create_image_view(
   geyser_fill_image_view_creation_structs(state, &resource_range, &mapping, &image_view_creation_info);
 
   image_view_creation_info.image    = gs_image_view->base.image;
-  image_view_creation_info.viewType = type;
-
-  if (vkCreateImageView(state->device, &image_view_creation_info, NULL, &gs_image_view->view) != VK_SUCCESS) {
-    printf("[Geyser Error] Unable to create image view!\n");
-    abort();
-  }
-}
-
-void geyser_create_image_view_from_image(
-  RenderState *state, VkImage *img, const VkImageViewType type, GeyserImageView *gs_image_view
-) {
-  VkImageSubresourceRange resource_range;
-  VkComponentMapping mapping;
-  VkImageViewCreateInfo image_view_creation_info;
-
-  gs_image_view->base.image = *img;
-
-  geyser_fill_image_view_creation_structs(state, &resource_range, &mapping, &image_view_creation_info);
-
-  image_view_creation_info.image    = *img;
   image_view_creation_info.viewType = type;
 
   if (vkCreateImageView(state->device, &image_view_creation_info, NULL, &gs_image_view->view) != VK_SUCCESS) {
@@ -706,38 +690,6 @@ void geyser_create_image(
   geyser_success_or_message(
     vkCreateImage(state->device, &image_creation_info, NULL, &gi->image), "Failed to create image!"
   );
-}
-
-void geyser_allocate_image_memory(RenderState *restrict state, MemoryManager *mm, GeyserImage *image) {
-  VkMemoryRequirements memory_requirements;
-  vkGetImageMemoryRequirements(state->device, image->image, &memory_requirements);
-
-  FreeImageMemoryBlock mblock;
-
-  memory_find_free_image_block(state, mm, memory_requirements.alignment, memory_requirements.size, &mblock);
-
-  image->pool   = mblock.pool;
-  image->offset = mblock.free->offset;
-  image->size   = memory_requirements.size;
-
-  mblock.free->offset += memory_requirements.size;
-  mblock.free->size -= memory_requirements.size;
-
-  geyser_success_or_message(
-    vkBindImageMemory(state->device, image->image, image->pool->memory, image->offset), "Failed to bind image memory!"
-  );
-}
-
-void geyser_create_and_allocate_image(
-  RenderState *restrict state,
-  const Vector2 size,
-  const VkImageTiling tiling,
-  const VkFormat format,
-  const VkImageUsageFlags usage,
-  GeyserImage *image
-) {
-  geyser_create_image(state, size, tiling, format, usage, image);
-  geyser_allocate_image_memory(state, (MemoryManager *)state->memory_manager, image);
 }
 
 void geyser_create_pipeline(
@@ -1138,9 +1090,16 @@ void geyser_cmd_set_viewport(const RenderState *restrict state) {
   vkCmdSetScissor(state->command_buffer, 0, 1, &state->scissor);
 }
 
-void geyser_create_texture(RenderState *restrict state, const Vector2 size, GeyserTexture *texture) {
+void geyser_create_texture(RenderState *restrict state, const u64 crc, const Vector2 size, GeyserTexture *texture) {
   geyser_create_image_view(
-    state, size, VK_IMAGE_VIEW_TYPE_2D, 0, VK_SAMPLE_COUNT_1_BIT, (MemoryManager *)state->memory_manager, &texture->base
+    state,
+    size,
+    VK_IMAGE_VIEW_TYPE_2D,
+    0,
+    VK_SAMPLE_COUNT_1_BIT,
+    (MemoryManager *)state->memory_manager,
+    crc,
+    &texture->base
   );
 
   const VkSamplerCreateInfo sampler_info = {
@@ -1291,6 +1250,40 @@ void geyser_set_image_memory(RenderState *restrict state, GeyserImage *image, co
   geyser_cmd_submit_staging(state);
 }
 
+void geyser_set_image_memory_barrier(RenderState *restrict state, GeyserImage *image) {
+  if (state->rendering) {
+    printf("[Geyser Error] Cannot set image memory during a render pass!\n");
+    abort();
+  }
+
+  VkImageMemoryBarrier memory_barrier = { .sType            = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+                                          .oldLayout        = VK_IMAGE_LAYOUT_UNDEFINED,
+                                          .newLayout        = VK_IMAGE_LAYOUT_GENERAL,
+                                          .image            = image->image,
+                                          .subresourceRange = { .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+                                                                .baseMipLevel   = 0,
+                                                                .levelCount     = 1,
+                                                                .baseArrayLayer = 0,
+                                                                .layerCount     = 1 },
+                                          .srcAccessMask    = 0,
+                                          .dstAccessMask    = VK_ACCESS_SHADER_READ_BIT };
+
+  vkCmdPipelineBarrier(
+    state->command_buffer,
+    VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+    VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+    0,
+    0,
+    NULL,
+    0,
+    NULL,
+    1,
+    &memory_barrier
+  );
+
+  geyser_cmd_submit_staging(state);
+}
+
 void geyser_cmd_begin_staging(RenderState *restrict state) {
   const VkCommandBufferBeginInfo cmd_begin_info = {
     GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO), .pInheritanceInfo = NULL
@@ -1341,6 +1334,7 @@ void geyser_create_backbuffer(RenderState *restrict state) {
     VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
     VK_SAMPLE_COUNT_1_BIT,
     (MemoryManager *)state->memory_manager,
+    0,
     (GeyserImageView *)&state->backbuffer
   );
 

@@ -30,6 +30,7 @@ typedef struct GeyserImage {
   ImageMemoryPool *pool;
   u64 offset;
   u64 size;
+  u8 newblock;
 } GeyserImage;
 
 typedef struct GeyserImageView {
@@ -149,19 +150,8 @@ void geyser_create_image_view(
   const VkImageUsageFlags usage,
   const VkSampleCountFlags samples,
   MemoryManager *mm,
+  const u64 crc,
   GeyserImageView *gs_image_view
-);
-
-/**
- * @brief Creates a new image view from VkImage.
- *
- * @param state The render state.
- * @param img Image to create the view from.
- * @param type The type of the image view as defined by VkImageViewTypeBits.
- * @param gs_image_view The image view to write to.
- */
-void geyser_create_image_view_from_image(
-  RenderState *state, VkImage *img, const VkImageViewType type, GeyserImageView *gs_image_view
 );
 
 /**
@@ -171,7 +161,7 @@ void geyser_create_image_view_from_image(
  * @param size Size of the texture.
  * @param texture The texture to write to.
  */
-void geyser_create_texture(RenderState RESTRICTED_PTR state, const Vector2 size, GeyserTexture *texture);
+void geyser_create_texture(RenderState RESTRICTED_PTR state, const u64 crc, const Vector2 size, GeyserTexture *texture);
 
 /**
  * @brief Allocates texture's descriptor set.
@@ -226,35 +216,6 @@ void geyser_create_image(
   const VkFormat format,
   const VkImageUsageFlags usage,
   GeyserImage *gi
-);
-
-/**
- * @brief Assigns memory to the image.
- *
- * @param state The render state.
- * @param memory_type The type of memory to allocate.
- * @param image The image to write to.
- */
-void geyser_allocate_image_memory(RenderState RESTRICTED_PTR state, MemoryManager *mm, GeyserImage *image);
-
-/**
- * @brief Creates an image and allocates memory for it.
- *
- * @param state The render state.
- * @param size The size of the image.
- * @param tiling The desired tiling format of the image.
- * @param format The desired color format of the image.
- * @param usage The usage flags of the image.
- * @param memory_type The type of memory to allocate.
- * @param image The image to write to.
- */
-void geyser_create_and_allocate_image(
-  RenderState RESTRICTED_PTR state,
-  const Vector2 size,
-  const VkImageTiling tiling,
-  const VkFormat format,
-  const VkImageUsageFlags usage,
-  GeyserImage *image
 );
 
 /**
@@ -383,6 +344,16 @@ void geyser_cmd_set_viewport(const RenderState RESTRICTED_PTR state);
  * @param data The image data to set the memory to.
  */
 void geyser_set_image_memory(RenderState RESTRICTED_PTR state, GeyserImage *image, const Image *data);
+
+/**
+ * @brief Sets the image type to general.
+ *
+ * When you re-use the same memory block, you gotta do this.
+ *
+ * @param state The render state.
+ * @param image The image to set the memory barrier of.
+ */
+void geyser_set_image_memory_barrier(RenderState RESTRICTED_PTR state, GeyserImage *image);
 
 /**
  * @brief Begins a staging pass.

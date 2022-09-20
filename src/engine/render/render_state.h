@@ -26,6 +26,7 @@ typedef struct BackbufferView {
   void *pool;
   u64 offset;
   u64 size;
+  u8 newblock;
   VkImageView view;
 } BackbufferView;
 
@@ -41,6 +42,7 @@ typedef struct RsPipeline {
 typedef struct RsMemoryManager {
   void *pools;
   void *image_pools;
+  void *components;
 } RsMemoryManager;
 
 /**
