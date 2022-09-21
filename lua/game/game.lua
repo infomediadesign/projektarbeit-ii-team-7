@@ -15,7 +15,7 @@ CAN_MOVE = true
 --   for i = 1, 8192 do
 --     local e = ent.create()
 --     e:set_ent_class(ENTCLASS_CLIP)
---     e:set_pos({(i % 64) * 0.1, -0.1 - 0.1 * (i / 64), 0})
+--     e:set_pos({(i % 64) * 0.1, -0.1 - 0.1 * math.floor(i / 64), 0})
 --     e:set_texture_path('assets/debug/wall_32x32.png')
 --     e:set_active(true)
 --   end
@@ -45,20 +45,6 @@ function GAME:create_bindings()
   game.bind(bit.bor(KEY_MOUSE1, KEY_RELEASE), -MOUSE_MOVE)
   game.bind(bit.bor(KEY_F5, KEY_PRESS), REFRESH_CMD)
   game.bind(bit.bor(KEY_F10, KEY_PRESS), DEBUG_CHANGELEVEL_CMD)
-end
-
-function math.round(n)
-  return math.floor(n * 1000) * 0.001
-end
-
-function math.clamp(n, min, max)
-  if n > max then
-    return max
-  elseif n < min then
-    return min
-  end
-
-  return n
 end
 
 local function get_collision_ent(ply)

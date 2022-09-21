@@ -1,5 +1,6 @@
 #include "render.h"
 
+#include "glyph.h"
 #include "shaders/shaders.h"
 
 #include <game/interface.h>
@@ -68,6 +69,28 @@ i32 render_perform(void *args) {
   render_state_create_window(render_state);
   geyser_init_vk(render_state);
 
+  /* Text buffer */
+
+  VkBuffer text_buffer;
+  VkDeviceMemory text_memory;
+  const VkBufferCreateInfo text_buffer_info = { GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO),
+                                                .usage                 = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                                                .size                  = util_mebibytes(8),
+                                                .sharingMode           = VK_SHARING_MODE_EXCLUSIVE,
+                                                .queueFamilyIndexCount = render_state->queue_family_indices_count,
+                                                .pQueueFamilyIndices   = render_state->queue_family_indices };
+
+  vkCreateBuffer(render_state->device, &text_buffer_info, NULL, &text_buffer);
+
+  const VkMemoryAllocateInfo text_memory_allocation_info = {
+    GEYSER_MINIMAL_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO),
+    .allocationSize  = util_mebibytes(8),
+    .memoryTypeIndex = geyser_get_memory_type_index(render_state, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
+  };
+
+  vkAllocateMemory(render_state->device, &text_memory_allocation_info, NULL, &text_memory);
+  vkBindBufferMemory(render_state->device, text_buffer, text_memory, 0);
+
   state->window = render_state->window;
 
   geyser_cmd_begin_staging(render_state);
@@ -95,9 +118,13 @@ i32 render_perform(void *args) {
 
   geyser_add_vertex_input_attribute(&vertex_input_description, 0, 0, VK_FORMAT_R32G32_SFLOAT, 0);
 
+  VkDescriptorSetLayout *descriptor_set_layouts = (VkDescriptorSetLayout *)calloc(1, sizeof(VkDescriptorSetLayout));
+
+  geyser_create_descriptor_set_layout_binding(render_state, descriptor_bindings, 1, descriptor_set_layouts);
+
   geyser_create_pipeline(
     render_state,
-    descriptor_bindings,
+    descriptor_set_layouts,
     1,
     push_constant_range,
     1,
@@ -108,6 +135,101 @@ i32 render_perform(void *args) {
     &vertex_input_description,
     (GeyserPipeline *)&render_state->pipeline
   );
+
+  /* Text rendering pipeline */
+  const VkDescriptorSetLayoutBinding text_descriptor_bindings[] = {
+    { 0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, NULL },
+    { 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, NULL },
+  };
+
+  VkDescriptorSetLayout *text_descriptor_set_layouts =
+    (VkDescriptorSetLayout *)calloc(1, sizeof(VkDescriptorSetLayout));
+
+  geyser_create_descriptor_set_layout_binding(
+    render_state, text_descriptor_bindings, 2, &text_descriptor_set_layouts[0]
+  );
+
+  const VkPushConstantRange text_push_constant_range[] = {
+    { VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(GeyserTextPushConstants) },
+  };
+
+  GeyserVertexInputDescription text_vertex_input_description = geyser_create_vertex_input_description();
+
+  geyser_create_pipeline(
+    render_state,
+    text_descriptor_set_layouts,
+    1,
+    text_push_constant_range,
+    1,
+    text_vert_data,
+    text_vert_data_size,
+    text_frag_data,
+    text_frag_data_size,
+    &text_vertex_input_description,
+    (GeyserPipeline *)&render_state->text_pipeline
+  );
+
+  GeyserTexture text_texture;
+  Image text_texture_img;
+  const char *path = "assets/ui/font.png";
+  asset_load_image(&text_texture_img, path);
+
+  geyser_create_texture(
+    render_state, 0, vector_make2((f32)text_texture_img.width, (f32)text_texture_img.height), &text_texture
+  );
+  geyser_set_image_memory(render_state, &text_texture.base.base, &text_texture_img);
+
+  text_texture.copy = 0;
+
+  asset_unload_image(&text_texture_img);
+
+  VkDescriptorSet *text_descriptor_set                 = (VkDescriptorSet *)calloc(1, sizeof(VkDescriptorSet));
+  VkDescriptorSetAllocateInfo descriptor_allocate_info = { .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+                                                           .pNext = NULL,
+                                                           .descriptorPool = render_state->descriptor_pool,
+                                                           .descriptorSetCount =
+                                                             render_state->text_pipeline.descriptor_set_layouts_count,
+                                                           .pSetLayouts =
+                                                             render_state->text_pipeline.descriptor_set_layouts };
+
+  geyser_success_or_message(
+    vkAllocateDescriptorSets(render_state->device, &descriptor_allocate_info, text_descriptor_set),
+    "Failed to allocate the text descriptor sets!"
+  );
+
+  VkDescriptorBufferInfo descriptor_info;
+  VkDescriptorImageInfo descriptor_image_info;
+  VkWriteDescriptorSet descriptor_write;
+
+  descriptor_image_info.sampler     = text_texture.sampler;
+  descriptor_image_info.imageView   = text_texture.base.view;
+  descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+
+  descriptor_info.buffer = text_buffer;
+  descriptor_info.offset = 0;
+  descriptor_info.range  = VK_WHOLE_SIZE;
+
+  memset(&descriptor_write, 0, sizeof(descriptor_write));
+
+  descriptor_write.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  descriptor_write.dstSet          = text_descriptor_set[0];
+  descriptor_write.dstBinding      = 0;
+  descriptor_write.descriptorCount = 1;
+  descriptor_write.descriptorType  = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+  descriptor_write.pBufferInfo     = &descriptor_info;
+
+  vkUpdateDescriptorSets(render_state->device, 1, &descriptor_write, 0, NULL);
+
+  memset(&descriptor_write, 0, sizeof(descriptor_write));
+
+  descriptor_write.sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  descriptor_write.dstSet          = text_descriptor_set[0];
+  descriptor_write.dstBinding      = 1;
+  descriptor_write.descriptorCount = 1;
+  descriptor_write.descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  descriptor_write.pImageInfo      = &descriptor_image_info;
+
+  vkUpdateDescriptorSets(render_state->device, 1, &descriptor_write, 0, NULL);
 
   geyser_cmd_end_staging(render_state);
 
@@ -142,6 +264,8 @@ i32 render_perform(void *args) {
 
     geyser_cmd_begin_draw(render_state);
     geyser_cmd_begin_renderpass(render_state);
+
+    /* Render game/world */
 
     vkCmdBindPipeline(render_state->command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, render_state->pipeline.pipeline);
 
@@ -207,6 +331,37 @@ i32 render_perform(void *args) {
         vkCmdDraw(render_state->command_buffer, renderables[i]->vertices_count, 1, 0, 0);
       }
     }
+
+    /* Render text */
+
+    vkCmdBindPipeline(
+      render_state->command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, render_state->text_pipeline.pipeline
+    );
+
+    const GeyserPushConstants text_push_constants = { .camera = render_state->camera_transform };
+    u32 text_count                                = 446;
+
+    vkCmdBindDescriptorSets(
+      render_state->command_buffer,
+      VK_PIPELINE_BIND_POINT_GRAPHICS,
+      render_state->text_pipeline.pipeline_layout,
+      0,
+      1,
+      text_descriptor_set,
+      0,
+      NULL
+    );
+
+    vkCmdPushConstants(
+      render_state->command_buffer,
+      render_state->text_pipeline.pipeline_layout,
+      VK_SHADER_STAGE_VERTEX_BIT,
+      0,
+      sizeof(GeyserTextPushConstants),
+      &text_push_constants
+    );
+
+    vkCmdDraw(render_state->command_buffer, 6, text_count, 0, 0);
 
     gpu_start = platform_time_usec();
 

@@ -221,6 +221,8 @@ void renderable_load_texture(RenderState *state, Renderable *r, const char *imag
     memcpy(&r->texture, tex, sizeof(GeyserTexture));
     r->texture.copy = 1;
   }
+
+  asset_unload_image(&tex_img);
 }
 
 void renderable_set_texture(RenderState *state, Renderable *r, const Image tex_img) {

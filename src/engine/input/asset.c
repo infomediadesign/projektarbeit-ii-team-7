@@ -81,7 +81,7 @@ void asset_load_image(Image *img, const char *asset_path) {
   u8 *data = stbi_load(image_path, &image_width, &image_height, &_n, STBI_rgb_alpha);
 
   if (data == NULL) {
-    printf("Asset not found: %s\n", asset_path);
+    printf("Failed to load asset: %s (%s)\n", asset_path, stbi_failure_reason());
 
     data         = (u8 *)calloc(1024, 1);
     image_width  = 16;

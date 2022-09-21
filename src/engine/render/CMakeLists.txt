@@ -1,4 +1,5 @@
 set(engine_render_source_files
+  glyph.c
   render_state.c
   geyser.c
   memory.c
@@ -7,6 +8,7 @@ set(engine_render_source_files
 )
 
 set(engine_render_header_files
+  glyph.h
   render_state.h
   geyser.h
   memory.h

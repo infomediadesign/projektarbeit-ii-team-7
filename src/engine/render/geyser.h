@@ -8,6 +8,7 @@ extern "C" {
 #define GEYSER_MINIMAL_VK_STRUCT_INFO(t) .sType = t, .pNext = NULL
 #define GEYSER_BASIC_VK_STRUCT_INFO(t)   .sType = t, .pNext = NULL, .flags = 0
 #define GEYSER_MAX_TEXTURES              16384
+#define GEYSER_MAX_GLYPHS                65536
 
 /**
  * Geyser is a minimalistic Vulkan middleware library.
@@ -46,11 +47,12 @@ typedef struct GeyserTexture {
 } GeyserTexture;
 
 typedef struct GeyserPipeline {
-  VkDescriptorSetLayout descriptor_set_layout;
+  VkDescriptorSetLayout *descriptor_set_layouts;
   VkPipelineLayout pipeline_layout;
   VkShaderModule vertex_shader;
   VkShaderModule fragment_shader;
   VkPipeline pipeline;
+  u32 descriptor_set_layouts_count;
 } GeyserPipeline;
 
 typedef struct GeyserVertexInputDescription {
@@ -68,6 +70,10 @@ typedef struct GeyserPushConstants {
   Vector2 scale;
   Vector2 uv_offset;
 } GeyserPushConstants;
+
+typedef struct GeyserTextPushConstants {
+  Matrix4 camera;
+} GeyserTextPushConstants;
 
 /**
  * @brief Initializes Vulkan resources.
@@ -236,8 +242,8 @@ void geyser_create_image(
  */
 void geyser_create_pipeline(
   const RenderState RESTRICTED_PTR state,
-  const VkDescriptorSetLayoutBinding descriptor_bindings[],
-  const u32 descriptor_bindings_size,
+  const VkDescriptorSetLayout descriptor_layouts[],
+  const u32 descriptor_layouts_size,
   const VkPushConstantRange push_constant_ranges[],
   const u32 push_constant_ranges_size,
   const u8 vertex_shader_data[],
@@ -246,6 +252,13 @@ void geyser_create_pipeline(
   const u32 fragment_shader_data_size,
   GeyserVertexInputDescription *vertex_input_description,
   GeyserPipeline *pipeline
+);
+
+void geyser_create_descriptor_set_layout_binding(
+  const RenderState RESTRICTED_PTR state,
+  const VkDescriptorSetLayoutBinding descriptor_bindings[],
+  const u32 descriptor_bindings_size,
+  VkDescriptorSetLayout *layout
 );
 
 /**

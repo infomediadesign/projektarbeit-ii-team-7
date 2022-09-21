@@ -144,9 +144,52 @@ function GAME:battle_setup_gui()
     end
   end
 
-  battle_gui.current_pos = nil
+  battle_gui.current_pos = 1
+  battle_gui.current_limb = 1
 end
 
 cmd_register(CMD_USE, function()
+  if battle_gui.current_pos == 1 then
+    battle_gui.current_pos = 0
+  elseif battle_gui.current_pos == 0 then
+    -- attack code here
+  elseif battle_gui.current_pos == 2 then
+    -- inventory code here
+  end
+end)
 
+cmd_register(CMD_FORWARD, function()
+  if battle_gui.current_pos == 2 then
+    battle_gui.current_pos = 1
+  end
+end)
+
+cmd_register(CMD_BACK, function()
+  if battle_gui.current_pos == 1 then
+    battle_gui.current_pos = 2
+  end
+end)
+
+cmd_register(CMD_RIGHT, function()
+  if battle_gui.current_pos == 1 then
+    local total_limbs = table.length(CURRENT_OPPONENT.limbs)
+
+    if total_limbs == 1 or battle_gui.current_limb >= total_limbs then
+      battle_gui.current_pos = 0
+    elseif battle_gui.current_limb < total_limbs then
+      battle_gui.current_limb = battle_gui.current_limb + 1
+    end
+  else
+    battle_gui.current_pos = 0
+  end
+end)
+
+cmd_register(CMD_LEFT, function()
+  if battle_gui.current_pos == 0 then
+    battle_gui.current_pos = 1
+  elseif battle_gui.current_pos == 1 then
+    if battle_gui.current_limb > 1 then
+      battle_gui.current_limb = battle_gui.current_limb - 1
+    end
+  end
 end)

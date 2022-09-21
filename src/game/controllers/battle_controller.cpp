@@ -10,9 +10,9 @@ void BattleController::init(GameState *state) {
 
   this->background = this->base.ent_manager->ent_create();
   this->background->set_ent_class(EntClass::BACKGROUND);
-  this->background->set_texture_path("assets/debug/battle_background.png");
+  this->background->set_texture_path("assets/battle/battle_bg1.png");
   this->background->set_pos(center_vec3);
-  this->background->set_scale({ 20.0f, 11.25f });
+  this->background->set_scale({ 17.0f, 8.0f });
   this->background->set_active(true);
 
   LUA_EVENT_RUN(this->base.lua, "battle_setup_opponents");

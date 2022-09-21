@@ -32,11 +32,12 @@ typedef struct BackbufferView {
 
 /* Copy of GeyserPipeline */
 typedef struct RsPipeline {
-  VkDescriptorSetLayout descriptor_set_layout;
+  VkDescriptorSetLayout *descriptor_set_layouts;
   VkPipelineLayout pipeline_layout;
   VkShaderModule vertex_shader;
   VkShaderModule fragment_shader;
   VkPipeline pipeline;
+  u32 descriptor_set_layouts_count;
 } RsPipeline;
 
 typedef struct RsMemoryManager {

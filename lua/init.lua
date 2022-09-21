@@ -57,6 +57,7 @@ function include(fn)
 end
 
 include 'table_utils'
+include 'math_utils'
 include 'enums'
 include 'event'
 include 'entity'

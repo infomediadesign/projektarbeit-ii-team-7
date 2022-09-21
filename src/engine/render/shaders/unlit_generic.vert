@@ -64,7 +64,6 @@ void main() {
   trans_mat[3] = PushConstants.pos;
 
   gl_Position = PushConstants.camera_matrix * trans_mat * vertices[gl_VertexIndex];
-
   v_uv = uv + PushConstants.uvoffset;
   v_color = PushConstants.color;
 }

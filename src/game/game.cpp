@@ -223,6 +223,9 @@ void Game::update_renderables(
       if (r->assigned_to != ent.get_entity_index() && r->assigned_to != -1)
         throw std::runtime_error("Renderable is not assigned to the correct entity.");
 
+      if (strcmp(ent.get_texture_path().c_str(), r->texture_path) != 0)
+        renderable_load_texture(render_state, r, ent.get_texture_path().c_str());
+
       renderable_set_pos(r, vector3_to_vector4(ent.get_pos()));
       renderable_set_rotation(r, ent.get_axis(), -ent.get_angle());
       renderable_set_velocity(r, ent.get_velocity());

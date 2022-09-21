@@ -18,6 +18,9 @@ function table.length(t)
   return len
 end
 
+table.size = table.length
+table.count = table.length
+
 function table.hasvalue(t, val)
   for _, v in pairs(t) do
     if v == val then

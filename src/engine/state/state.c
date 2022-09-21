@@ -19,6 +19,8 @@ GameState *game_default_state() {
 
 void game_add_flag(GameState *restrict state, const u32 flag) { state->flags = state->flags | flag; }
 
+void game_remove_flag(GameState *restrict state, const u32 flag) { state->flags &= ~flag; }
+
 u8 game_is_paused(const GameState *restrict state) { return state->flags & GS_PAUSED; }
 
 u8 game_is_debug(const GameState *restrict state) { return state->flags & GS_DEBUG; }

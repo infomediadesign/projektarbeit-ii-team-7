@@ -79,6 +79,18 @@ GameState *game_default_state();
 void game_add_flag(GameState RESTRICTED_PTR state, const u32 flag);
 
 /**
+ * @brief Removes a boolean flag from the game flags.
+ *
+ * ```
+ * game_remove_flag(state, GameFlag::PAUSED);
+ * ```
+ *
+ * @param state Current game state
+ * @param flag The flag to remove
+ */
+void game_remove_flag(GameState RESTRICTED_PTR state, const u32 flag);
+
+/**
  * @brief Checks whether game state is paused or not.
  *
  * ```

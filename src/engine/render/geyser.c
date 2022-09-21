@@ -248,14 +248,14 @@ void geyser_init_vk(RenderState *restrict state) {
     .pQueuePriorities = queue_prios
   };
 
-  const char *device_ext_names[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+  const char *device_ext_names[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME };
 
   const VkDeviceCreateInfo device_create_info = { GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO),
                                                   .queueCreateInfoCount    = 1,
                                                   .pQueueCreateInfos       = &queue_create_info,
                                                   .enabledLayerCount       = validation_layer_count,
                                                   .ppEnabledLayerNames     = validation_layer_names,
-                                                  .enabledExtensionCount   = 1,
+                                                  .enabledExtensionCount   = 2,
                                                   .ppEnabledExtensionNames = device_ext_names,
                                                   .pEnabledFeatures        = &state->physical_device_features };
 
@@ -539,15 +539,17 @@ void geyser_init_vk(RenderState *restrict state) {
   state->scissor.offset.x      = 0;
   state->scissor.offset.y      = 0;
 
-  const VkDescriptorPoolSize descriptor_pool_size = { .type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                                                      .descriptorCount = GEYSER_MAX_TEXTURES };
+  const VkDescriptorPoolSize descriptor_pool_size[] = {
+    { .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, .descriptorCount = GEYSER_MAX_TEXTURES },
+    { .type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, .descriptorCount = GEYSER_MAX_GLYPHS }
+  };
 
   const VkDescriptorPoolCreateInfo descriptor_pool_info = {
     GEYSER_MINIMAL_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO),
     .flags         = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
     .maxSets       = GEYSER_MAX_TEXTURES,
-    .poolSizeCount = 1,
-    .pPoolSizes    = &descriptor_pool_size
+    .poolSizeCount = 2,
+    .pPoolSizes    = descriptor_pool_size
   };
 
   vkCreateDescriptorPool(state->device, &descriptor_pool_info, NULL, &state->descriptor_pool);
@@ -692,10 +694,25 @@ void geyser_create_image(
   );
 }
 
-void geyser_create_pipeline(
+void geyser_create_descriptor_set_layout_binding(
   const RenderState *restrict state,
   const VkDescriptorSetLayoutBinding descriptor_bindings[],
   const u32 descriptor_bindings_size,
+  VkDescriptorSetLayout *layout
+) {
+  const VkDescriptorSetLayoutCreateInfo descriptor_layout_create_info = {
+    GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO),
+    .bindingCount = descriptor_bindings_size,
+    .pBindings    = descriptor_bindings
+  };
+
+  vkCreateDescriptorSetLayout(state->device, &descriptor_layout_create_info, NULL, layout);
+}
+
+void geyser_create_pipeline(
+  const RenderState *restrict state,
+  const VkDescriptorSetLayout descriptor_layouts[],
+  const u32 descriptor_layouts_size,
   const VkPushConstantRange push_constant_ranges[],
   const u32 push_constant_ranges_size,
   const u8 vertex_shader_data[],
@@ -705,20 +722,13 @@ void geyser_create_pipeline(
   GeyserVertexInputDescription *vertex_input_description,
   GeyserPipeline *pipeline
 ) {
-  const VkDescriptorSetLayoutCreateInfo descriptor_layout_create_info = {
-    GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO),
-    .bindingCount = descriptor_bindings_size,
-    .pBindings    = descriptor_bindings
-  };
-
-  vkCreateDescriptorSetLayout(state->device, &descriptor_layout_create_info, NULL, &pipeline->descriptor_set_layout);
-
-  const VkDescriptorSetLayout layouts[] = { pipeline->descriptor_set_layout };
+  pipeline->descriptor_set_layouts       = descriptor_layouts;
+  pipeline->descriptor_set_layouts_count = descriptor_layouts_size;
 
   const VkPipelineLayoutCreateInfo pipeline_layout_info = {
     GEYSER_BASIC_VK_STRUCT_INFO(VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO),
-    .setLayoutCount         = 1,
-    .pSetLayouts            = layouts,
+    .setLayoutCount         = descriptor_layouts_size,
+    .pSetLayouts            = descriptor_layouts,
     .pushConstantRangeCount = push_constant_ranges_size,
     .pPushConstantRanges    = push_constant_ranges
   };
@@ -1133,8 +1143,8 @@ void geyser_allocate_texture_descriptor_set(
   VkDescriptorSetAllocateInfo descriptor_info = { .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
                                                   .pNext              = NULL,
                                                   .descriptorPool     = state->descriptor_pool,
-                                                  .descriptorSetCount = 1,
-                                                  .pSetLayouts        = &pipeline->descriptor_set_layout };
+                                                  .descriptorSetCount = pipeline->descriptor_set_layouts_count,
+                                                  .pSetLayouts        = pipeline->descriptor_set_layouts };
 
   geyser_success_or_message(
     vkAllocateDescriptorSets(state->device, &descriptor_info, &texture->descriptor_set),
