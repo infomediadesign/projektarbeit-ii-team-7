@@ -42,6 +42,7 @@ typedef struct GeyserTexture {
   GeyserImageView base;
   VkSampler sampler;
   VkDescriptorSet descriptor_set;
+  u8 copy;
 } GeyserTexture;
 
 typedef struct GeyserPipeline {

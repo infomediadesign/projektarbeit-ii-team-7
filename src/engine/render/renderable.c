@@ -112,10 +112,12 @@ void renderable_make_rect_ex(const RenderState *state, Renderable *r, const f32 
 }
 
 void renderable_free(RenderState *state, Renderable *r) {
-  // memory_free_block(r->pool, r->offset, renderable_get_size(r));
+  memory_free_block(r->pool, r->offset, renderable_get_size(r));
   /* TODO: fix memory freeing */
   // memory_free_image_block(r->texture.base.base.pool, r->texture.base.base.offset, r->texture.base.base.size);
-  geyser_free_texture_descriptor_set(state, &r->texture);
+
+  if (r->texture.copy == 0)
+    geyser_free_texture_descriptor_set(state, &r->texture);
 
   free(r->uv);
 }
@@ -213,8 +215,11 @@ void renderable_load_texture(RenderState *state, Renderable *r, const char *imag
     geyser_update_texture_descriptor_set(state, &r->texture);
 
     _add_geyser_texture(crc, &r->texture);
+
+    r->texture.copy = 0;
   } else {
     memcpy(&r->texture, tex, sizeof(GeyserTexture));
+    r->texture.copy = 1;
   }
 }
 
@@ -240,8 +245,11 @@ void renderable_set_texture(RenderState *state, Renderable *r, const Image tex_i
     geyser_update_texture_descriptor_set(state, &r->texture);
 
     _add_geyser_texture(crc, &r->texture);
+
+    r->texture.copy = 0;
   } else {
     memcpy(&r->texture, tex, sizeof(GeyserTexture));
+    r->texture.copy = 1;
   }
 }
 
@@ -273,16 +281,9 @@ u64 renderable_get_size(const Renderable *r) { return sizeof(Vector2) * r->verti
 
 void renderable_assign_memory(RenderState *state, MemoryManager *m, Renderable *r) {
   const u64 size = renderable_get_size(r);
-
-#ifndef _WIN32
-  const u64 crc = crc64(r->uv, size);
-#else
-  const u64 crc = 0;
-#endif
-
   FreeMemoryBlock mblock;
 
-  memory_find_free_block(state, m, crc, size, &mblock);
+  memory_find_free_block(state, m, 0, size, &mblock);
 
   r->offset = mblock.free->offset;
   r->pool   = mblock.pool;

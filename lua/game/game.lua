@@ -51,6 +51,16 @@ function math.round(n)
   return math.floor(n * 1000) * 0.001
 end
 
+function math.clamp(n, min, max)
+  if n > max then
+    return max
+  elseif n < min then
+    return min
+  end
+
+  return n
+end
+
 local function get_collision_ent(ply)
   for _, v in ipairs(ent.find_by_class(ENTCLASS_CLIP)) do
     if ply:collides_with(v) then
@@ -179,8 +189,8 @@ function GAME:process_input(cmds, input_state)
       local ww = window.getwidth()
       local wh = window.getheight()
 
-      ply:set_velocity_x((input_state.mouse.x - ww * 0.5) / ww)
-      ply:set_velocity_y((input_state.mouse.y - wh * 0.5) / wh)
+      ply:set_velocity_x(math.clamp((input_state.mouse.x - ww * 0.5) / ww * 2, -0.5, 0.5))
+      ply:set_velocity_y(math.clamp((input_state.mouse.y - wh * 0.5) / wh * 2, -0.5, 0.5))
     elseif table.hasvaluei(cmds, -MOUSE_MOVE) then
       ply:set_velocity_x(0)
       ply:set_velocity_y(0)
@@ -240,7 +250,7 @@ function GAME:update_lazy()
 
   local ply_pos = ply:get_aabb_center_absolute()
 
-  for k, v in ipairs(ent.find_by_class(ENTCLASS_CLIP)) do
+  for _, v in ipairs(ent.find_by_class(ENTCLASS_CLIP)) do
     if vec_distance_sqr(ply_pos, v:get_pos()) < 1 then
       table.insert(clip_ents, v)
     end
