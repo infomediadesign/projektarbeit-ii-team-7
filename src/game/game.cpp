@@ -357,6 +357,8 @@ void Game::create_bindings(GameState *state, mutex_t *lock, InputState *input_st
     input_bind(input_state, MF_KEY_ENTER | MF_KEY_RELEASE, -Cmd::USE);
     input_bind(input_state, MF_KEY_SPACE | MF_KEY_PRESS, Cmd::USE);
     input_bind(input_state, MF_KEY_SPACE | MF_KEY_RELEASE, -Cmd::USE);
+    input_bind(input_state, MF_GAMEPAD_A | MF_KEY_PRESS, Cmd::USE);
+    input_bind(input_state, MF_GAMEPAD_A | MF_KEY_RELEASE, -Cmd::USE);
     input_bind(input_state, MF_KEY_F6 | MF_KEY_PRESS, Cmd::SAVE);
     input_bind(input_state, MF_KEY_F9 | MF_KEY_PRESS, Cmd::LOAD);
 
@@ -369,6 +371,8 @@ void Game::create_bindings(GameState *state, mutex_t *lock, InputState *input_st
     input_bind(input_state, MF_KEY_RIGHT_CONTROL | MF_KEY_RELEASE, -Cmd::INVENTORY);
     input_bind(input_state, MF_KEY_ESCAPE | MF_KEY_PRESS, Cmd::MENU);
     input_bind(input_state, MF_KEY_ESCAPE | MF_KEY_RELEASE, -Cmd::MENU);
+    input_bind(input_state, MF_GAMEPAD_START | MF_KEY_PRESS, Cmd::MENU);
+    input_bind(input_state, MF_GAMEPAD_START | MF_KEY_RELEASE, -Cmd::MENU);
     input_bind(input_state, MF_KEY_BACKSPACE | MF_KEY_PRESS, Cmd::MENU);
     input_bind(input_state, MF_KEY_BACKSPACE | MF_KEY_RELEASE, -Cmd::MENU);
 

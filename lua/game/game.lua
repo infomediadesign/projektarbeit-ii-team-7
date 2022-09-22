@@ -13,11 +13,6 @@ CAN_MOVE = true
 
 local explanation_texts = {}
 
-function GAME:post_init()
-  explanation_texts.movement = game.addtext("Use 'WASD' or ARROW KEYS to move", {x = -0.5, y = 0.1, z = 0, w = 1}, nil, {x = 0.4, y = 0.4})
-  explanation_texts.enemy = game.addtext("Approach an enemy to fight", {x = 0.5, y = 0.5, z = 0, w = 1}, nil, {x = 0.4, y = 0.4})
-end
-
 function GAME:ent_create(e)
   table.insert(ENTS, e)
 end
@@ -42,6 +37,7 @@ function GAME:create_bindings()
   game.bind(bit.bor(KEY_MOUSE1, KEY_RELEASE), -MOUSE_MOVE)
   game.bind(bit.bor(KEY_F5, KEY_PRESS), REFRESH_CMD)
   game.bind(bit.bor(KEY_F10, KEY_PRESS), DEBUG_CHANGELEVEL_CMD)
+  game.bind(bit.bor(GAMEPAD_Y, KEY_PRESS), DEBUG_CHANGELEVEL_CMD)
 end
 
 local function get_collision_ent(ply)
@@ -214,6 +210,11 @@ end
 
 function GAME:post_set_stage()
   CAN_MOVE = game.getstage() == GS_OVERWORLD or game.getstage() == GS_DUNGEON
+
+  if game.getstage() == GS_OVERWORLD then
+    explanation_texts.movement = game.addtext("Use 'WASD' or ARROW KEYS to move", {x = -0.5, y = 0.1, z = 0, w = 1}, nil, {x = 0.4, y = 0.4})
+    explanation_texts.enemy = game.addtext("Press GAMEPAD Y or F10 to fight", {x = 0.3, y = 0.4, z = 0, w = 1}, {x = 0, y = 0, z = 0, w = 1.0}, {x = 0.4, y = 0.4})
+  end
 end
 
 function GAME:update()

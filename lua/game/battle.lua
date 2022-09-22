@@ -119,6 +119,7 @@ local commands = {}
 local col_green = {x = 0.2, y = 0.9, z = 0.2, w = 1.0}
 local col_black = {x = 0.1, y = 0.2, z = 0.1, w = 1.0}
 local col_red = {x = 0.9, y = 0.2, z = 0.2, w = 1.0}
+local won_since = 0
 
 local function px_to_pos(x, y)
   return {x / 1280 * ui_width - 1, y / 720 * ui_height - 1, 0}
@@ -174,6 +175,8 @@ end
 
 local function recolor_text()
   if battle_gui.current_stage == 1 then
+    local ap = player.get_data('ap')
+
     battle_gui.attack_text:set_color(col_green)
     battle_gui.defend_text:set_color(col_green)
     battle_gui.item_text:set_color(col_green)
@@ -188,13 +191,43 @@ local function recolor_text()
     elseif battle_gui.current_pos == 4 then
       battle_gui.retreat_text:set_color(col_black)
     end
+
+    if ap <= 0 then
+      battle_gui.attack_text:set_color(col_red)
+      battle_gui.defend_text:set_color(col_red)
+    end
   elseif battle_gui.current_stage == 2 then
     for k, v in ipairs(battle_gui.limbs) do
-      if battle_gui.current_pos == 1 and battle_gui.current_limb == k then
+      if CURRENT_OPPONENT.limbs[k].health <= 0 then
+        v:set_color(col_red)
+      elseif battle_gui.current_pos == 1 and battle_gui.current_limb == k then
         v:set_color(col_black)
       else
         v:set_color(col_green)
       end
+    end
+  end
+end
+
+local function update_hp_ap()
+  local hp = player.get_data('health')
+  local max_hp = player.get_data('max_health')
+  local ap = player.get_data('ap')
+  local max_ap = player.get_data('max_ap')
+
+  for i = 1, max_ap do
+    if i > ap then
+      battle_gui.ap_bars[i].ent:set_visible(false)
+    else
+      battle_gui.ap_bars[i].ent:set_visible(true)
+    end
+  end
+
+  for i = 1, max_hp do
+    if i > hp then
+      battle_gui.hp_bars[i].ent:set_visible(false)
+    else
+      battle_gui.hp_bars[i].ent:set_visible(true)
     end
   end
 end
@@ -215,6 +248,16 @@ local current_frame = 0
 
 function GAME:battle_update()
   if not CURRENT_OPPONENT or not valid(CURRENT_OPPONENT.ent) or CURRENT_OPPONENT.ent:get_ent_class() ~= ENTCLASS_ENEMY then
+    return
+  end
+
+  if CURRENT_OPPONENT.status == 'death' then
+    if won_since == 0 then
+      won_since = platform.time()
+    elseif won_since + 3 < platform.time() then
+      game.setstage(GS_OVERWORLD)
+    end
+
     return
   end
 
@@ -306,7 +349,7 @@ function GAME:battle_setup_gui()
   end
 
   if hp > 0 then
-    for i = 1, hp do
+    for i = 1, max_hp do
       battle_gui.hp_bars[i] = Tileset.create('assets/ui/HP_AP_bar.png', 80, 32, 16, 16)
       battle_gui.hp_bars[i].ent:set_pos(px_to_pos(48, 680 - 32 * i))
     end
@@ -330,7 +373,7 @@ function GAME:battle_setup_gui()
   end
 
   if ap > 0 then
-    for i = 1, ap do
+    for i = 1, max_ap do
       battle_gui.ap_bars[i] = Tileset.create('assets/ui/HP_AP_bar.png', 80, 32, 16, 16)
       battle_gui.ap_bars[i]:set_index(0, 1)
       battle_gui.ap_bars[i].ent:set_pos(px_to_pos(128, 680 - 32 * i))
@@ -340,13 +383,17 @@ function GAME:battle_setup_gui()
   battle_gui.current_pos = 1
   battle_gui.current_limb = 1
   battle_gui.current_stage = 1
+  battle_gui.chain = {}
 
   rebuild_text()
   recolor_text()
+  update_hp_ap()
 end
 
 cmd_register(CMD_USE, function()
-  if battle_gui.current_stage == 1 then
+  local current_ap = player.get_data('ap')
+
+  if battle_gui.current_stage == 1 and current_ap > 0 then
     if battle_gui.current_pos == 1 then
       battle_gui.current_stage = 2
       battle_gui.current_pos = 1
@@ -356,17 +403,27 @@ cmd_register(CMD_USE, function()
 
       rebuild_text()
       recolor_text()
+    elseif battle_gui.current_pos == 2 and current_ap > 0 then
+      table.insert(battle_gui.chain, {'defend'})
+      player.set_data('ap', 2 - table.length(battle_gui.chain))
+      update_hp_ap()
     elseif battle_gui.current_pos == 4 then
       game.setstage(GS_OVERWORLD)
     end
   elseif battle_gui.current_stage == 2 then
-    if battle_gui.current_pos == 1 then
+    if battle_gui.current_pos == 1 and current_ap > 0 then
       battle_gui.attack_ok = true
       battle_gui.current_pos = 0
 
+      table.insert(battle_gui.chain, {'attack', battle_gui.current_limb})
+
+      player.set_data('ap', 2 - table.length(battle_gui.chain))
+
+      update_hp_ap()
+
       recolor_text()
-    elseif battle_gui.current_pos == 2 then
-      -- inventory code here
+    elseif battle_gui.current_pos == 2 and current_ap > 0 then
+
     elseif battle_gui.current_pos == 100 then
       battle_gui.current_stage = 1
       battle_gui.current_pos = 1
@@ -379,8 +436,25 @@ cmd_register(CMD_USE, function()
     end
   end
 
-  if battle_gui.current_pos == 0 then
-    -- attack code here
+  if battle_gui.current_pos == 0 and table.length(battle_gui.chain) > 0 then
+    CURRENT_OPPONENT:attack()
+
+    for k, v in ipairs(battle_gui.chain) do
+      if v[1] == 'attack' then
+        CURRENT_OPPONENT.limbs[v[2]].health = CURRENT_OPPONENT.limbs[v[2]].health - 3
+      elseif v[1] == 'defend' then
+        CURRENT_OPPONENT.attack_damage = math.clamp(CURRENT_OPPONENT.attack_damage - 1, 0, 100)
+      end
+    end
+
+    player.set_data('health', (player.get_data('health') or 5) - (CURRENT_OPPONENT.attack_damage or 0))
+    player.set_data('ap', player.get_data('max_ap'))
+
+    rebuild_text()
+    recolor_text()
+    update_hp_ap()
+  
+    battle_gui.chain = {}
   end
 end)
 
@@ -395,6 +469,8 @@ cmd_register(CMD_FORWARD, function()
     end
   end
 
+  CURRENT_OPPONENT:stance()
+  rebuild_text()
   recolor_text()
 end)
 
@@ -409,6 +485,8 @@ cmd_register(CMD_BACK, function()
     end
   end
 
+  CURRENT_OPPONENT:stance()
+  rebuild_text()
   recolor_text()
 end)
 
@@ -435,6 +513,8 @@ cmd_register(CMD_RIGHT, function()
     end
   end
 
+  CURRENT_OPPONENT:stance()
+  rebuild_text()
   recolor_text()
 end)
 
@@ -457,5 +537,7 @@ cmd_register(CMD_LEFT, function()
     end
   end
 
+  CURRENT_OPPONENT:stance()
+  rebuild_text()
   recolor_text()
 end)
