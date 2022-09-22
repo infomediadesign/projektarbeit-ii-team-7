@@ -68,7 +68,7 @@ void Game::init(GameState *state) {
   this->ent_manager.create_player();
   this->ent_manager.get_player_ent()->set_pos(center_vec3 + vector_make3(0.0f, 0.0f, 1.0f));
   this->ent_manager.get_player_ent()->set_should_sort(true);
-  this->set_stage(GameStage::GS_OVERWORLD);
+  this->set_stage(GameStage::GS_MENU);
 
   LUA_EVENT_RUN(this->lua, "post_init");
   LUA_EVENT_CALL(this->lua, 0, 0);
@@ -121,6 +121,29 @@ void Game::update_lazy(GameState *state, mutex_t *lock) {
 
 void Game::update_paused(GameState *state, mutex_t *lock) {
   this->game_state = state;
+
+  this->ent_manager.get_player_ent()->set_velocity(vector_make3(0, 0, 0));
+
+  for (u32 i = 0; i < this->input_state->command_count; i++) {
+    switch (this->input_state->commands[i]) {
+    case Cmd::USE:
+      game_remove_flag(this->game_state, GS_PAUSED);
+      this->ent_remove(background);
+
+      break;
+    case -Cmd::MENU:
+      exit(0);
+      /**
+       * Tried to make it go to the starting screen instead of straight up
+       * quitting but that just makes it crash for some reason.
+       *
+       * this->ent_remove(background);
+       * this->set_stage(GameStage::GS_MENU);
+       **/
+
+      break;
+    }
+  }
 
   LUA_EVENT_RUN(this->lua, "pre_update_paused");
   LUA_EVENT_CALL(this->lua, 0, 0);
@@ -333,6 +356,8 @@ void Game::create_bindings(GameState *state, mutex_t *lock, InputState *input_st
     input_bind(input_state, MF_KEY_E | MF_KEY_RELEASE, -Cmd::USE);
     input_bind(input_state, MF_KEY_ENTER | MF_KEY_PRESS, Cmd::USE);
     input_bind(input_state, MF_KEY_ENTER | MF_KEY_RELEASE, -Cmd::USE);
+    input_bind(input_state, MF_KEY_SPACE | MF_KEY_PRESS, Cmd::USE);
+    input_bind(input_state, MF_KEY_SPACE | MF_KEY_RELEASE, -Cmd::USE);
     input_bind(input_state, MF_KEY_F6 | MF_KEY_PRESS, Cmd::SAVE);
     input_bind(input_state, MF_KEY_F9 | MF_KEY_PRESS, Cmd::LOAD);
 
@@ -375,8 +400,35 @@ void Game::process_input(GameState *state, const f64 update_time) {
     case Cmd::ZOOM_RESET: this->scale = RENDER_SCALE; break;
     case Cmd::DEBUG_OVERWORLD: this->set_stage(GameStage::GS_OVERWORLD); break;
     case Cmd::DEBUG_BATTLE: this->set_stage(GameStage::GS_BATTLE); break;
+    case -Cmd::USE:
+      if (this->stage == GS_MENU) {
+        this->set_stage(GameStage::GS_OVERWORLD);
+        break;
+      } else
+        break;
+    case Cmd::MENU:
+      if (this->stage == GS_MENU) {
+        exit(0);
+        break;
+      } else
+        break;
+    case -Cmd::MENU:
+      {
+        if (!this->stage == GS_MENU) {
+          this->background = this->ent_manager.ent_create();
+          this->background->set_ent_class(EntClass::BACKGROUND);
+          this->background->set_texture_path("assets/debug/pause.png");
+          this->background->set_pos(this->ent_manager.get_player_ent()->get_pos());
+          this->background->set_scale({ 20.0f, 11.25f });
+          this->background->set_active(true);
 
-    default: break;
+          game_add_flag(this->game_state, GS_PAUSED);
+          break;
+        } else
+          break;
+
+      default: break;
+      }
     }
   }
 

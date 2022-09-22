@@ -42,6 +42,7 @@ private:
   DungeonController *dungeon_controller;
   BattleController *battle_controller;
   MenuController *menu_controller;
+  Entity *background;
   GameStage stage;
   f32 window_width;
   f32 window_height;
