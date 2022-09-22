@@ -130,16 +130,15 @@ void Game::update_paused(GameState *state, mutex_t *lock) {
       game_remove_flag(this->game_state, GS_PAUSED);
       this->ent_remove(background);
 
+      input_flush(this->input_state);
+
       break;
     case -Cmd::MENU:
-      exit(0);
-      /**
-       * Tried to make it go to the starting screen instead of straight up
-       * quitting but that just makes it crash for some reason.
-       *
-       * this->ent_remove(background);
-       * this->set_stage(GameStage::GS_MENU);
-       **/
+      game_remove_flag(this->game_state, GS_PAUSED);
+      this->ent_remove(background);
+      this->set_stage(GameStage::GS_MENU);
+
+      input_flush(this->input_state);
 
       break;
     }
@@ -401,34 +400,28 @@ void Game::process_input(GameState *state, const f64 update_time) {
     case Cmd::DEBUG_OVERWORLD: this->set_stage(GameStage::GS_OVERWORLD); break;
     case Cmd::DEBUG_BATTLE: this->set_stage(GameStage::GS_BATTLE); break;
     case -Cmd::USE:
-      if (this->stage == GS_MENU) {
+      if (this->stage == GS_MENU)
         this->set_stage(GameStage::GS_OVERWORLD);
-        break;
-      } else
-        break;
+      break;
     case Cmd::MENU:
-      if (this->stage == GS_MENU) {
+      if (this->stage == GS_MENU)
         exit(0);
-        break;
-      } else
-        break;
+      break;
     case -Cmd::MENU:
       {
         if (!this->stage == GS_MENU) {
           this->background = this->ent_manager.ent_create();
           this->background->set_ent_class(EntClass::BACKGROUND);
-          this->background->set_texture_path("assets/debug/pause.png");
+          this->background->set_texture_path("assets/ui/pause.png");
           this->background->set_pos(this->ent_manager.get_player_ent()->get_pos());
           this->background->set_scale({ 20.0f, 11.25f });
           this->background->set_active(true);
 
           game_add_flag(this->game_state, GS_PAUSED);
-          break;
-        } else
-          break;
-
-      default: break;
+        }
+        break;
       }
+    default: break;
     }
   }
 
