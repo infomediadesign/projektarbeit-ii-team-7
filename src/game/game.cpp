@@ -37,6 +37,8 @@ static const luaL_Reg lua_game_lib[] = {
   { "player", Game::lua_player },
   { "changelevel", Game::lua_changelevel },
   { "getscale", Game::lua_getscale },
+  { "addtext", Game::lua_add_text },
+  { "cleartext", Game::lua_clear_text },
   { NULL, NULL } /* sentinel */
 };
 static const luaL_Reg lua_ent_lib[] = {
@@ -158,7 +160,13 @@ i32 Game::compare_renderables(const void *v1, const void *v2) {
 }
 
 void Game::update_renderables(
-  GameState *state, mutex_t *lock, RenderState *render_state, Renderable **renderables, const u32 renderables_count
+  GameState *state,
+  mutex_t *lock,
+  RenderState *render_state,
+  Renderable **renderables,
+  const u32 renderables_count,
+  GlyphText *text_objects,
+  const u32 text_objects_count
 ) {
   this->game_state           = state;
   this->window_width         = render_state->window_width;
@@ -180,6 +188,43 @@ void Game::update_renderables(
 
     renderable_set_active(renderable, GS_FALSE);
     renderable_make_default(renderable);
+  }
+
+  if (this->should_clear_text) {
+    for (u32 i = 0; i < text_objects_count; i++) {
+      if (text_objects[i].glyphs != NULL) {
+        free(text_objects[i].glyphs);
+        text_objects[i].glyphs = NULL;
+      }
+
+      if (text_objects[i].glyphs != NULL) {
+        free(text_objects[i].text);
+        text_objects[i].glyphs = NULL;
+      }
+
+      memset(&text_objects[i], 0, sizeof(GlyphText));
+    }
+
+    this->should_clear_text = false;
+  }
+
+  u32 text_index = 0;
+
+  for (Text &txt : this->text) {
+    if (txt.active) {
+      const u32 size = txt.text.length() > 0 ? 64 + 64 * (txt.text.length() / 64) : 128;
+
+      if (text_objects[text_index].glyphs == NULL)
+        glyph_default_text(&text_objects[text_index], size, txt.pos, txt.color, txt.scale);
+
+      glyph_set_text(&text_objects[text_index], txt.text.c_str());
+
+      text_objects[text_index].color = txt.color;
+      text_objects[text_index].pos   = txt.pos;
+      text_objects[text_index].scale = txt.scale;
+
+      text_index++;
+    }
   }
 
   this->ent_manager.dangling_renderables.clear();
@@ -239,7 +284,9 @@ void Game::update_renderables(
     }
   }
 
-  RUN_METHOD(update_renderables, state, lock, render_state, renderables, renderables_count)
+  RUN_METHOD(
+    update_renderables, state, lock, render_state, renderables, renderables_count, text_objects, text_objects_count
+  )
 }
 
 void Game::create_bindings(GameState *state, mutex_t *lock, InputState *input_state) {
@@ -409,6 +456,8 @@ void Game::set_stage(const GameStage stage) {
     return;
   }
 
+  this->clear_text();
+
   RUN_METHOD(destroy, this->game_state)
 
   LUA_EVENT_RUN(this->lua, "post_stage_destroy");
@@ -453,6 +502,33 @@ void Game::changelevel(const std::string level) {
     case GameStage::GS_OVERWORLD: this->overworld_controller->changelevel(level); break;
     case GameStage::GS_DUNGEON: this->dungeon_controller->changelevel(level); break;
     default: break;
+    }
+  }
+}
+
+Text *Game::add_text(const std::string text, const Vector4 pos, const Vector4 color, const Vector2 scale) {
+  for (Text &txt : this->text) {
+    if (!txt.active) {
+      txt.text   = text;
+      txt.pos    = pos;
+      txt.color  = color;
+      txt.scale  = scale;
+      txt.active = true;
+
+      return &txt;
+    }
+  }
+
+  return nullptr;
+}
+
+void Game::clear_text() {
+  this->should_clear_text = true;
+
+  for (Text &txt : this->text) {
+    if (txt.active) {
+      txt.text   = "";
+      txt.active = false;
     }
   }
 }
@@ -619,4 +695,59 @@ i32 Game::lua_window_getscale(lua_State *state) {
   LUA_TABLE_SET_NAMED(state, number, "y", GAME->get_window_scale_x());
 
   return 1;
+}
+
+i32 Game::lua_add_text(lua_State *state) {
+  std::string text = luaL_checkstring(state, 1);
+  Vector4 pos      = { 0.0f, 0.0f, 0.0f, 1.0f };
+  Vector4 color    = { 1.0f, 1.0f, 1.0f, 1.0f };
+  Vector2 scale    = { 1.0f, 1.0f };
+
+  if (lua_istable(state, 2)) {
+    lua_getfield(state, 2, "x");
+    pos.x = (f32)luaL_checknumber(state, -1);
+    lua_getfield(state, 2, "y");
+    pos.y = (f32)luaL_checknumber(state, -1);
+    lua_getfield(state, 2, "z");
+    pos.z = (f32)luaL_checknumber(state, -1);
+    lua_getfield(state, 2, "w");
+    pos.w = (f32)luaL_checknumber(state, -1);
+  }
+
+  if (lua_istable(state, 3)) {
+    lua_getfield(state, 3, "x");
+    color.x = (f32)luaL_checknumber(state, -1);
+    lua_getfield(state, 3, "y");
+    color.y = (f32)luaL_checknumber(state, -1);
+    lua_getfield(state, 3, "z");
+    color.z = (f32)luaL_checknumber(state, -1);
+    lua_getfield(state, 3, "w");
+    color.w = (f32)luaL_checknumber(state, -1);
+  }
+
+  if (lua_istable(state, 4)) {
+    lua_getfield(state, 4, "x");
+    scale.x = (f32)luaL_checknumber(state, -1);
+    lua_getfield(state, 4, "y");
+    scale.y = (f32)luaL_checknumber(state, -1);
+  }
+
+  LUA_GET_GAME(state);
+
+  Text *txt = GAME->add_text(text, pos, color, scale);
+
+  if (txt != nullptr && txt->active)
+    lua_push_text(state, txt);
+  else
+    lua_pushnil(state);
+
+  return 1;
+}
+
+i32 Game::lua_clear_text(lua_State *state) {
+  LUA_GET_GAME(state);
+
+  GAME->clear_text();
+
+  return 0;
 }

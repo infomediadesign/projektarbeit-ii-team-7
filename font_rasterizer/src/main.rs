@@ -15,7 +15,7 @@ fn main() {
         fs::read(&args[1]).unwrap().as_slice(),
         fontdue::FontSettings {
             collection_index: 0,
-            scale: 16.0,
+            scale: 32.0,
         },
     )
     .unwrap();
@@ -31,15 +31,15 @@ fn main() {
     let data: Vec<u8> = chars
         .iter()
         .flat_map(|c| {
-            let (metrics, bitmap) = font.rasterize(*c, 20.0);
-            let offset_x = (16 - metrics.width as i32) / 2;
-            let offset_y = (16 - metrics.height as i32) / 2;
+            let (metrics, bitmap) = font.rasterize(*c, 42.0);
+            let offset_x = (32 - metrics.width as i32) / 2;
+            let offset_y = (32 - metrics.height as i32) / 2;
             let mut pixels = bitmap.iter().map(|b| *b).rev().collect::<Vec<u8>>();
 
-            let d: Vec<u8> = (0..256)
+            let d: Vec<u8> = (0..1024)
                 .flat_map(|i| {
-                    let line: i32 = i / 16;
-                    let line_pos = i % 16 + 1;
+                    let line: i32 = i / 32;
+                    let line_pos = i % 32 + 1;
 
                     if (offset_y + metrics.height as i32) < line
                         || (offset_x + metrics.width as i32) < line_pos
@@ -60,7 +60,7 @@ fn main() {
     let file = File::create(path).unwrap();
     let ref mut w = BufWriter::new(file);
 
-    let mut encoder = png::Encoder::new(w, 16, chars.len() as u32 * 16);
+    let mut encoder = png::Encoder::new(w, 32, chars.len() as u32 * 32);
     encoder.set_color(png::ColorType::Rgba);
     encoder.set_depth(png::BitDepth::Eight);
     encoder.set_trns(vec![0xFFu8, 0xFFu8, 0xFFu8, 0xFFu8]);

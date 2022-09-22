@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED 20)
 set(game_source_files
   ${JSON_DIR}/simdjson.h
   ${JSON_DIR}/simdjson.cpp
+  text.h
   vector.h
   vector.cpp
   level.h
@@ -34,6 +35,8 @@ set(game_source_files
   lua/common.cpp
   lua/entity.h
   lua/entity.cpp
+  lua/text.h
+  lua/text.cpp
   game.h
   game.cpp
   interface.h

@@ -9,7 +9,13 @@ void MenuController::update_lazy(GameState *state, mutex_t *lock) {}
 void MenuController::update_paused(GameState *state, mutex_t *lock) {}
 
 void MenuController::update_renderables(
-  GameState *state, mutex_t *lock, RenderState *render_state, Renderable **renderables, const u32 renderables_count
+  GameState *state,
+  mutex_t *lock,
+  RenderState *render_state,
+  Renderable **renderables,
+  const u32 renderables_count,
+  GlyphText *text_objects,
+  const u32 text_objects_count
 ) {}
 
 void MenuController::destroy(GameState *state) {}

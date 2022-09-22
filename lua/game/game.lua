@@ -11,15 +11,12 @@ ACTIVE_COMMANDS = active_commands
 
 CAN_MOVE = true
 
--- function GAME:post_init()
---   for i = 1, 8192 do
---     local e = ent.create()
---     e:set_ent_class(ENTCLASS_CLIP)
---     e:set_pos({(i % 64) * 0.1, -0.1 - 0.1 * math.floor(i / 64), 0})
---     e:set_texture_path('assets/debug/wall_32x32.png')
---     e:set_active(true)
---   end
--- end
+local explanation_texts = {}
+
+function GAME:post_init()
+  explanation_texts.movement = game.addtext("Use 'WASD' or ARROW KEYS to move", {x = -0.5, y = 0.1, z = 0, w = 1}, nil, {x = 0.4, y = 0.4})
+  explanation_texts.enemy = game.addtext("Approach an enemy to fight", {x = 0.5, y = 0.5, z = 0, w = 1}, nil, {x = 0.4, y = 0.4})
+end
 
 function GAME:ent_create(e)
   table.insert(ENTS, e)

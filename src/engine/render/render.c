@@ -20,13 +20,11 @@ static inline const char *platform_name(i32 platform) {
 }
 
 i32 render_perform(void *args) {
-  ThreadData *const td     = (ThreadData *)args;
-  mutex_t *lock            = (mutex_t *)td->lock;
-  GameState *const state   = (GameState *)td->state;
-  Renderable **renderables = (Renderable **)calloc(MAX_RENDERABLES, sizeof(Renderable *));
-
-  for (u32 i = 0; i < MAX_RENDERABLES; i++)
-    renderables[i] = (Renderable *)calloc(1, sizeof(Renderable));
+  ThreadData *const td   = (ThreadData *)args;
+  mutex_t *lock          = (mutex_t *)td->lock;
+  GameState *const state = (GameState *)td->state;
+  Renderable **renderables;
+  GlyphText *text_objects;
 
   glfwSetErrorCallback(glfw_error_fun);
 
@@ -39,7 +37,6 @@ i32 render_perform(void *args) {
 
   if (!glfwInit()) {
     game_add_flag(state, GS_EXIT);
-    free(renderables);
 
     return 1;
   }
@@ -51,7 +48,6 @@ i32 render_perform(void *args) {
 
     glfwTerminate();
     game_add_flag(state, GS_EXIT);
-    free(renderables);
 
     return 1;
   }
@@ -63,8 +59,13 @@ i32 render_perform(void *args) {
   if (game_is_debug(state))
     render_state->debug = 1;
 
-  for (u32 i = 0; i < MAX_RENDERABLES; i++)
+  renderables  = (Renderable **)calloc(MAX_RENDERABLES, sizeof(Renderable *));
+  text_objects = (GlyphText *)calloc(MAX_TEXT_OBJECTS, sizeof(GlyphText));
+
+  for (u32 i = 0; i < MAX_RENDERABLES; i++) {
+    renderables[i] = (Renderable *)calloc(1, sizeof(Renderable));
     renderable_make_default(renderables[i]);
+  }
 
   render_state_create_window(render_state);
   geyser_init_vk(render_state);
@@ -169,6 +170,12 @@ i32 render_perform(void *args) {
     (GeyserPipeline *)&render_state->text_pipeline
   );
 
+  void *text_data_handle;
+
+  geyser_success_or_message(
+    vkMapMemory(render_state->device, text_memory, 0, sizeof(Glyph), 0, &text_data_handle), "Failed to map text memory!"
+  );
+
   GeyserTexture text_texture;
   Image text_texture_img;
   const char *path = "assets/ui/font.png";
@@ -256,7 +263,31 @@ i32 render_perform(void *args) {
 
     geyser_cmd_begin_staging(render_state);
 
-    game_adjust_renderables(state, lock, render_state, renderables, MAX_RENDERABLES);
+    game_adjust_renderables(state, lock, render_state, renderables, MAX_RENDERABLES, text_objects, MAX_TEXT_OBJECTS);
+
+    u32 total_glyphs = 0;
+
+    for (u32 i = 0; i < MAX_TEXT_OBJECTS; i++) {
+      if (text_objects[i].size == 0)
+        break;
+
+      if (total_glyphs + text_objects[i].size > GEYSER_MAX_GLYPHS) {
+        printf(
+          "Too many glyphs in scene (did you clear?): %u, max: %u\n",
+          total_glyphs + text_objects[i].size,
+          GEYSER_MAX_GLYPHS
+        );
+        break;
+      }
+
+      memcpy(
+        (u8 *)text_data_handle + sizeof(Glyph) * total_glyphs,
+        text_objects[i].glyphs,
+        sizeof(Glyph) * text_objects[i].size
+      );
+
+      total_glyphs += text_objects[i].size;
+    }
 
     geyser_cmd_end_staging(render_state);
 
@@ -339,7 +370,6 @@ i32 render_perform(void *args) {
     );
 
     const GeyserPushConstants text_push_constants = { .camera = render_state->camera_transform };
-    u32 text_count                                = 446;
 
     vkCmdBindDescriptorSets(
       render_state->command_buffer,
@@ -361,7 +391,7 @@ i32 render_perform(void *args) {
       &text_push_constants
     );
 
-    vkCmdDraw(render_state->command_buffer, 6, text_count, 0, 0);
+    vkCmdDraw(render_state->command_buffer, 6, total_glyphs, 0, 0);
 
     gpu_start = platform_time_usec();
 
@@ -398,6 +428,7 @@ i32 render_perform(void *args) {
   for (u32 i = 0; i < MAX_RENDERABLES; i++)
     renderable_free(render_state, renderables[i]);
 
+  vkUnmapMemory(render_state->device, text_memory);
   free(renderables);
   geyser_destroy_vk(render_state);
   render_state_destroy(render_state);

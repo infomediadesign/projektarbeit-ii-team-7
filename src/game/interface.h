@@ -15,6 +15,7 @@ extern "C" {
 
 #include <engine/input/input.h>
 #include <engine/platform.h>
+#include <engine/render/glyph.h>
 #include <engine/render/render_state.h>
 #include <engine/render/renderable.h>
 #include <engine/state/state.h>
@@ -26,7 +27,13 @@ void game_lazy_tick(GameState *state, mutex_t *lock);
 void game_paused_tick(GameState *state, mutex_t *lock);
 /* TODO: make it not require render_state */
 void game_adjust_renderables(
-  GameState *state, mutex_t *lock, RenderState *render_state, Renderable **renderables, const u32 renderables_count
+  GameState *state,
+  mutex_t *lock,
+  RenderState *render_state,
+  Renderable **renderables,
+  const u32 renderables_count,
+  GlyphText *text_objects,
+  const u32 text_objects_count
 );
 void game_create_bindings(GameState *state, mutex_t *lock, InputState *input_state);
 

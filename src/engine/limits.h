@@ -4,5 +4,6 @@
 #define MAX_ENTITIES          16384
 #define MAX_RENDERABLES       MAX_ENTITIES * 2
 #define MAX_MEMORY_COMPONENTS 8192
+#define MAX_TEXT_OBJECTS      1024
 
 #endif
