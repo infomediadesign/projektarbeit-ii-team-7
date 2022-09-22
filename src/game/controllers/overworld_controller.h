@@ -9,8 +9,6 @@ private:
   Controller base;
   Level *level;
 
-  void check_collision(Entity *ent);
-
 public:
   CONTROLLER_METHOD_DEFINITIONS
   void changelevel(const std::string level);

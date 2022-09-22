@@ -19,6 +19,17 @@ local opponents = {
 
     CURRENT_OPPONENT = {
       ent = e,
+      tile = nil,
+      name = "FOXY FOXINGTON",
+      status = "idle",
+      status_messages = {
+        idle = "BLOCKS THE WAY",
+        attack = "BITES YOU",
+        defend = "HIDES BEHIND TAIL",
+        pain = "YIPS PAINFULLY",
+        near_death = "WHIMPERS",
+        death = "IS DEFEATED"
+      },
       limbs = {
         {
           name = "Body",
@@ -26,12 +37,95 @@ local opponents = {
         }
       }
     }
+  end,
+  bandit = function()
+    local e = Tileset.create('assets/animated/battle_enemy_rat.png', 2128, 120, 304, 120)
+    e.ent:set_ent_class(ENTCLASS_ENEMY)
+    e.ent:set_pos({0, -0.5, 0})
+    e.ent:set_scale({12, 4.5})
+
+    CURRENT_OPPONENT = {
+      ent = e.ent,
+      tile = e,
+      animated = true,
+      anim_max = 7,
+      name = "THE BANDIT",
+      status = "idle",
+      status_messages = {
+        idle = "BLOCKS THE WAY",
+        attack = "SLASHES AT YOU",
+        weak_attack = "PUNCHES YOU",
+        defend = "HIDES BEHIND GREATSHIELD",
+        pain = "CURSES!",
+        near_death = "SEEMS EXHAUSTED",
+        death = "IS DEFEATED"
+      },
+      limbs = {
+        {
+          name = "Body",
+          health = 10
+        },
+        {
+          name = "Sword",
+          health = 2 
+        },
+        {
+          name = "Shield",
+          health = 25
+        }
+      },
+      attack = function(self)
+        if self.limbs[1].health <= 0 then
+          return
+        end
+
+        if self.limbs[2].health > 0 then
+          -- attack
+          self.status = "attack"
+          self.attack_damage = 2
+          self.defense = 0
+        elseif self.limbs[3].health > 0 then
+          -- defend or weak attack
+          if math.random(1, 2) == 1 then
+            self.status = "weak_attack"
+            self.attack_damage = 1
+            self.defense = 0
+          else
+            self.status = "defend"
+            self.attack_damage = 0
+            self.defense = 2
+          end
+        else
+          self.status = "weak_attack"
+          self.attack_damage = 1
+          self.defense = 0
+        end
+      end,
+      stance = function(self)
+        if self.limbs[1].health <= 0 then
+          self.status = "death"
+        elseif self.limbs[1].health <= 5 then
+          self.status = "near_death"
+        elseif self.limbs[1].health <= 9 then
+          self.status = "pain"
+        else
+          self.status = "idle"
+        end
+      end
+    }
   end
 }
 local commands = {}
+local col_green = {x = 0.2, y = 0.9, z = 0.2, w = 1.0}
+local col_black = {x = 0.1, y = 0.2, z = 0.1, w = 1.0}
+local col_red = {x = 0.9, y = 0.2, z = 0.2, w = 1.0}
 
 local function px_to_pos(x, y)
   return {x / 1280 * ui_width - 1, y / 720 * ui_height - 1, 0}
+end
+
+local function px_to_pos4(x, y)
+  return {x = x / 1280 * ui_width - 1, y = y / 720 * ui_height - 1, z = 0, w = 1}
 end
 
 local function react_to(cmd, val)
@@ -50,6 +144,61 @@ local function cmd_register(cmd, cb)
   commands[cmd] = cb
 end
 
+local function rebuild_text()
+  game.cleartext()
+
+  if battle_gui.current_stage == 1 then
+    battle_gui.attack_text  = game.addtext("ATTACK", px_to_pos4(270, 580), col_green, {x = 0.64, y = 0.64})
+    battle_gui.defend_text  = game.addtext("DEFEND", px_to_pos4(580, 580), col_green, {x = 0.64, y = 0.64})
+    battle_gui.item_text    = game.addtext("ITEM", px_to_pos4(270, 650), col_green, {x = 0.64, y = 0.64})
+    battle_gui.retreat_text = game.addtext("RETREAT", px_to_pos4(580, 650), col_green, {x = 0.64, y = 0.64})
+  elseif battle_gui.current_stage == 2 then
+    local limbs_count = table.length(CURRENT_OPPONENT.limbs)
+    local scale = 1 - (limbs_count - 2) * 0.3
+
+    battle_gui.limb_label = game.addtext("CHOOSE BODY PART", px_to_pos4(270, 560), col_green, {x = 0.45, y = 0.55})
+    battle_gui.limbs = {}
+
+    for k, v in ipairs(CURRENT_OPPONENT.limbs) do
+      local t = game.addtext(v.name, px_to_pos4(270 + (k - 1) * 260 * scale, 620), col_green, {x = 0.5 * scale, y = 0.6 * scale })
+
+      table.insert(battle_gui.limbs, t)
+    end
+  else
+    battle_gui.error_label = game.addtext("ERROR!", px_to_pos4(270, 580), col_red, {x = 0.8, y = 0.8})
+    battle_gui.error_text = game.addtext("Please restart the game.", px_to_pos4(270, 630), col_red, {x = 0.35, y = 0.45})
+  end
+
+  battle_gui.log_text = game.addtext(CURRENT_OPPONENT.name.." "..CURRENT_OPPONENT.status_messages[CURRENT_OPPONENT.status], px_to_pos4(300, 32), col_green, {x = 0.3, y = 0.3})
+end
+
+local function recolor_text()
+  if battle_gui.current_stage == 1 then
+    battle_gui.attack_text:set_color(col_green)
+    battle_gui.defend_text:set_color(col_green)
+    battle_gui.item_text:set_color(col_green)
+    battle_gui.retreat_text:set_color(col_green)
+
+    if battle_gui.current_pos == 1 then
+      battle_gui.attack_text:set_color(col_black)
+    elseif battle_gui.current_pos == 2 then
+      battle_gui.defend_text:set_color(col_black)
+    elseif battle_gui.current_pos == 3 then
+      battle_gui.item_text:set_color(col_black)
+    elseif battle_gui.current_pos == 4 then
+      battle_gui.retreat_text:set_color(col_black)
+    end
+  elseif battle_gui.current_stage == 2 then
+    for k, v in ipairs(battle_gui.limbs) do
+      if battle_gui.current_pos == 1 and battle_gui.current_limb == k then
+        v:set_color(col_black)
+      else
+        v:set_color(col_green)
+      end
+    end
+  end
+end
+
 function GAME:battle_setup_opponents()
   if not NEXT_OPPONENT or type(opponents[NEXT_OPPONENT]) ~= "function" then
     game.setstage(GS_OVERWORLD)
@@ -60,6 +209,9 @@ function GAME:battle_setup_opponents()
   
   NEXT_OPPONENT = nil
 end
+
+local next_frame_at = 0
+local current_frame = 0
 
 function GAME:battle_update()
   if not CURRENT_OPPONENT or not valid(CURRENT_OPPONENT.ent) or CURRENT_OPPONENT.ent:get_ent_class() ~= ENTCLASS_ENEMY then
@@ -72,6 +224,34 @@ function GAME:battle_update()
     if react_to(cmd, val) and commands[cmd] then
       commands[cmd]()
     end
+  end
+
+  if CURRENT_OPPONENT.animated and next_frame_at <= platform.time() then
+    CURRENT_OPPONENT.tile:set_index(current_frame)
+
+    current_frame = current_frame + 1
+
+    if current_frame >= CURRENT_OPPONENT.anim_max then
+      current_frame = 0
+    end
+
+    next_frame_at = platform.time() + 0.1
+  end
+
+  if battle_gui.attack_ok then
+    battle_gui.go:set_texture_path('assets/ui/GO_button.png')
+  end
+
+  if battle_gui.current_pos == 0 then
+    battle_gui.selector:set_visible(true)
+    battle_gui.selector:set_scale({ 2.5, 2.5 })
+    battle_gui.selector:set_pos({ 0.5, -0.07, 0 })
+  elseif battle_gui.current_pos == 100 then
+    battle_gui.selector:set_visible(true)
+    battle_gui.selector:set_scale({ 1.75, 1.75 })
+    battle_gui.selector:set_pos(px_to_pos(1226, 642))  
+  else
+    battle_gui.selector:set_visible(false)
   end
 end
 
@@ -94,6 +274,19 @@ function GAME:battle_setup_gui()
   battle_gui.go:set_scale({ 2.5, 2.5 })
   battle_gui.go:set_pos({ 0.5, -0.07, 0 })
   battle_gui.go:set_active(true)
+
+  battle_gui.back_btn = Tileset.create('assets/ui/back_button.png', 128, 32, 32, 32)
+  battle_gui.back_btn.ent:set_scale({ 1.75, 1.75 })
+  battle_gui.back_btn.ent:set_pos(px_to_pos(1226, 642))
+  battle_gui.back_btn.ent:set_visible(false)
+
+  battle_gui.selector = ent.create()
+  battle_gui.selector:set_ent_class(ENTCLASS_GUI)
+  battle_gui.selector:set_texture_path('assets/ui/cursor_hover.png')
+  battle_gui.selector:set_scale({ 2.5, 2.5 })
+  battle_gui.selector:set_pos({ 0.5, -0.07, 0 })
+  battle_gui.selector:set_visible(false)
+  battle_gui.selector:set_active(true)
 
   battle_gui.hp_back_first = Tileset.create('assets/ui/HP_AP_bar.png', 80, 32, 16, 16)
   battle_gui.hp_back_first:set_index(4, 0)
@@ -146,50 +339,123 @@ function GAME:battle_setup_gui()
 
   battle_gui.current_pos = 1
   battle_gui.current_limb = 1
+  battle_gui.current_stage = 1
+
+  rebuild_text()
+  recolor_text()
 end
 
 cmd_register(CMD_USE, function()
-  if battle_gui.current_pos == 1 then
-    battle_gui.current_pos = 0
-  elseif battle_gui.current_pos == 0 then
+  if battle_gui.current_stage == 1 then
+    if battle_gui.current_pos == 1 then
+      battle_gui.current_stage = 2
+      battle_gui.current_pos = 1
+      battle_gui.current_limb = 1
+
+      battle_gui.back_btn.ent:set_visible(true)
+
+      rebuild_text()
+      recolor_text()
+    elseif battle_gui.current_pos == 4 then
+      game.setstage(GS_OVERWORLD)
+    end
+  elseif battle_gui.current_stage == 2 then
+    if battle_gui.current_pos == 1 then
+      battle_gui.attack_ok = true
+      battle_gui.current_pos = 0
+
+      recolor_text()
+    elseif battle_gui.current_pos == 2 then
+      -- inventory code here
+    elseif battle_gui.current_pos == 100 then
+      battle_gui.current_stage = 1
+      battle_gui.current_pos = 1
+      battle_gui.current_limb = 1
+
+      battle_gui.back_btn.ent:set_visible(false)
+
+      rebuild_text()
+      recolor_text()
+    end
+  end
+
+  if battle_gui.current_pos == 0 then
     -- attack code here
-  elseif battle_gui.current_pos == 2 then
-    -- inventory code here
   end
 end)
 
 cmd_register(CMD_FORWARD, function()
-  if battle_gui.current_pos == 2 then
-    battle_gui.current_pos = 1
+  if battle_gui.current_stage == 1 then
+    if battle_gui.current_pos > 2 then
+      battle_gui.current_pos = battle_gui.current_pos - 2
+    end
+  elseif battle_gui.current_stage == 2 then
+    if battle_gui.current_pos == 2 then
+      battle_gui.current_pos = 1
+    end
   end
+
+  recolor_text()
 end)
 
 cmd_register(CMD_BACK, function()
-  if battle_gui.current_pos == 1 then
-    battle_gui.current_pos = 2
+  if battle_gui.current_stage == 1 then
+    if battle_gui.current_pos <= 2 then
+      battle_gui.current_pos = battle_gui.current_pos + 2
+    end
+  elseif battle_gui.current_stage == 2 then
+    if battle_gui.current_pos == 1 then
+      battle_gui.current_pos = 2
+    end
   end
+
+  recolor_text()
 end)
 
 cmd_register(CMD_RIGHT, function()
-  if battle_gui.current_pos == 1 then
-    local total_limbs = table.length(CURRENT_OPPONENT.limbs)
-
-    if total_limbs == 1 or battle_gui.current_limb >= total_limbs then
+  if battle_gui.current_stage == 1 then
+    if battle_gui.current_pos % 2 == 1 then
+      battle_gui.current_pos = battle_gui.current_pos + 1
+    elseif battle_gui.current_pos % 2 == 0 then
       battle_gui.current_pos = 0
-    elseif battle_gui.current_limb < total_limbs then
-      battle_gui.current_limb = battle_gui.current_limb + 1
     end
-  else
-    battle_gui.current_pos = 0
+  elseif battle_gui.current_stage == 2 then
+    if battle_gui.current_pos == 1 then
+      local total_limbs = table.length(CURRENT_OPPONENT.limbs)
+
+      if total_limbs == 1 or battle_gui.current_limb >= total_limbs then
+        battle_gui.current_pos = 0
+      elseif battle_gui.current_limb < total_limbs then
+        battle_gui.current_limb = battle_gui.current_limb + 1
+      end
+    elseif battle_gui.current_pos == 0 then
+      battle_gui.current_pos = 100
+    elseif battle_gui.current_pos ~= 100 then
+      battle_gui.current_pos = 0
+    end
   end
+
+  recolor_text()
 end)
 
 cmd_register(CMD_LEFT, function()
-  if battle_gui.current_pos == 0 then
-    battle_gui.current_pos = 1
-  elseif battle_gui.current_pos == 1 then
-    if battle_gui.current_limb > 1 then
-      battle_gui.current_limb = battle_gui.current_limb - 1
+  if battle_gui.current_stage == 1 then
+    if battle_gui.current_pos > 0 and battle_gui.current_pos % 2 == 0 then
+      battle_gui.current_pos = battle_gui.current_pos - 1
+    elseif battle_gui.current_pos == 0 then
+      battle_gui.current_pos = 4
+    end
+  elseif battle_gui.current_stage == 2 then
+    if battle_gui.current_pos == 0 then
+      battle_gui.current_pos = 1
+    elseif battle_gui.current_pos == 1 then
+      if battle_gui.current_limb > 1 then
+        battle_gui.current_limb = battle_gui.current_limb - 1
+      end
+    elseif battle_gui.current_pos == 100 then
+      battle_gui.current_pos = 0
     end
   end
+
+  recolor_text()
 end)

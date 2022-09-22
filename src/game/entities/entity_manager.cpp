@@ -33,6 +33,7 @@ void EntityManager::ent_remove(Entity *ent) {
   ent->set_should_remove(true);
   ent->set_active(false);
   ent->set_visible(false);
+  ent->set_default();
 
   LUA_EVENT_RUN(this->lua, "ent_removed");
   lua_push_entity(this->lua, ent);

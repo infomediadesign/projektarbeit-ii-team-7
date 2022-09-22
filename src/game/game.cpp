@@ -108,13 +108,6 @@ void Game::update_lazy(GameState *state, mutex_t *lock) {
 
   this->locked = true;
 
-  for (Entity &ent : this->ent_manager.entities) {
-    if (ent.should_be_removed()) {
-      this->ent_manager.dangling_renderables.push_back(ent.get_renderable());
-      ent.set_default();
-    }
-  }
-
   LUA_EVENT_RUN(this->lua, "update_lazy");
   LUA_EVENT_CALL(this->lua, 0, 0);
 
@@ -168,6 +161,9 @@ void Game::update_renderables(
   GlyphText *text_objects,
   const u32 text_objects_count
 ) {
+  if (this->locked)
+    return;
+
   this->game_state           = state;
   this->window_width         = render_state->window_width;
   this->window_height        = render_state->window_height;
@@ -232,16 +228,17 @@ void Game::update_renderables(
   /* Z sort */
   qsort(renderables, renderables_count, sizeof(Renderable *), Game::compare_renderables);
 
-  if (this->locked)
-    return;
-
   /* Assign renderables to entities that don't already have them assigned,
      and updates position and attributes of those which are assigned */
   for (Entity &ent : this->ent_manager.entities) {
-    if (!ent.get_visible())
-      continue;
-
     Renderable *r = ent.get_renderable();
+
+    if (!ent.get_visible()) {
+      if (r != nullptr && r->active == GS_TRUE)
+        renderable_set_scale(r, vector_make2(0.0f, 0.0f));
+
+      continue;
+    }
 
     if (ent.get_active() && !ent.should_be_removed()) {
       if (!ent.get_ready()) {

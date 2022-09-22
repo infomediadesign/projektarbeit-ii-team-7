@@ -316,11 +316,13 @@ i32 render_perform(void *args) {
     first_offsets[0] = renderables[first]->offset;
     vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1, &renderables[first]->pool->buffer, first_offsets);
 
+    Renderable *last_renderable = NULL;
+
     for (u32 i = first; i < MAX_RENDERABLES; i++) {
       /* Since renderables are sorted in a way such that non-active come last, we can just stop once we spot one of
        * these */
-      if (renderables[i]->active == GS_FALSE)
-        break;
+      if (renderables[i]->active == GS_FALSE || renderables[i]->uv == NULL)
+        continue;
 
       if (renderables[i]->vertices_count > 0) {
         renderable_interpolate(renderables[i]);
@@ -332,19 +334,19 @@ i32 render_perform(void *args) {
         push_constants.uv_offset    = renderables[i]->uv_offset;
         push_constants.camera       = render_state->camera_transform;
 
-        if (i != first && memcmp(renderables[i]->uv, renderables[i - 1]->uv, sizeof(Vector2) * renderables[i]->vertices_count) != 0) {
+        if (last_renderable != NULL && memcmp(renderables[i]->uv, last_renderable->uv, sizeof(Vector2) * renderables[i]->vertices_count) != 0) {
           offsets[0] = renderables[i]->offset;
           vkCmdBindVertexBuffers(render_state->command_buffer, 0, 1, &renderables[i]->pool->buffer, offsets);
         }
 
-        if (i == first || strcmp(renderables[i]->texture_path, renderables[i - 1]->texture_path) != 0) {
+        if (last_renderable == NULL || strcmp(renderables[i]->texture_path, last_renderable->texture_path) != 0) {
           vkCmdBindDescriptorSets(
             render_state->command_buffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
             render_state->pipeline.pipeline_layout,
             0,
             1,
-            &renderables[i]->texture.descriptor_set,
+            &renderables[i]->texture->descriptor_set,
             0,
             NULL
           );
@@ -360,6 +362,8 @@ i32 render_perform(void *args) {
         );
 
         vkCmdDraw(render_state->command_buffer, renderables[i]->vertices_count, 1, 0, 0);
+
+        last_renderable = renderables[i];
       }
     }
 

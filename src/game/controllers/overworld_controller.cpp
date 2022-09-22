@@ -24,16 +24,12 @@ void OverworldController::changelevel(const std::string level) {
     this->level = nullptr;
   }
 
-  this->level = new Level(this->base.lua, this->base.ent_manager, true);
+  this->level = new Level(this->base.lua, this->base.ent_manager, false);
   this->level->load_json("levels/" + level + ".json");
   this->level->init();
 }
 
 void OverworldController::update(GameState *state, mutex_t *lock) {
-  for (Entity &ent : this->base.ent_manager->entities)
-    if (ent.is_valid() && ent.get_should_collide())
-      this->check_collision(&ent);
-
   this->base.ent_manager->get_player()->update_anim();
 }
 
@@ -106,23 +102,6 @@ void OverworldController::process_input(GameState *state, const f64 update_time)
 
       default: break;
       }
-    }
-  }
-}
-
-void OverworldController::check_collision(Entity *ent) {
-  if (!ent->is_valid())
-    return;
-
-  for (Entity &target : this->base.ent_manager->entities) {
-    if (!target.is_valid())
-      continue;
-
-    if (target.get_entity_index() == ent->get_entity_index())
-      continue;
-
-    if (ent->collides_with(&target)) {
-      // TODO: collision logic
     }
   }
 }

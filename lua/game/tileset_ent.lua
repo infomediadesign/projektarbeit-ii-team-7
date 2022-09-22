@@ -12,6 +12,7 @@ function Tileset.create(tex, w, h, aw, ah)
   obj.index = 0
 
   obj.ent:set_uv_size({ aw / w, ah / h })
+  obj.ent:set_ent_class(ENTCLASS_GUI)
   obj.ent:set_texture_path(tex)
   obj.ent:set_active(true)
 

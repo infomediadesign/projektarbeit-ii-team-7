@@ -128,7 +128,7 @@ function GAME:process_input(cmds, input_state)
 
       return
     elseif v == DEBUG_CHANGELEVEL_CMD then
-      NEXT_OPPONENT = 'test'
+      NEXT_OPPONENT = 'bandit'
       game.setstage(GS_BATTLE)
     end
   end

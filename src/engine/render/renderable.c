@@ -33,6 +33,8 @@ static const Matrix4 null_mat4 = {
 
 void renderable_make_default(Renderable *r) {
   r->uv               = NULL;
+  r->pool             = NULL;
+  r->texture          = NULL;
   r->vertices_count   = 0U;
   r->position         = null_vec4;
   r->last_position    = null_vec4;
@@ -116,8 +118,8 @@ void renderable_free(RenderState *state, Renderable *r) {
   /* TODO: fix memory freeing */
   // memory_free_image_block(r->texture.base.base.pool, r->texture.base.base.offset, r->texture.base.base.size);
 
-  if (r->texture.copy == 0)
-    geyser_free_texture_descriptor_set(state, &r->texture);
+  // if (r->texture.copy == 0)
+  //   geyser_free_texture_descriptor_set(state, &r->texture);
 
   free(r->uv);
 }
@@ -204,22 +206,21 @@ void renderable_load_texture(RenderState *state, Renderable *r, const char *imag
   GeyserTexture *tex = _get_geyser_texture(crc);
 
   if (tex == NULL) {
-    geyser_create_texture(state, crc, vector_make2((f32)tex_img.width, (f32)tex_img.height), &r->texture);
+    r->texture = (GeyserTexture *)calloc(1, sizeof(GeyserTexture));
 
-    if (r->texture.base.base.newblock == 1)
-      geyser_set_image_memory(state, &r->texture.base.base, &tex_img);
+    geyser_create_texture(state, crc, vector_make2((f32)tex_img.width, (f32)tex_img.height), r->texture);
+
+    if (r->texture->base.base.newblock == 1)
+      geyser_set_image_memory(state, &r->texture->base.base, &tex_img);
     else
-      geyser_set_image_memory_barrier(state, &r->texture.base.base);
+      geyser_set_image_memory_barrier(state, &r->texture->base.base);
 
-    geyser_allocate_texture_descriptor_set(state, &r->texture, (GeyserPipeline *)&state->pipeline);
-    geyser_update_texture_descriptor_set(state, &r->texture);
+    geyser_allocate_texture_descriptor_set(state, r->texture, (GeyserPipeline *)&state->pipeline);
+    geyser_update_texture_descriptor_set(state, r->texture);
 
-    _add_geyser_texture(crc, &r->texture);
-
-    r->texture.copy = 0;
+    _add_geyser_texture(crc, r->texture);
   } else {
-    memcpy(&r->texture, tex, sizeof(GeyserTexture));
-    r->texture.copy = 1;
+    r->texture = tex;
   }
 
   asset_unload_image(&tex_img);
@@ -231,27 +232,26 @@ void renderable_set_texture(RenderState *state, Renderable *r, const Image tex_i
   GeyserTexture *tex = _get_geyser_texture(crc);
 
   if (tex == NULL) {
+    r->texture = (GeyserTexture *)calloc(1, sizeof(GeyserTexture));
+
     geyser_create_texture(
       state,
       crc64(tex_img.data, tex_img.width * tex_img.height * 4),
       vector_make2((f32)tex_img.width, (f32)tex_img.height),
-      &r->texture
+      r->texture
     );
 
-    if (r->texture.base.base.newblock == 1)
-      geyser_set_image_memory(state, &r->texture.base.base, &tex_img);
+    if (r->texture->base.base.newblock == 1)
+      geyser_set_image_memory(state, &r->texture->base.base, &tex_img);
     else
-      geyser_set_image_memory_barrier(state, &r->texture.base.base);
+      geyser_set_image_memory_barrier(state, &r->texture->base.base);
 
-    geyser_allocate_texture_descriptor_set(state, &r->texture, (GeyserPipeline *)&state->pipeline);
-    geyser_update_texture_descriptor_set(state, &r->texture);
+    geyser_allocate_texture_descriptor_set(state, r->texture, (GeyserPipeline *)&state->pipeline);
+    geyser_update_texture_descriptor_set(state, r->texture);
 
-    _add_geyser_texture(crc, &r->texture);
-
-    r->texture.copy = 0;
+    _add_geyser_texture(crc, r->texture);
   } else {
-    memcpy(&r->texture, tex, sizeof(GeyserTexture));
-    r->texture.copy = 1;
+    r->texture = tex;
   }
 }
 

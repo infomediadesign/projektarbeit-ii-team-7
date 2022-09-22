@@ -20,7 +20,7 @@ typedef struct Renderable {
   Vector4 position;
   Vector4 color;
   Quaternion rotation;
-  GeyserTexture texture;
+  GeyserTexture *texture;
   Vector3 velocity;
   Vector2 *uv;
   Vector2 scale;
