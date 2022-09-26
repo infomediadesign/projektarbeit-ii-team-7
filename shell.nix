@@ -6,6 +6,7 @@ gcc11Stdenv.mkDerivation {
     vulkan-headers
     cmake
     gcc11
+    mold
   ];
 
   buildInputs = [

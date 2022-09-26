@@ -119,6 +119,7 @@ local commands = {}
 local col_green = {x = 0.2, y = 0.9, z = 0.2, w = 1.0}
 local col_black = {x = 0.1, y = 0.2, z = 0.1, w = 1.0}
 local col_red = {x = 0.9, y = 0.2, z = 0.2, w = 1.0}
+local col_blue = {x = 0.2, y = 0.3, z = 0.85, w = 1.0}
 local won_since = 0
 
 local function px_to_pos(x, y)
@@ -168,6 +169,18 @@ local function rebuild_text()
   else
     battle_gui.error_label = game.addtext("ERROR!", px_to_pos4(270, 580), col_red, {x = 0.8, y = 0.8})
     battle_gui.error_text = game.addtext("Please restart the game.", px_to_pos4(270, 630), col_red, {x = 0.35, y = 0.45})
+  end
+
+  if battle_gui.chain and table.length(battle_gui.chain) > 0 then
+    battle_gui.chain_texts = {}
+
+    for k, v in ipairs(battle_gui.chain) do
+      if v[1] == 'attack' then
+        game.addtext('ATK '..CURRENT_OPPONENT.limbs[v[2]].name, px_to_pos4(1000, 128 + 48 * (k - 1)), col_red, {x = 0.5, y = 0.75})
+      else
+        game.addtext('DEF', px_to_pos4(1000, 128 + 48 * (k - 1)), col_blue, {x = 0.5, y = 0.75})
+      end
+    end
   end
 
   battle_gui.log_text = game.addtext(CURRENT_OPPONENT.name.." "..CURRENT_OPPONENT.status_messages[CURRENT_OPPONENT.status], px_to_pos4(300, 32), col_green, {x = 0.3, y = 0.3})
@@ -239,6 +252,11 @@ function GAME:battle_setup_opponents()
   end
 
   opponents[NEXT_OPPONENT]()
+
+  battle_gui = {cmds = {}}
+
+  player.set_data('health', 5)
+  player.set_data('ap', 2)
   
   NEXT_OPPONENT = nil
 end
@@ -248,6 +266,32 @@ local current_frame = 0
 
 function GAME:battle_update()
   if not CURRENT_OPPONENT or not valid(CURRENT_OPPONENT.ent) or CURRENT_OPPONENT.ent:get_ent_class() ~= ENTCLASS_ENEMY then
+    return
+  end
+
+  if player.get_data('health') <= 0 then
+    if won_since == 0 then
+      won_since = platform.time()
+
+      game.cleartext()
+
+      local e = ent.create()
+      e:set_ent_class(ENTCLASS_GUI)
+      e:set_pos(center)
+      e:set_scale({ 20, 11.25 })
+      e:set_texture_path('assets/ui/background_black.png')
+      e:set_active(true)
+
+      e = ent.create()
+      e:set_ent_class(ENTCLASS_GUI)
+      e:set_pos(center)
+      e:set_scale({ 20 * 0.5, 11.25 * 0.5 })
+      e:set_texture_path('assets/ui/game_over.png')
+      e:set_active(true)
+    elseif won_since + 5 < platform.time() then
+      game.setstage(GS_OVERWORLD)
+    end
+
     return
   end
 
@@ -403,12 +447,21 @@ cmd_register(CMD_USE, function()
 
       rebuild_text()
       recolor_text()
+
+      return
     elseif battle_gui.current_pos == 2 and current_ap > 0 then
       table.insert(battle_gui.chain, {'defend'})
       player.set_data('ap', 2 - table.length(battle_gui.chain))
+
       update_hp_ap()
+      rebuild_text()
+      recolor_text()
+
+      return
     elseif battle_gui.current_pos == 4 then
       game.setstage(GS_OVERWORLD)
+
+      return
     end
   elseif battle_gui.current_stage == 2 then
     if battle_gui.current_pos == 1 and current_ap > 0 then
@@ -420,8 +473,10 @@ cmd_register(CMD_USE, function()
       player.set_data('ap', 2 - table.length(battle_gui.chain))
 
       update_hp_ap()
-
+      rebuild_text()
       recolor_text()
+
+      return
     elseif battle_gui.current_pos == 2 and current_ap > 0 then
 
     elseif battle_gui.current_pos == 100 then
@@ -433,6 +488,8 @@ cmd_register(CMD_USE, function()
 
       rebuild_text()
       recolor_text()
+
+      return
     end
   end
 
@@ -450,11 +507,11 @@ cmd_register(CMD_USE, function()
     player.set_data('health', (player.get_data('health') or 5) - (CURRENT_OPPONENT.attack_damage or 0))
     player.set_data('ap', player.get_data('max_ap'))
 
+    battle_gui.chain = {}
+
     rebuild_text()
     recolor_text()
     update_hp_ap()
-  
-    battle_gui.chain = {}
   end
 end)
 
